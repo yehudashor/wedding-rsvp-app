@@ -3,7 +3,7 @@
  * any cross-origin request, and any non-GET request ALWAYS hit the network untouched
  * (no respondWith) - zero chance of stale dashboards or lost RSVP submissions. */
 
-const CACHE = 'wrsvp-shell-v1'; // bump (-v2, -v3...) to invalidate the old shell
+const CACHE = 'wrsvp-shell-v2'; // bump (-v2, -v3...) to invalidate the old shell
 
 const PRECACHE_URLS = [
   './',
