@@ -363,6 +363,17 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
   .btn{padding:12px 22px;}
 }
 </style>
+<style id="ux-elderly">
+/* ELDERLY-FRIENDLY READABILITY - append-only, no color changes, bigger text + tap targets */
+html{font-size:18px;}
+body{line-height:1.65;}
+p,li,.expl-text,.lnk .t,.stp .lbl{font-size:1.04em;}
+.btn,.share button,.g-btns button,.sides button,.picker button,.stp button,.wa-open-btn,.note-btn{
+  min-height:48px;
+  font-size:1.08em;
+}
+.share button,.picker button{padding-left:18px;padding-right:18px;}
+</style>
 <!-- PWA integration (added 2026-06-26) -->
 <meta name="theme-color" content="#a9802f">
 <link rel="manifest" href="manifest.json">
@@ -408,6 +419,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
           <div class="t">&#128228; קישור-הפצה &#8212; לשלוח לאורחים</div>
           <div id="portalWaText" class="wa-text" style="white-space:pre-wrap;overflow-wrap:anywhere;font-size:.9em;color:var(--ink);background:#fff;border:1px dashed var(--line);border-radius:8px;padding:8px;margin:6px 0;"></div>
           <span id="portalDispLink" class="u" style="display:block;word-break:break-all;overflow-wrap:anywhere;margin-top:4px;"></span>
+          <div class="share-steps" style="font-size:1em;font-weight:700;color:var(--olive-d);margin:8px 0 6px;line-height:1.7;">1. להעתיק את הקישור &nbsp; 2. לשלוח בוואטסאפ &nbsp; 3. לשלוח במייל</div>
           <div class="share">
             <button class="cp" id="cpPortalDisp" onclick="doCopy('cpPortalDisp', window._portalDisp||'')">&#128203; העתקה</button>
             <button class="wa-btn" id="cpPortalWa" onclick="if(window._portalWaUrl)window.open(window._portalWaUrl,'_blank')">שיתוף בוואטסאפ</button>
@@ -571,6 +583,14 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
     <div class="slide-main">
       <div class="cap">כל מארגן רואה רק את האורחים שהביא. ניתן לערוך או למחוק שורות &#8212; כל פעולה מבקשת את המייל שנרשמת איתו. הדגמה בלבד &#8212; יחובר לנתונים חיים לאחר האישור.</div>
       <div class="picker" id="pPick"></div>
+      <div id="p5LiveWrap" style="display:none;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
+          <button id="p5LiveRefresh" type="button" style="padding:6px 18px;background:#e8dcc8;border:1.5px solid var(--line);border-radius:20px;font-family:inherit;font-size:.85em;cursor:pointer;color:var(--olive-d);">&#128260; רענון</button>
+          <span style="font-size:.78em;color:var(--muted);">נתונים חיים &#8212; האורחים האמיתיים שלך</span>
+        </div>
+        <iframe id="p5LiveIframe" src="" style="width:100%;height:560px;border:1.5px solid var(--line);border-radius:12px;background:#fff;" loading="lazy"></iframe>
+      </div>
+      <div id="p5DemoLabel" style="display:none;font-size:.74em;color:var(--muted);margin-bottom:6px;">&#128247; הדגמה</div>
       <div id="pBody"></div>
     </div>
     <aside class="expl-panel">
@@ -834,6 +854,36 @@ window.DASH_DATA = {"personal":[{"name":"שרה כהן - רכזת צד החתן"
   function portalLoad(){try{var s=localStorage.getItem(PORTAL_KEY);return s?JSON.parse(s):null;}catch(e){return null;}}
   function portalClear(){try{localStorage.removeItem(PORTAL_KEY);}catch(e){}}
 
+  /* LIVE personal-dashboard wiring (additive). Returns the organizer's real exec dashboard URL, or '' */
+  function liveDashUrl(){
+    if(window._activeMgr&&window._activeMgr.dashboardLink){return window._activeMgr.dashboardLink;}
+    var p=(typeof portalLoad==='function')?portalLoad():null;
+    if(p&&p.dashboardLink){return p.dashboardLink;}
+    return '';
+  }
+  function refreshP5Live(){
+    var wrap=document.getElementById('p5LiveWrap');
+    var iframe=document.getElementById('p5LiveIframe');
+    var demo=document.getElementById('p5DemoLabel');
+    var url=liveDashUrl();
+    if(url){
+      if(iframe){iframe.src=url+(url.indexOf('?')>-1?'&':'?')+'_ts='+Date.now();}
+      if(wrap)wrap.style.display='';
+      if(demo)demo.style.display='none';
+    }else{
+      if(wrap)wrap.style.display='none';
+      if(demo)demo.style.display='';
+    }
+  }
+  (function(){
+    var btn=document.getElementById('p5LiveRefresh');
+    if(btn){btn.onclick=function(){
+      var iframe=document.getElementById('p5LiveIframe');
+      var url=liveDashUrl();
+      if(iframe&&url){iframe.src=url+(url.indexOf('?')>-1?'&':'?')+'_ts='+Date.now();}
+    };}
+  })();
+
   function buildWaMessageTextPortal(mName, link){
     return "בשבח והודיה להשם יתברך ✨\n" +
       "הוזמנת לחתונת אבי חוקת ומיכל שור\n" +
@@ -876,6 +926,7 @@ window.DASH_DATA = {"personal":[{"name":"שרה כהן - רכזת צד החתן"
     var iframeSection=document.getElementById('regIframeSection');
     if(banner)banner.style.display='none';
     if(iframeSection)iframeSection.style.display='';
+    if(typeof refreshP5Live==='function'){refreshP5Live();}
   };
 
   window._deckRegister=function(name,side,sid,dispLink,dashLink){
@@ -896,6 +947,7 @@ window.DASH_DATA = {"personal":[{"name":"שרה כהן - רכזת צד החתן"
     if(typeof refreshBrideSlide==='function'){refreshBrideSlide();}
     if(typeof refreshCombinedSlide==='function'){refreshCombinedSlide();}
     if(typeof updateWaBubble==='function'){updateWaBubble(name,resolvedDisp);}
+    if(typeof refreshP5Live==='function'){refreshP5Live();}
   };
 
   // Restore portal from localStorage on page load
@@ -911,6 +963,7 @@ window.DASH_DATA = {"personal":[{"name":"שרה כהן - רכזת צד החתן"
       }
       if(typeof updateWaBubble==='function'){updateWaBubble(saved.name,saved.distributionLink||'');}
     }
+    if(typeof refreshP5Live==='function'){refreshP5Live();}
   })();
 
   /* ===== SLIDE 5: PERSONAL DASHBOARD ===== */
