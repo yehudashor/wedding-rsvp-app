@@ -186,6 +186,194 @@
   .email-gate-row button{flex:1;border:none;border-radius:10px;padding:10px;font-family:inherit;font-weight:700;cursor:pointer;}
   .email-gate-ok{background:var(--olive);color:#fff;} .email-gate-cancel{background:#eee;color:#444;}
 </style>
+<style id="festive-restyle">
+/* FESTIVE WEDDING RESTYLE - append-only layer, same class names, RTL-safe, a11y-first */
+:root{
+  --gold:#9c7322; --gold-d:#7d5a14; --gold-deep:#6a4d12;
+  --champ:#e7cf94; --gold-soft:#cda64f;
+  --blush:#f7e9e4; --rose:#c98a86; --rose-d:#a85f5b;
+  --ink:#3a2f23; --cream:#fffdf7; --card:#fffdf8;
+  --divider:linear-gradient(90deg,transparent,var(--gold-soft) 18%,var(--gold) 50%,var(--gold-soft) 82%,transparent);
+  --ring:0 0 0 3px rgba(156,115,34,.45);
+  --shadow-warm:0 18px 48px -12px rgba(120,86,30,.30), 0 4px 14px -6px rgba(120,86,30,.18);
+  --shadow-soft:0 10px 30px -10px rgba(120,86,30,.20);
+}
+html{font-size:17px;}
+body{
+  line-height:1.55;
+  background:
+    radial-gradient(38% 30% at 12% 0%, rgba(201,138,134,.10), transparent 60%),
+    radial-gradient(40% 32% at 88% 2%, rgba(231,207,148,.16), transparent 62%),
+    radial-gradient(120% 100% at 50% -6%, #fffefb 0%, var(--ivory) 45%, var(--parch) 100%) fixed;
+}
+h1{color:var(--olive-d);letter-spacing:.2px;text-shadow:0 1px 0 rgba(255,255,255,.6);}
+h2{color:var(--olive-d);letter-spacing:.2px;}
+.sub{color:var(--gold-d);letter-spacing:.4px;}
+.slide > h1::after,
+.slide > h2::after{
+  content:"";display:block;width:148px;height:14px;margin:14px auto 6px;
+  background:
+    radial-gradient(circle at 50% 50%, var(--gold) 0 3px, transparent 4px) center/14px 14px no-repeat,
+    var(--divider);
+  background-position:center, 0 50%;background-repeat:no-repeat;
+  background-size:14px 14px, 100% 1.5px;
+}
+.cap{color:var(--muted);font-size:1.14em;}
+.note{color:#8d8068;}
+.title-card{
+  border-radius:26px;padding:48px 58px;
+  background:linear-gradient(180deg,#fffefb,var(--card));
+  border-top:6px solid var(--gold);
+  box-shadow:var(--shadow-warm), inset 0 0 0 1px rgba(156,115,34,.18);
+  position:relative;overflow:hidden;
+}
+.title-card::before,
+.title-card::after{
+  content:"";position:absolute;width:78px;height:78px;pointer-events:none;
+  background:radial-gradient(circle at 0 0, rgba(231,207,148,.55), transparent 70%);
+  opacity:.85;
+}
+.title-card::before{top:0;inset-inline-start:0;}
+.title-card::after{bottom:0;inset-inline-end:0;transform:rotate(180deg);}
+.ring{font-size:3.4em;filter:drop-shadow(0 4px 8px rgba(156,115,34,.25));}
+.pill{
+  background:linear-gradient(180deg,var(--olive),var(--olive-d));
+  box-shadow:0 8px 18px -6px rgba(95,122,78,.5), inset 0 1px 0 rgba(255,255,255,.18);
+  letter-spacing:.4px;padding:10px 26px;font-size:1.02em;
+}
+.step{
+  border-radius:18px;padding:26px 22px;
+  background:linear-gradient(180deg,#fffefb,var(--card));
+  box-shadow:var(--shadow-soft);border-top:4px solid var(--olive);
+  transition:transform .25s ease, box-shadow .25s ease;
+}
+.step:hover{transform:translateY(-3px);box-shadow:var(--shadow-warm);}
+.step .n{
+  background:linear-gradient(180deg,var(--olive),var(--olive-d));
+  box-shadow:0 6px 14px -4px rgba(95,122,78,.5);width:48px;height:48px;
+}
+.g-head{background:linear-gradient(180deg,#fffefb,#fbf2df);border-bottom:1px solid transparent;box-shadow:0 1px 0 rgba(156,115,34,.18);}
+.g-title{color:var(--gold-d);font-size:1.3em;letter-spacing:.3px;}
+.g-body label{font-size:1.1em;}
+.g-body input,.g-body textarea,
+.reg input,.email-gate-card input{
+  padding:13px 15px;border:1.5px solid var(--line);border-radius:12px;
+  background:#fffbf2;font-size:1.05em;transition:border-color .2s,box-shadow .2s;
+}
+.g-body input:focus,.g-body textarea:focus,
+.reg input:focus,.email-gate-card input:focus{
+  outline:none;border-color:var(--gold);box-shadow:var(--ring);background:#fff;
+}
+.g-q{font-size:1.08em;}
+.g-btns button,.sides button{min-height:52px;font-size:1.1em;border-radius:14px;}
+.g-yes{background:linear-gradient(180deg,var(--olive),var(--olive-d));box-shadow:0 8px 16px -7px rgba(95,122,78,.5);}
+.g-yes.sel{box-shadow:0 0 0 4px rgba(95,122,78,.32), 0 8px 16px -7px rgba(95,122,78,.5);border-color:var(--gold);}
+.g-no{background:#efe6d6;}
+.g-send,.reg-go{min-height:54px;font-size:1.18em;border-radius:14px;letter-spacing:.3px;position:relative;overflow:hidden;}
+.g-send{background:linear-gradient(180deg,var(--gold-soft),var(--gold));box-shadow:0 12px 26px -10px rgba(156,115,34,.55), inset 0 1px 0 rgba(255,255,255,.3);}
+.reg-go{background:linear-gradient(180deg,var(--olive),var(--olive-d));box-shadow:0 12px 26px -10px rgba(95,122,78,.5), inset 0 1px 0 rgba(255,255,255,.18);}
+.g-send::after,.reg-go::after{
+  content:"";position:absolute;top:0;bottom:0;width:40%;left:-60%;
+  background:linear-gradient(100deg,transparent,rgba(255,255,255,.35),transparent);
+  transform:skewX(-18deg);animation:sheen 5.5s ease-in-out infinite;
+}
+@keyframes sheen{0%,72%{left:-60%;}88%{left:130%;}100%{left:130%;}}
+.g-success .big{filter:drop-shadow(0 4px 10px rgba(156,115,34,.3));}
+.stp{border-radius:14px;background:#fffbf2;}
+.stp button{width:46px;height:46px;font-size:1.5em;background:linear-gradient(180deg,var(--gold-soft),var(--gold));box-shadow:0 5px 12px -4px rgba(156,115,34,.5);}
+.stp .val{font-size:1.5em;}
+.reg,.reg-iframe-wrap,.guest-form-panel{border-radius:20px;box-shadow:var(--shadow-warm), inset 0 0 0 1px rgba(156,115,34,.12);position:relative;}
+.reg h3,.reg-iframe-wrap h3{color:var(--olive-d);font-size:1.4em;}
+.sides button{border:2px solid var(--line);background:#fff;}
+.sides button.sel{border-color:var(--gold);background:#fdf5e8;box-shadow:0 0 0 3px rgba(156,115,34,.2);}
+.lnk{border-radius:12px;background:#fffbf2;border:1px solid var(--line);}
+.lnk .t{color:var(--olive-d);}
+.lnk.priv{background:#fdf1e9;border-color:var(--rose);}
+.share button{min-height:46px;border-radius:12px;font-size:.98em;letter-spacing:.2px;box-shadow:0 6px 14px -7px rgba(0,0,0,.35);}
+.share .cp{background:linear-gradient(180deg,#3c4c5c,var(--navy));}
+.share .wa-btn{background:linear-gradient(180deg,#2aa342,#1f8434);}
+.share .em-btn{background:linear-gradient(180deg,var(--gold-soft),var(--gold));}
+.share .cp.done{background:linear-gradient(180deg,var(--olive),var(--olive-d));}
+.recover-link{color:var(--gold-d);}
+.dash-h{color:var(--olive-d);font-size:1.6em;}
+.sum-banner{background:linear-gradient(135deg,#1f8044,var(--green));box-shadow:0 10px 24px -10px rgba(26,110,60,.5);border-radius:14px;}
+.picker button{min-height:44px;border-radius:22px;font-size:1em;}
+.picker button.sel{background:linear-gradient(180deg,var(--olive),var(--olive-d));border-color:var(--olive-d);}
+table.dt{border-radius:14px;box-shadow:var(--shadow-soft);}
+table.dt th{background:linear-gradient(180deg,#3b4956,var(--navy));font-size:.94em;padding:11px 8px;letter-spacing:.2px;}
+table.dt td{font-size:.96em;padding:10px 8px;}
+table.dt tr:nth-child(even) td{background:#fbf6ea;}
+.yes{color:#1a8a45;} .no{color:#c0492b;}
+.org,.box,.bless-wrap{border-radius:14px;box-shadow:var(--shadow-soft);}
+.box-h,.org-h{color:var(--olive-d);}
+.bless-h{color:var(--gold-d);}
+.bless{border-right:4px solid var(--gold-soft);background:#fffaf0;border-radius:0 10px 10px 0;}
+.facts li{border-radius:14px;box-shadow:var(--shadow-soft);border-right:5px solid var(--gold);background:linear-gradient(180deg,#fffefb,var(--card));}
+.chg{border-radius:16px;box-shadow:var(--shadow-soft);border-top:4px solid var(--gold);background:linear-gradient(180deg,#fffefb,var(--card));transition:transform .25s,box-shadow .25s;}
+.chg:hover{transform:translateY(-3px);box-shadow:var(--shadow-warm);}
+.chg b{color:var(--olive-d);}
+.nav{gap:18px;}
+.btn{min-height:48px;padding:12px 26px;font-size:1.06em;letter-spacing:.3px;background:linear-gradient(180deg,var(--olive),var(--olive-d));box-shadow:0 8px 18px -7px rgba(95,122,78,.5), inset 0 1px 0 rgba(255,255,255,.18);transition:transform .18s ease, box-shadow .18s ease, filter .18s ease;}
+.btn:hover{filter:brightness(1.06);transform:translateY(-1px);}
+.btn:active{transform:translateY(0);}
+.counter{background:rgba(255,255,255,.85);box-shadow:0 2px 8px -3px rgba(120,86,30,.3);font-weight:600;}
+.dots{gap:8px;}
+.dot{width:11px;height:11px;background:#d8cdb6;transition:transform .2s,background .2s;}
+.dot.on{background:linear-gradient(180deg,var(--olive),var(--olive-d));transform:scale(1.15);}
+.dot:hover{transform:scale(1.2);}
+.demo-flag{background:#fdecec;box-shadow:0 2px 8px -3px rgba(178,59,59,.3);font-size:.9em;}
+.note-btn{width:58px;height:58px;font-size:1.6em;background:linear-gradient(180deg,var(--gold-soft),var(--gold));box-shadow:0 10px 22px -8px rgba(156,115,34,.6), 0 0 0 6px rgba(231,207,148,.18);}
+.note-pop{border-radius:16px;box-shadow:0 20px 50px -12px rgba(0,0,0,.28), inset 0 0 0 1px rgba(156,115,34,.12);}
+.note-pop h4{color:var(--olive-d);}
+.note-pop .row button{min-height:46px;border-radius:12px;}
+.np-save{background:linear-gradient(180deg,var(--olive),var(--olive-d));}
+.help{background:rgba(40,30,18,.6);backdrop-filter:saturate(1.05) blur(1px);}
+.help-card{border-radius:22px;box-shadow:0 26px 70px -16px rgba(0,0,0,.5), inset 0 0 0 1px rgba(156,115,34,.14);}
+.help-card h3{color:var(--olive-d);}
+.help-card b{color:var(--gold-d);}
+.help-card button{min-height:50px;border-radius:14px;font-size:1.1em;background:linear-gradient(180deg,var(--olive),var(--olive-d));}
+.wa-bubble-wrap{border-radius:16px;}
+.wa-bubble{box-shadow:0 4px 12px -5px rgba(0,0,0,.18);}
+.wa-open-btn{min-height:50px;border-radius:12px;font-size:1.08em;background:linear-gradient(180deg,var(--olive),var(--olive-d));box-shadow:0 8px 18px -8px rgba(95,122,78,.5);}
+.ripple-title{color:var(--olive-d);border-bottom:2px solid var(--line);}
+.ripple-section{border-radius:14px;box-shadow:var(--shadow-soft);}
+.ripple-now{color:var(--green);}
+.ripple-arrow{color:var(--gold);}
+.expl-panel{border-radius:18px;box-shadow:var(--shadow-soft), inset 0 0 0 1px rgba(156,115,34,.1);background:linear-gradient(180deg,#fffefb,var(--card));}
+.expl-panel h4{color:var(--gold-d);border-bottom:1px solid var(--line);}
+.expl-label{color:var(--olive-d);}
+.expl-tag{background:var(--parch);color:#6c5d44;border-radius:7px;}
+.expl-warn{background:#fdf1e9;border-right:3px solid var(--rose);border-radius:0 10px 10px 0;color:#7a4a10;}
+.p5-btn{min-height:34px;padding:6px 11px;font-size:.86em;border-radius:9px;}
+.p5-save{background:linear-gradient(180deg,var(--olive),var(--olive-d));}
+.p5-del-mgr{min-height:40px;border-radius:22px;}
+.email-gate-card{border-radius:20px;box-shadow:0 26px 70px -16px rgba(0,0,0,.5), inset 0 0 0 1px rgba(156,115,34,.14);}
+.email-gate-card h4{color:var(--olive-d);}
+.email-gate-row button{min-height:48px;border-radius:12px;}
+.email-gate-ok{background:linear-gradient(180deg,var(--olive),var(--olive-d));}
+a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--gold);outline-offset:2px;border-radius:8px;}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.001ms !important;}
+  .g-send::after,.reg-go::after{display:none;}
+}
+@media (max-width:760px){
+  html{font-size:17px;}
+  .title-card{padding:34px 24px;}
+  .slide > h1::after,.slide > h2::after{width:120px;}
+  .btn{padding:12px 22px;}
+}
+</style>
+<style id="ux-elderly">
+/* ELDERLY-FRIENDLY READABILITY - append-only, no color changes, bigger text + tap targets */
+html{font-size:18px;}
+body{line-height:1.65;}
+p,li,.expl-text,.lnk .t,.stp .lbl{font-size:1.04em;}
+.btn,.share button,.g-btns button,.sides button,.picker button,.stp button,.wa-open-btn,.note-btn{
+  min-height:48px;
+  font-size:1.08em;
+}
+.share button,.picker button{padding-left:18px;padding-right:18px;}
+</style>
 <!-- PWA integration (added 2026-06-26) -->
 <meta name="theme-color" content="#a9802f">
 <link rel="manifest" href="manifest.json">
@@ -231,6 +419,7 @@
           <div class="t">&#128228; קישור-הפצה &#8212; לשלוח לאורחים</div>
           <div id="portalWaText" class="wa-text" style="white-space:pre-wrap;overflow-wrap:anywhere;font-size:.9em;color:var(--ink);background:#fff;border:1px dashed var(--line);border-radius:8px;padding:8px;margin:6px 0;"></div>
           <span id="portalDispLink" class="u" style="display:block;word-break:break-all;overflow-wrap:anywhere;margin-top:4px;"></span>
+          <div class="share-steps" style="font-size:1em;font-weight:700;color:var(--olive-d);margin:8px 0 6px;line-height:1.7;">1. להעתיק את הקישור &nbsp; 2. לשלוח בוואטסאפ &nbsp; 3. לשלוח במייל</div>
           <div class="share">
             <button class="cp" id="cpPortalDisp" onclick="doCopy('cpPortalDisp', window._portalDisp||'')">&#128203; העתקה</button>
             <button class="wa-btn" id="cpPortalWa" onclick="if(window._portalWaUrl)window.open(window._portalWaUrl,'_blank')">שיתוף בוואטסאפ</button>
@@ -394,6 +583,14 @@
     <div class="slide-main">
       <div class="cap">כל מארגן רואה רק את האורחים שהביא. ניתן לערוך או למחוק שורות &#8212; כל פעולה מבקשת את המייל שנרשמת איתו. הדגמה בלבד &#8212; יחובר לנתונים חיים לאחר האישור.</div>
       <div class="picker" id="pPick"></div>
+      <div id="p5LiveWrap" style="display:none;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
+          <button id="p5LiveRefresh" type="button" style="padding:6px 18px;background:#e8dcc8;border:1.5px solid var(--line);border-radius:20px;font-family:inherit;font-size:.85em;cursor:pointer;color:var(--olive-d);">&#128260; רענון</button>
+          <span style="font-size:.78em;color:var(--muted);">נתונים חיים &#8212; האורחים האמיתיים שלך</span>
+        </div>
+        <iframe id="p5LiveIframe" src="" style="width:100%;height:560px;border:1.5px solid var(--line);border-radius:12px;background:#fff;" loading="lazy"></iframe>
+      </div>
+      <div id="p5DemoLabel" style="display:none;font-size:.74em;color:var(--muted);margin-bottom:6px;">&#128247; הדגמה</div>
       <div id="pBody"></div>
     </div>
     <aside class="expl-panel">
@@ -657,6 +854,36 @@ window.DASH_DATA = {"personal":[{"name":"שרה כהן - רכזת צד החתן"
   function portalLoad(){try{var s=localStorage.getItem(PORTAL_KEY);return s?JSON.parse(s):null;}catch(e){return null;}}
   function portalClear(){try{localStorage.removeItem(PORTAL_KEY);}catch(e){}}
 
+  /* LIVE personal-dashboard wiring (additive). Returns the organizer's real exec dashboard URL, or '' */
+  function liveDashUrl(){
+    if(window._activeMgr&&window._activeMgr.dashboardLink){return window._activeMgr.dashboardLink;}
+    var p=(typeof portalLoad==='function')?portalLoad():null;
+    if(p&&p.dashboardLink){return p.dashboardLink;}
+    return '';
+  }
+  function refreshP5Live(){
+    var wrap=document.getElementById('p5LiveWrap');
+    var iframe=document.getElementById('p5LiveIframe');
+    var demo=document.getElementById('p5DemoLabel');
+    var url=liveDashUrl();
+    if(url){
+      if(iframe){iframe.src=url+(url.indexOf('?')>-1?'&':'?')+'_ts='+Date.now();}
+      if(wrap)wrap.style.display='';
+      if(demo)demo.style.display='none';
+    }else{
+      if(wrap)wrap.style.display='none';
+      if(demo)demo.style.display='';
+    }
+  }
+  (function(){
+    var btn=document.getElementById('p5LiveRefresh');
+    if(btn){btn.onclick=function(){
+      var iframe=document.getElementById('p5LiveIframe');
+      var url=liveDashUrl();
+      if(iframe&&url){iframe.src=url+(url.indexOf('?')>-1?'&':'?')+'_ts='+Date.now();}
+    };}
+  })();
+
   function buildWaMessageTextPortal(mName, link){
     return "בשבח והודיה להשם יתברך ✨\n" +
       "הוזמנת לחתונת אבי חוקת ומיכל שור\n" +
@@ -699,6 +926,7 @@ window.DASH_DATA = {"personal":[{"name":"שרה כהן - רכזת צד החתן"
     var iframeSection=document.getElementById('regIframeSection');
     if(banner)banner.style.display='none';
     if(iframeSection)iframeSection.style.display='';
+    if(typeof refreshP5Live==='function'){refreshP5Live();}
   };
 
   window._deckRegister=function(name,side,sid,dispLink,dashLink){
@@ -719,6 +947,7 @@ window.DASH_DATA = {"personal":[{"name":"שרה כהן - רכזת צד החתן"
     if(typeof refreshBrideSlide==='function'){refreshBrideSlide();}
     if(typeof refreshCombinedSlide==='function'){refreshCombinedSlide();}
     if(typeof updateWaBubble==='function'){updateWaBubble(name,resolvedDisp);}
+    if(typeof refreshP5Live==='function'){refreshP5Live();}
   };
 
   // Restore portal from localStorage on page load
@@ -734,6 +963,7 @@ window.DASH_DATA = {"personal":[{"name":"שרה כהן - רכזת צד החתן"
       }
       if(typeof updateWaBubble==='function'){updateWaBubble(saved.name,saved.distributionLink||'');}
     }
+    if(typeof refreshP5Live==='function'){refreshP5Live();}
   })();
 
   /* ===== SLIDE 5: PERSONAL DASHBOARD ===== */
