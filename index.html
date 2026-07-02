@@ -429,14 +429,7 @@ p,li,.expl-text,.lnk .t,.stp .lbl{font-size:1.04em;}
             <button class="em-btn" id="cpPortalEm" onclick="if(window._portalEmUrl)window.open(window._portalEmUrl,'_blank')">שיתוף במייל</button>
           </div>
         </div>
-        <div class="lnk priv" style="margin-bottom:12px;">
-          <div class="t">&#9888; לוח אישי &#8212; פרטי, לא להעביר</div>
-          <span id="portalDashLink" class="u" style="display:block;word-break:break-all;overflow-wrap:anywhere;margin-top:4px;"></span>
-          <div class="share">
-            <button class="cp" id="cpPortalDash" onclick="doCopy('cpPortalDash', window._portalDash||'')">&#128203; העתקה</button>
-            <button class="wa-btn" style="display:none" onclick="gotoTitle(&quot;לוח אישי של מארגן&quot;)">&#128200; פתח לוח אישי בדק</button>
-          </div>
-        </div>
+        <!-- POLISH 2026-07-02: raw dashboard-link block removed - the dashboard lives ONLY in the embedded iframe below; the raw script.google.com URL is never shown. -->
         <div id="portalPersonalDash" style="margin-top:8px;">
           <div style="font-weight:700;color:var(--olive-d);margin-bottom:6px;font-size:.9em;">&#128200; הלוח האישי שלך (חי):</div>
           <div style="text-align:center;margin-bottom:8px;">
@@ -667,18 +660,15 @@ window.DASH_DATA = {};
     var subjEnc=encodeURIComponent('אישור הגעה לחתונת אבי חוקת ומיכל שור');
     var bodyEnc=encodeURIComponent(waText);
     window._portalDisp=rec.distributionLink||'';
-    window._portalDash=rec.dashboardLink||'';
     window._portalWaUrl='https://wa.me/?text='+encoded;
     window._portalEmUrl='mailto:?subject='+subjEnc+'&body='+bodyEnc;
     var nameEl=document.getElementById('portalName');
     var wtEl=document.getElementById('portalWaText');
     var dlEl=document.getElementById('portalDispLink');
-    var dashEl=document.getElementById('portalDashLink');
     var dashIframe=document.getElementById('portalDashIframe');
     if(nameEl)nameEl.textContent=rec.name+' - '+sideLabel;
     if(wtEl)wtEl.textContent=waText;
     if(dlEl)dlEl.textContent=rec.distributionLink||'';
-    if(dashEl)dashEl.textContent=rec.dashboardLink||'';
     /* B1.4: embed the GAS dashboard as an IFRAME built from EXEC_URL + token + phone (raw
        script.google.com URL is never shown as visible text). */
     if(dashIframe&&rec.token){
@@ -1662,7 +1652,45 @@ window.DASH_DATA = {};
 })();
 </script>
 <!-- WGI-INTRO END =========================================================== -->
-
+<!-- WGI-REPLAY (POLISH 2026-07-02): force the intro to play again on EVERY visit.
+     A normal (re)load already replays it (static HTML + CSS animations, no session
+     guard). The broken case is a BFCache / PWA-resume restore: the page returns
+     with the overlay ALREADY REMOVED from the DOM and its CSS animations finished,
+     so returning visitors saw no intro (or a frozen frame). Re-injecting a fresh
+     copy of the overlay restarts every CSS animation from zero - the equivalent,
+     for an embedded base64+CSS intro, of cache-busting an external gif src.
+     100% self-contained; does NOT touch the original WGI code above. -->
+<script>
+(function () {
+  'use strict';
+  try {
+    var _ov0 = document.getElementById('wgi-overlay');
+    if (!_ov0) return; /* intro disabled or already gone - nothing to replay */
+    /* Captured AFTER the intro script above ran, so the photo src is already set. */
+    var WGI_TPL = _ov0.outerHTML;
+    window.addEventListener('pageshow', function (ev) {
+      try {
+        if (!ev || !ev.persisted) return;                    /* only BFCache/app-resume restores */
+        if (document.getElementById('wgi-overlay')) return;  /* still mid-play - leave it alone */
+        document.body.insertAdjacentHTML('afterbegin', WGI_TPL);
+        var ov = document.getElementById('wgi-overlay');
+        if (!ov) return;
+        var kill = function () {
+          try { if (ov && ov.parentNode) { ov.parentNode.removeChild(ov); } ov = null; } catch (e) {}
+        };
+        ov.addEventListener('click', kill, { passive: true, once: true });
+        ov.addEventListener('touchstart', kill, { passive: true, once: true });
+        setTimeout(kill, 3700); /* same ~3.7s lifetime as the original intro */
+      } catch (e) {
+        try {
+          var _o = document.getElementById('wgi-overlay');
+          if (_o && _o.parentNode) { _o.parentNode.removeChild(_o); }
+        } catch (e2) {}
+      }
+    });
+  } catch (e) {}
+})();
+</script>
 
 </body>
 </html>
