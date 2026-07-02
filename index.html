@@ -437,9 +437,7 @@ p,li,.expl-text,.lnk .t,.stp .lbl{font-size:1.04em;}
           </div>
           <iframe id="portalDashIframe" src="about:blank" style="width:100%;height:520px;border:1px solid var(--line);border-radius:10px;background:#fff;" title="לוח אישי"></iframe>
         </div>
-        <div style="text-align:center;margin-top:10px;">
-          <button style="padding:6px 20px;background:#e8dcc8;border:1.5px solid var(--line);border-radius:20px;font-family:inherit;font-size:.88em;cursor:pointer;color:var(--olive-d);" onclick="window._portalReset&&window._portalReset()">&#128260; הרשמה מחדש (מחק נתונים)</button>
-        </div>
+        <!-- POLISH 2026-07-02: the reset/logout button (“הרשמה מחדש - מחק נתונים”) was REMOVED - organisers stay permanently logged in; there is no self-serve state-clear. -->
       </div>
       <div id="regIframeSection">
         <div class="reg-iframe-wrap">
@@ -614,7 +612,7 @@ window.DASH_DATA = {};
   var OWNER_SID='baa34f647c10'; /* B3: super-admin combined view is OWNER-SID-gated (no master token in client) */
   function portalSave(rec){try{localStorage.setItem(PORTAL_KEY,JSON.stringify(rec));}catch(e){}}
   function portalLoad(){try{var s=localStorage.getItem(PORTAL_KEY);return s?JSON.parse(s):null;}catch(e){return null;}}
-  function portalClear(){try{localStorage.removeItem(PORTAL_KEY);}catch(e){}}
+  /* portalClear() removed 2026-07-02 together with the reset button - login is permanent. */
 
   /* LIVE personal-dashboard wiring (additive). Returns the organizer's real exec dashboard URL, or '' */
   function liveDashUrl(){
@@ -693,15 +691,7 @@ window.DASH_DATA = {};
     if(iframeSection)iframeSection.style.display='none';
   }
 
-  window._portalReset=function(){
-    portalClear();
-    window._activeMgr=null;
-    var banner=document.getElementById('portalBanner');
-    var iframeSection=document.getElementById('regIframeSection');
-    if(banner)banner.style.display='none';
-    if(iframeSection)iframeSection.style.display='';
-    if(typeof refreshP5Live==='function'){refreshP5Live();}
-  };
+  /* _portalReset() removed 2026-07-02 together with the reset button - login is permanent. */
 
   window._deckRegister=function(name,side,sid,dispLink,dashLink,token,phone){
     side=(side==='bride')?'bride':'groom';
