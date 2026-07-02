@@ -397,6 +397,10 @@ html[data-auth="out"] #page-share,html[data-auth="out"] #page-dash,html[data-aut
 .page-nav button{flex:1;min-height:68px;font-size:1.3em;font-weight:800;border:none;border-radius:16px;cursor:pointer;font-family:inherit;}
 .page-nav .pn-next{background:linear-gradient(180deg,var(--olive),var(--olive-d));color:#fff;box-shadow:0 10px 24px -8px rgba(75,100,64,.55);}
 .page-nav .pn-back{background:#efe7d8;color:var(--ink);flex:0 0 32%;}
+/* [G5] compact mini nav for dash / combined pages */
+.page-nav-mini{display:flex;justify-content:flex-start;gap:10px;width:100%;max-width:1000px;margin:8px auto;}
+.pn-mini{min-height:44px;padding:6px 16px;border:none;border-radius:10px;background:#efe7d8;color:var(--ink);font-weight:700;font-size:1em;cursor:pointer;font-family:inherit;}
+html:fullscreen #portalDashIframe,html:fullscreen #portalCombinedIframe{height:86vh;}
 </style>
 <style id="demo-sim-css">
 /* ===== [UXFIX-A3-F3] demo simulation: exact visual clone of the real guest form (CSS scoped to #demoSection) ===== */
@@ -425,24 +429,15 @@ html[data-auth="out"] #page-share,html[data-auth="out"] #page-dash,html[data-aut
 #demoSection #dsim-submit-btn{display:block;width:100%;min-height:56px;padding:14px 20px;margin-top:8px;font-size:1.2rem;font-weight:700;font-family:'Frank Ruhl Libre',serif;letter-spacing:.02em;background:linear-gradient(180deg,var(--gold-soft),var(--gold));color:#fff;border:none;border-radius:12px;cursor:pointer;box-shadow:0 10px 24px rgba(169,128,47,.34);transition:filter .15s;}
 #demoSection #dsim-submit-btn:hover{filter:brightness(1.05);}
 </style>
-<style id="dash-pages-css">
-/* ===== [SPA-PAGES F3] rotate overlay (dashboard pages only) ===== */
-#rotateOverlay{position:fixed;inset:0;z-index:930;background:rgba(40,30,18,.74);display:none;align-items:center;justify-content:center;padding:20px;}
-#rotateOverlay .ro-card{background:#fffdf8;border-radius:18px;padding:28px 24px;max-width:420px;text-align:center;box-shadow:0 18px 48px rgba(0,0,0,.35);}
-#rotateOverlay .ro-msg{font-size:1.3em;font-weight:800;color:var(--ink);margin:10px 0 16px;line-height:1.5;}
-#rotateOverlay button{min-height:56px;padding:10px 26px;border:none;border-radius:12px;background:var(--olive);color:#fff;font-weight:800;font-size:1.1em;cursor:pointer;font-family:inherit;}
-/* ===== [UXFIX-A2-F4] CSS-first instant rotate enforcer: phones only, dashboard pages only, until dismissed ===== */
-@media screen and (orientation: portrait) and (max-width: 820px){
-  html.on-dash-page:not(.rotate-ok) #rotateOverlay{display:flex !important;}
-  html.on-dash-page:not(.rotate-ok) #portalPersonalDash,
-  html.on-dash-page:not(.rotate-ok) #combinedPageBody{display:none !important;}
-}
-@media screen and (orientation: landscape){
-  #rotateOverlay{display:none !important;}
-  html.on-dash-page #portalPersonalDash,
-  html.on-dash-page #combinedPageBody{display:block !important;}
-}
+<style id="g4-tabs-css">
+/* [G4-TABS] elderly-friendly tab bar + full-width share buttons */
+.share-tabs{display:flex;gap:12px;width:100%;max-width:1000px;margin:0 auto 18px;}
+.share-tab{flex:1 1 0;min-height:64px;padding:10px;font-size:1.25em;font-weight:800;font-family:inherit;border:2px solid var(--line);border-radius:16px;background:#efe7d8;color:var(--muted);cursor:pointer;line-height:1.3;}
+.share-tab.active{background:linear-gradient(180deg,var(--olive),var(--olive-d));color:#fff;border-color:var(--olive-d);box-shadow:0 8px 18px -6px rgba(75,100,64,.5);cursor:default;}
+#portalBanner .share{flex-direction:column;flex-wrap:nowrap;gap:12px;}
+#portalBanner .share button{width:100%;flex:none;min-height:60px;font-size:1.15em;}
 </style>
+<!-- [G5] rotate-overlay enforcer removed - portrait cards are now the default dashboard view -->
 <style id="notif-css">
 /* ===== [SPA-PAGES F4] toasts + settings modal ===== */
 #toastWrap{position:fixed;bottom:24px;left:0;right:0;z-index:940;display:flex;flex-direction:column;align-items:center;gap:10px;pointer-events:none;}
@@ -477,13 +472,6 @@ html[data-auth="out"] #page-share,html[data-auth="out"] #page-dash,html[data-aut
     <button id="hdrLogoutBtn" type="button">התנתקות</button>
   </div>
 </header>
-<div id="rotateOverlay" style="display:none;">
-  <div class="ro-card">
-    <div style="font-size:2.6em;">🔄</div>
-    <div class="ro-msg">לצפייה נוחה בלוח, סובבו את הטלפון לרוחב</div>
-    <button type="button" onclick="rotateOverlayDismiss()">המשך במסך זה</button>
-  </div>
-</div>
 <div id="toastWrap" dir="rtl"></div>
 <div id="settingsOverlay" dir="rtl">
   <div class="set-card">
@@ -491,6 +479,7 @@ html[data-auth="out"] #page-share,html[data-auth="out"] #page-dash,html[data-aut
     <label class="set-row"><input type="checkbox" id="prefLive" checked><span>קבל התראות חיות</span></label>
     <!-- [UXFIX-A3-F3] demo-notifications pref -->
     <label class="set-row"><input type="checkbox" id="prefDemo" checked><span>קבל התראות דמה</span></label>
+    <div id="notifPermHint" style="display:none;font-size:.95em;font-weight:600;color:#8a6d3b;line-height:1.5;margin:-6px 0 12px;"></div>
     <div id="prefScopeWrap" style="display:none;border-top:1px solid var(--line);padding-top:12px;">
       <label class="set-row"><input type="radio" name="prefScope" id="prefScopeSide" value="side"><span>התראות על כל מוזמני הצד שלי</span></label>
       <label class="set-row"><input type="radio" name="prefScope" id="prefScopeMine" value="mine"><span>התראות רק על אורחים שהזמנתי אישית</span></label>
@@ -531,7 +520,7 @@ html[data-auth="out"] #page-share,html[data-auth="out"] #page-dash,html[data-aut
     <div class="cap">לכניסה למערכת אישורי ההגעה, אנא הזינו את פרטיכם מטה.</div>
     <div id="regIframeSection">
       <div class="reg-iframe-wrap">
-        <h3>כניסה / הרשמה</h3>
+        <h3>הרשמה / כניסה</h3>
         <iframe id="regFrame" src="https://script.google.com/macros/s/AKfycbyMjAOKf5l_5hzeLy4DAEBanw9ZO3n3_S7TVXACYRrCQh_QeTNuuqqSUSm6bl59mRVM_A/exec?mode=register" style="border:none;width:100%;min-height:720px;display:block" title="הרשמת מארגן"></iframe>
       </div>
       <div id="regres" style="display:none;margin-top:16px;"></div>
@@ -541,9 +530,12 @@ html[data-auth="out"] #page-share,html[data-auth="out"] #page-dash,html[data-aut
 <!-- PHASE2 PAGE 1: share + demo -->
 <section class="slide" id="page-share" data-title="מסך שיתוף והדגמה">
   <div class="page-inner">
-    <h2 class="page-h">מסך שיתוף והדגמה</h2>
-    <!-- [UXFIX-A2-F2] page-nav moved below title -->
-    <div class="page-nav"><button class="pn-back" id="pnBack1" onclick="pageBack()">חזור</button><button class="pn-next" id="pnNext1" onclick="tryFullscreenLandscape();pageNext()"></button></div>
+    <!-- [G4-TABS] two-tab split: share / guest-demo. Pure DOM toggle - NEVER touches the page router -->
+    <div class="share-tabs" id="shareTabs" role="tablist">
+      <button type="button" class="share-tab active" id="shareTabBtn1" role="tab" aria-selected="true" onclick="shareTabSel(1)">&#128228; שיתוף הזמנה</button>
+      <button type="button" class="share-tab" id="shareTabBtn2" role="tab" aria-selected="false" onclick="shareTabSel(2)">&#128064; הדגמת אורח</button>
+    </div>
+    <div id="shareTabPane1" role="tabpanel">
     <div id="portalBanner" style="display:none;background:linear-gradient(135deg,#f5f0e8,#fffdf7);border:2px solid var(--gold);border-radius:16px;padding:18px 20px;margin-bottom:16px;font-family:'Frank Ruhl Libre',serif;">
       <div style="font-size:1.15em;font-weight:700;color:var(--olive-d);margin-bottom:10px;text-align:center;">&#127775; הפורטל האישי שלך</div>
       <div id="portalName" style="text-align:center;font-size:1em;color:var(--ink);margin-bottom:12px;"></div>
@@ -559,6 +551,8 @@ html[data-auth="out"] #page-share,html[data-auth="out"] #page-dash,html[data-aut
         </div>
       </div>
     </div>
+    </div>
+    <div id="shareTabPane2" role="tabpanel" style="display:none">
     <div id="demoSection">
       <div class="lnk" style="margin-top:18px;">
         <h3 class="page-h" style="font-size:1.35em;">כך זה נראה לאורחים שלכם</h3>
@@ -599,14 +593,17 @@ html[data-auth="out"] #page-share,html[data-auth="out"] #page-dash,html[data-aut
         <div id="demoOut"></div>
       </div>
     </div>
+    </div>
+    <!-- [G4-TABS] page-nav moved BELOW both panes (renders under the share card in tab 1; reachable from tab 2) -->
+    <div class="page-nav"><button class="pn-back" id="pnBack1" onclick="pageBack()">חזור</button><button class="pn-next" id="pnNext1" onclick="pageNext()"></button></div>
   </div>
 </section>
 <!-- PHASE2 PAGE 2: dashboard (role-titled) -->
 <section class="slide" id="page-dash" data-title="לוח בקרה">
   <div class="page-inner">
     <h2 class="page-h" id="pageDashTitle">לוח בקרה</h2>
-    <!-- [UXFIX-A2-F2] page-nav moved below title -->
-    <div class="page-nav"><button class="pn-back" id="pnBack2" onclick="pageBack()">חזור</button><button class="pn-next" id="pnNext2" onclick="pageNext()"></button></div>
+    <!-- [G5] compact dash nav: back-to-share + super-only route to page-combined -->
+    <div class="page-nav-mini"><button type="button" class="pn-mini" onclick="showPage('page-share')">⬅️ חזור למסך השיתוף</button><button type="button" class="pn-mini" id="pnCombinedGo" onclick="showPage('page-combined')" style="display:none">ללוח המשולב ➡️</button></div>
     <div id="portalPersonalDash" style="margin-top:8px;">
       <div style="font-weight:700;color:var(--olive-d);margin-bottom:6px;font-size:.9em;">&#128200; הלוח האישי שלך (חי):</div>
       <iframe id="portalDashIframe" src="about:blank" style="width:100%;height:68vh;min-height:480px;border:1px solid var(--line);border-radius:10px;background:#fff;" title="לוח אישי"></iframe>
@@ -617,8 +614,8 @@ html[data-auth="out"] #page-share,html[data-auth="out"] #page-dash,html[data-aut
 <section class="slide" id="page-combined" data-title="דשבורד משולב">
   <div class="page-inner">
     <h2 class="page-h">דשבורד משולב</h2>
-    <!-- [UXFIX-A2-F2] page-nav moved below title -->
-    <div class="page-nav"><button class="pn-back" id="pnBack3" onclick="pageBack()">חזור</button><button class="pn-next" id="pnNext3" onclick="pageNext()" style="display:none"></button></div>
+    <!-- [G5] compact combined nav: back to dashboard -->
+    <div class="page-nav-mini"><button type="button" class="pn-mini" onclick="showPage('page-dash')">⬅️ חזור ללוח הבקרה</button></div>
     <div id="combinedPageBody"><iframe id="portalCombinedIframe" src="about:blank" style="width:100%;height:68vh;min-height:480px;border:1px solid var(--line);border-radius:10px;background:#fff;" title="דשבורד משולב"></iframe></div>
   </div>
 </section>
@@ -1267,6 +1264,7 @@ window.DASH_DATA = {};
       back.style.display=(idx>0)?'':'none';back.textContent=lbl.back||'חזור';
       if(idx<seq.length-1){next.style.display='';next.textContent=lbl.next||('הבא: '+seq[idx+1].title);}else{next.style.display='none';}
     });
+    var cg=document.getElementById('pnCombinedGo');if(cg){cg.style.display=(window.portalRole()==='super')?'':'none';}/* [G5] super-only route to page-combined */
   }
   window.showPage=function(id){
     var seq=pageSeq();
@@ -1300,6 +1298,14 @@ window.DASH_DATA = {};
   /* ===== [SPA-PAGES F1] END ===== */
   /* ===== [SPA-PAGES F2] PAGE1 DEMO SIMULATION (client-only, nothing is saved) ===== */
   var demoRows=[]; var demoAtt=true;
+  /* [G4-TABS] tab toggle - DOM only; router (showPage/_curPage/sessionStorage) is never touched */
+  window.shareTabSel=function(n){var two=(n===2);
+    var p1=document.getElementById('shareTabPane1'),p2=document.getElementById('shareTabPane2');
+    var b1=document.getElementById('shareTabBtn1'),b2=document.getElementById('shareTabBtn2');
+    if(p1)p1.style.display=two?'none':'';if(p2)p2.style.display=two?'':'none';
+    if(b1){b1.classList.toggle('active',!two);b1.setAttribute('aria-selected',String(!two));}
+    if(b2){b2.classList.toggle('active',two);b2.setAttribute('aria-selected',String(two));}
+    var pe=document.getElementById('page-share');if(pe)pe.scrollTop=0;};
   /* [UXFIX-A3-F3] guest-form clone controls (dsim- ids, mirrors the real rsvp_guest.html behavior) */
   window.demoSel=function(yes){demoAtt=yes;
     var y=document.getElementById('dsim-btn-yes'),n=document.getElementById('dsim-btn-no');
@@ -1337,7 +1343,11 @@ window.DASH_DATA = {};
     try{
       var role=(typeof window.portalRole==='function'&&window.portalRole())||'regular';
       var p=getNotifPrefs(role);
-      if(demoAtt&&p.demo!==false){showDemoToast({guest_name:nm,men_count:men,women_count:women,blessing:bl});}
+      if(demoAtt&&p.demo!==false){
+        showDemoToast({guest_name:nm,men_count:men,women_count:women,blessing:bl});
+        /* [G3-NOTIF] demo OS notification, in addition to the toast, so the user sees the real thing (fires even when visible: that IS the demo) */
+        notifyNative('[התראת הדגמה] אורח מדומה אישר! '+nm,(men||0)+' גברים / '+(women||0)+' נשים'+(bl?(' | ברכה: '+bl):''),'wrsvp-demo-'+Date.now(),'page-share');
+      }
     }catch(e){}
   };
   function renderDemoOut(){
@@ -1359,33 +1369,21 @@ window.DASH_DATA = {};
   function loadDashIframe(force){var f=document.getElementById('portalDashIframe');if(!f)return;var u=dashUrl('dashboard');if(!u)return;if(force||f.getAttribute('src')!==u){f.src=u;}}
   function loadCombinedIframe(force){var rec=portalLoad();if(!rec||rec.sid!==OWNER_SID)return;/* GILI + admins never load combined */var f=document.getElementById('portalCombinedIframe');if(!f)return;var u=dashUrl('combined');if(!u)return;if(force||f.getAttribute('src')!==u){f.src=u;}}
   window._reloadDashIframes=function(){loadDashIframe(true);loadCombinedIframe(true);};
-  function updateRotateOverlay(pg){
-    pg=pg||(typeof window.currentPage==='function'?window.currentPage():'');
-    var ov=document.getElementById('rotateOverlay');if(!ov)return;
-    var isDash=(pg==='page-dash'||pg==='page-combined');
-    var portrait=false;try{portrait=window.matchMedia('(orientation: portrait)').matches&&window.matchMedia('(max-width: 820px)').matches;}catch(e){}
-    var dismissed=false;try{dismissed=sessionStorage.getItem('wrsvpRotateOk')==='1';}catch(e){}
-    ov.style.display=(isDash&&portrait&&!dismissed)?'flex':'none';
-  }
-  window.rotateOverlayDismiss=function(){try{sessionStorage.setItem('wrsvpRotateOk','1');}catch(e){}document.documentElement.classList.add('rotate-ok');/* [UXFIX-A2-F4] */updateRotateOverlay();};
+  /* [G2] change-triggered refresh: notify the loaded personal iframe (in-place refreshBoard) + reload the owner's combined view. '*' targetOrigin: GAS renders from an unpredictable script.googleusercontent.com origin; payload carries no secrets (same convention as the wedding-goto-share bridge). */
+  function _notifyIframesOfChange(){try{var f=document.getElementById('portalDashIframe');if(f&&f.contentWindow&&f.getAttribute('src')!=='about:blank'){f.contentWindow.postMessage({type:'wedding-refresh'},'*');}}catch(e){} try{loadCombinedIframe(true);}catch(e){}}
   document.addEventListener('wrsvp:page',function(ev){
     var pg=ev&&ev.detail&&ev.detail.page;
     if(pg==='page-dash'){loadDashIframe(false);}
     if(pg==='page-combined'){loadCombinedIframe(false);}
-    updateRotateOverlay(pg);
+    if(pg==='page-dash'||pg==='page-combined'){try{pollOnce();}catch(e){}} /* [G2] instant catch-up on navigation */
   });
-  try{window.addEventListener('resize',function(){updateRotateOverlay();},{passive:true});}catch(e){window.addEventListener('resize',function(){updateRotateOverlay();});}
-  try{window.addEventListener('orientationchange',function(){updateRotateOverlay();});}catch(e){}
-  /* D1 bridge: the GAS dashboard action row posts this to navigate the SPA to Page 1 */
-  window.addEventListener('message',function(e){if(e&&e.data&&e.data.type==='wedding-goto-share'){try{window.showPage('page-share');}catch(err){}}});
-  /* [UXFIX-A2-F4] restore the CSS dismiss class from sessionStorage on load */
-  try{if(sessionStorage.getItem('wrsvpRotateOk')==='1')document.documentElement.classList.add('rotate-ok');}catch(e){}
-  updateRotateOverlay();
+  /* [G5] bridge: the GAS dashboard action row posts to navigate the SPA (goto-share) or request fullscreen (goto-fullscreen) */
+  window.addEventListener('message',function(e){if(!e||!e.data)return;if(e.data.type==='wedding-goto-share'){try{window.showPage('page-share');if(window.shareTabSel)window.shareTabSel(1);}catch(err){}}if(e.data.type==='wedding-goto-fullscreen'){try{window.tryFullscreenLandscape();}catch(err){}}});
   /* boot-case: F1's bootPages() fired 'wrsvp:page' BEFORE this module existed, so cover the missed initial page */
   (function(){var pg=(typeof window.currentPage==='function')?window.currentPage():'';if(pg==='page-dash'){loadDashIframe(false);}if(pg==='page-combined'){loadCombinedIframe(false);}})();
   /* ===== [SPA-PAGES F3] END ===== */
   /* ===== [SPA-PAGES F4] REALTIME POLLING + TOASTS + SETTINGS ===== */
-  var PREFS_KEY='wrsvpNotifPrefs_v1'; var POLL_MS=30000;
+  var PREFS_KEY='wrsvpNotifPrefs_v1'; var POLL_MS=5000; var _pollBusy=false;
   function getNotifPrefs(role){
     var p=null;try{p=JSON.parse(localStorage.getItem(PREFS_KEY)||'null');}catch(e){}
     if(!p||typeof p!=='object'){p={};}
@@ -1396,6 +1394,55 @@ window.DASH_DATA = {};
     return p;
   }
   function saveNotifPrefs(p){try{localStorage.setItem(PREFS_KEY,JSON.stringify(p));}catch(e){}}
+  /* ===== [G3-NOTIF] OS notifications: helper + permission flow (local-only, no push server) ===== */
+  function notifSupported(){return ('Notification' in window)&&('serviceWorker' in navigator);}
+  function notifGranted(){return notifSupported()&&Notification.permission==='granted';}
+  function isStandalone(){try{return window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone===true;}catch(e){return false;}}
+  /* Android Chrome: new Notification() THROWS in page context -> ALWAYS reg.showNotification() */
+  function notifyNative(title,body,tag,page){
+    if(!notifGranted())return false;
+    try{
+      navigator.serviceWorker.ready.then(function(reg){
+        return reg.showNotification(String(title||''),{
+          body:String(body||''),tag:String(tag||'wrsvp'),
+          icon:'icons/icon-192.png',badge:'icons/icon-192.png',
+          dir:'rtl',lang:'he',data:{page:page||'page-dash'}
+        });
+      }).catch(function(){});
+    }catch(e){return false;}
+    return true;
+  }
+  function updateNotifHint(){
+    var el=document.getElementById('notifPermHint');if(!el)return;
+    var msg='';
+    if(!notifSupported()){
+      msg=isStandalone()?'הדפדפן לא תומך בהתראות מערכת — יוצגו חלוניות בתוך האפליקציה בלבד.'
+        :'להתראות מערכת ב-iPhone: התקינו את האפליקציה למסך הבית (שיתוף ← הוסף למסך הבית). בינתיים יוצגו חלוניות בתוך האפליקציה.';
+    }else if(Notification.permission==='granted'){msg='✓ התראות מערכת פעילות — יופיעו גם כשהאפליקציה ברקע.';}
+    else if(Notification.permission==='denied'){msg='התראות המערכת חסומות בדפדפן. אפשרו התראות לאתר בהגדרות הדפדפן; בינתיים יוצגו חלוניות בתוך האפליקציה.';}
+    else{msg='בהפעלת התראות הדפדפן יבקש אישור חד-פעמי.';}
+    el.textContent=msg;el.style.display=msg?'':'none';
+  }
+  /* request ONLY from the toggle gesture; never on load */
+  function maybeRequestNotifPermission(){
+    if(!notifSupported()||Notification.permission!=='default')return updateNotifHint();
+    try{
+      Notification.requestPermission().then(function(res){
+        updateNotifHint();
+        if(res==='granted'){notifyNative('התראות הופעלו ✓','מעכשיו תקבלו התראה כשאורח מאשר הגעה.','wrsvp-perm-ok','page-dash');}
+      }).catch(function(){updateNotifHint();});
+    }catch(e){updateNotifHint();}
+  }
+  /* SW-notification tap -> same behavior as tapping the green toast */
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.addEventListener('message',function(e){
+      if(e&&e.data&&e.data.type==='wrsvp-notification-click'){
+        try{if(typeof window._reloadDashIframes==='function')window._reloadDashIframes();}catch(err){}
+        try{window.showPage(e.data.page||'page-dash');}catch(err){}
+      }
+    });
+  }
+  /* ===== [G3-NOTIF] END ===== */
   /* settings modal */
   (function(){
     var gear=document.getElementById('hdrSettingsBtn');var ov=document.getElementById('settingsOverlay');
@@ -1407,6 +1454,7 @@ window.DASH_DATA = {};
       var wrap=document.getElementById('prefScopeWrap');if(wrap)wrap.style.display=(role==='admin'||role==='super')?'':'none';
       var rs=document.getElementById('prefScopeSide'),rm=document.getElementById('prefScopeMine');
       if(rs)rs.checked=(p.scope!=='mine');if(rm)rm.checked=(p.scope==='mine');
+      updateNotifHint(); /* [G3-NOTIF] */
       ov.classList.add('open');
     };}
     function persist(){
@@ -1418,7 +1466,7 @@ window.DASH_DATA = {};
       if(role==='regular')p.scope='mine';
       saveNotifPrefs(p);
     }
-    ['prefLive','prefDemo','prefScopeSide','prefScopeMine'].forEach(function(id){var el=document.getElementById(id);if(el)el.addEventListener('change',persist);}); /* [UXFIX-A3-F3] prefDemo added */
+    ['prefLive','prefDemo','prefScopeSide','prefScopeMine'].forEach(function(id){var el=document.getElementById(id);if(el)el.addEventListener('change',function(){persist();if((id==='prefLive'||id==='prefDemo')&&el.checked){maybeRequestNotifPermission();}});}); /* [UXFIX-A3-F3] prefDemo added; [G3-NOTIF] permission on first enable */
     var cb=document.getElementById('settingsCloseBtn');if(cb)cb.onclick=function(){if(ov)ov.classList.remove('open');};
     if(ov)ov.addEventListener('click',function(e){if(e.target===ov)ov.classList.remove('open');});
   })();
@@ -1443,16 +1491,26 @@ window.DASH_DATA = {};
     var rec=portalLoad();var role=(typeof window.portalRole==='function')?window.portalRole(rec):null;
     if(!role||!rec||!rec.token)return;               /* logged-in only */
     var p=getNotifPrefs(role);if(!p.enabled)return;  /* toggle1 off => no polling */
-    if(document.hidden)return;                       /* save quota in background */
+    if(document.hidden&&!notifGranted())return;      /* [G3-NOTIF] keep polling in background ONLY when OS notifications can fire */
+    if(_pollBusy)return;                             /* [G2] in-flight guard: never stack requests on slow links */
     var scope=(role==='regular')?'mine':((p.scope==='mine')?'mine':'side');
     var url=EXEC_URL+'?mode=check_updates&token='+encodeURIComponent(rec.token)+'&phone='+encodeURIComponent(rec.phone||'')+'&scope='+scope+'&since='+_pollSince()+'&_='+Date.now();
+    _pollBusy=true;
     fetch(url).then(function(r){return r.json();}).then(function(d){
+      _pollBusy=false;
       if(!d||!d.ok)return;
       try{localStorage.setItem('wrsvpPollSince',String(d.now||Date.now()));}catch(e){}
-      (d.guests||[]).filter(function(g){return g&&g.attending===true;}).slice(0,3).forEach(showGuestToast);
-    }).catch(function(){});
+      if(d.guests&&d.guests.length){try{_notifyIframesOfChange();}catch(e){}} /* [G2] refresh iframes on ANY new guest (attending true OR false) */
+      (d.guests||[]).filter(function(g){return g&&g.attending===true;}).slice(0,3).forEach(function(g){ /* [G3-NOTIF] visible=toast, hidden=OS notification (unique tag per guest ts => stacked banners) */
+        if(document.hidden&&notifGranted()){
+          var b=(g.men_count||0)+' גברים / '+(g.women_count||0)+' נשים'+(g.blessing?(' | ברכה: '+String(g.blessing)):'');
+          notifyNative('אורח חדש אישר! '+String(g.guest_name||''),b,'wrsvp-live-'+(g.ts||Date.now()),'page-dash');
+        }else{showGuestToast(g);}
+      });
+    }).catch(function(){_pollBusy=false;});
   }
   setInterval(pollOnce,POLL_MS);
+  document.addEventListener('visibilitychange',function(){if(!document.hidden)pollOnce();}); /* [G2] instant catch-up when the app returns to foreground */
   /* ===== [SPA-PAGES F4] END ===== */
 })();
 </script>
