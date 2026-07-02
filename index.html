@@ -431,7 +431,10 @@ html:fullscreen #portalDashIframe,html:fullscreen #portalCombinedIframe{height:8
 </style>
 <style id="g4-tabs-css">
 /* [G4-TABS] elderly-friendly tab bar + full-width share buttons */
-.share-tabs{display:flex;gap:12px;width:100%;max-width:1000px;margin:0 auto 18px;}
+.share-tabs{display:flex;gap:12px;width:100%;max-width:1000px;margin:0 auto 14px;}
+/* [G6-FIX2] page-share only: pull the tab bar + share card up (scoped, never global .slide) */
+#page-share{padding-top:12px;}
+html[data-auth="in"] #page-share{padding-top:10px;}
 .share-tab{flex:1 1 0;min-height:64px;padding:10px;font-size:1.25em;font-weight:800;font-family:inherit;border:2px solid var(--line);border-radius:16px;background:#efe7d8;color:var(--muted);cursor:pointer;line-height:1.3;}
 .share-tab.active{background:linear-gradient(180deg,var(--olive),var(--olive-d));color:#fff;border-color:var(--olive-d);box-shadow:0 8px 18px -6px rgba(75,100,64,.5);cursor:default;}
 #portalBanner .share{flex-direction:column;flex-wrap:nowrap;gap:12px;}
@@ -499,8 +502,8 @@ html:fullscreen #portalDashIframe,html:fullscreen #portalCombinedIframe{height:8
     <h3>שלום! איך מוסיפים הערות</h3>
     <ol>
       <li>עוברים בין השקופיות עם החיצים שלמטה (או במקלדת &#8592; &#8594;).</li>
-      <li>בכל מקום שתרצי לשנות משהו &#8212; לוחצים על כפתור <b>“הוסף הערה &#9997;”</b> מימין למטה, כותבים, ולוחצים <b>שמירה</b>.</li>
-      <li>בסוף, לוחצים <b>“אסוף את כל ההערות &#128100;”</b> &#8212; יורד קובץ אחד עם כל מה שכתבת, ושולחים אותו אלינו.</li>
+      <li>בכל מקום שתרצי לשנות משהו - לוחצים על כפתור <b>“הוסף הערה &#9997;”</b> מימין למטה, כותבים, ולוחצים <b>שמירה</b>.</li>
+      <li>בסוף, לוחצים <b>“אסוף את כל ההערות &#128100;”</b> - יורד קובץ אחד עם כל מה שכתבת, ושולחים אותו אלינו.</li>
     </ol>
     <button onclick="document.getElementById('help').classList.add('hide')">הבנתי, אפשר להתחיל &#10003;</button>
   </div>
@@ -540,12 +543,12 @@ html:fullscreen #portalDashIframe,html:fullscreen #portalCombinedIframe{height:8
       <div style="font-size:1.15em;font-weight:700;color:var(--olive-d);margin-bottom:10px;text-align:center;">&#127775; הפורטל האישי שלך</div>
       <div id="portalName" style="text-align:center;font-size:1em;color:var(--ink);margin-bottom:12px;"></div>
       <div class="lnk" style="margin-bottom:12px;">
-        <div class="t">&#128228; קישור-הפצה &#8212; לשלוח לאורחים</div>
+        <div class="t" style="white-space:nowrap;text-align:center;">&#128228; קישור-הפצה - לשלוח לאורחים</div>
         <div id="portalWaText" class="wa-text" style="white-space:pre-wrap;overflow-wrap:anywhere;font-size:.9em;color:var(--ink);background:#fff;border:1px dashed var(--line);border-radius:8px;padding:8px;margin:6px 0;"></div>
         <span id="portalDispLink" class="u" style="display:none;word-break:break-all;overflow-wrap:anywhere;margin-top:4px;"></span>
         <div class="share-steps" style="font-size:1em;font-weight:700;color:var(--olive-d);margin:8px 0 6px;line-height:1.7;">1. להעתיק את ההודעה &nbsp; 2. לשלוח בוואטסאפ &nbsp; 3. לשלוח במייל</div>
         <div class="share">
-          <button class="cp" id="cpPortalDisp" onclick="doCopy('cpPortalDisp', window._portalWaText||'')">&#128203; העתקה</button>
+          <button class="cp" id="cpPortalDisp" onclick="doCopy('cpPortalDisp', window._portalWaText||'')" style="white-space:nowrap;">קישור - הפצה</button>
           <button class="wa-btn" id="cpPortalWa" onclick="if(window._portalWaUrl)window.open(window._portalWaUrl,'_blank')">שיתוף בוואטסאפ</button>
           <button class="em-btn" id="cpPortalEm" onclick="if(window._portalEmUrl){var a=document.createElement('a');a.href=window._portalEmUrl;a.style.display='none';document.body.appendChild(a);a.click();a.remove();}">שיתוף במייל</button>
         </div>
@@ -870,7 +873,7 @@ window.DASH_DATA = {};
     var e=pErs[idx];
     if(!e){pB.innerHTML='<p class="empty">אין נתונים</p>';return;}
     var d=e.data||{};
-    pB.innerHTML='<div class="dash"><div class="dash-h">לוח אישי &#8212; '+esc(d.senderName||e.name)+'</div>'+banner(d.summary,'דרכך')+tbl5(d.rows,idx)+'</div>';
+    pB.innerHTML='<div class="dash"><div class="dash-h">לוח אישי - '+esc(d.senderName||e.name)+'</div>'+banner(d.summary,'דרכך')+tbl5(d.rows,idx)+'</div>';
     var bs=document.querySelectorAll('#pPick button');
     for(var k=0;k<bs.length;k++)bs[k].classList.toggle('sel',k===idx);
   }
@@ -907,7 +910,7 @@ window.DASH_DATA = {};
     var bd=(state.personal||[]).filter(function(p){return p.side===sideKey;});
     for(var i=0;i<bd.length;i++){var o=bd[i];
       var oSum=o.data?o.data.summary:{};
-      h+='<div class="org"><div class="org-h">'+esc(o.name)+' &#8212; '+line(oSum)+'</div>'+tbl(o.data?o.data.rows:[])+'</div>';}
+      h+='<div class="org"><div class="org-h">'+esc(o.name)+' - '+line(oSum)+'</div>'+tbl(o.data?o.data.rows:[])+'</div>';}
     return h+'</div>';
   }
 
@@ -922,7 +925,7 @@ window.DASH_DATA = {};
     var el=document.getElementById('cBody');
     if(!el)return; /* SPA: demo combined slide removed */
     if(d.error){el.innerHTML='<p class="empty">'+esc(d.error)+'</p>';return;}
-    var h='<div class="dash"><div class="dash-h">לוח-על &#8212; שני הצדדים</div>'+banner(d.summary,'&#1505;&#1492;"&#1499;')+
+    var h='<div class="dash"><div class="dash-h">לוח-על - שני הצדדים</div>'+banner(d.summary,'&#1505;&#1492;"&#1499;')+
       '<div class="two-box">'+
       '<div class="box"><div class="box-h">צד החתן &#129333;</div>'+line(d.groomSummary)+'</div>'+
       '<div class="box"><div class="box-h">צד הכלה &#128112;</div>'+line(d.brideSummary)+'</div></div>';
@@ -972,7 +975,7 @@ window.DASH_DATA = {};
 
     // Distribution link block
     h+='<div class="lnk">';
-    h+='<div class="t">&#128228; קישור-הפצה &#8212; לשלוח לאורחים</div>';
+    h+='<div class="t">&#128228; קישור-הפצה - לשלוח לאורחים</div>';
     h+='<div class="wa-text">'+esc(waText)+'</div>';
     h+='<span class="u">'+esc(dispLink)+'</span>';
     h+='<div class="share">';
@@ -983,7 +986,7 @@ window.DASH_DATA = {};
 
     // Private dashboard link
     h+='<div class="lnk priv">';
-    h+='<div class="t">&#9888; פרטי &#8212; לא להעביר</div>';
+    h+='<div class="t">&#9888; פרטי - לא להעביר</div>';
     h+='<span class="u">'+esc(dashLink)+'</span>';
     h+='<div class="share">';
     h+='<button class="cp" id="cpDash" onclick="doCopy(\'cpDash\',\''+safeAttr(dashLink)+'\')">&#128203; העתקה</button>';
@@ -1034,7 +1037,7 @@ window.DASH_DATA = {};
     updateWaBubble(n, dispLink);
   };
 
-  /* B1.2: SPA demo rRecover removed — the unified register/login form is the only entry. */
+  /* B1.2: SPA demo rRecover removed - the unified register/login form is the only entry. */
 
   /* ===== SLIDE 4: GUEST FLOW ===== */
   var gAtt2=null, gMen2=1, gWomen2=0;
@@ -1245,8 +1248,11 @@ window.DASH_DATA = {};
   window.portalRole=function(rec){rec=rec||portalLoad();if(!rec||!rec.sid||!rec.token)return null;if(rec.sid===OWNER_SID)return 'super';return rec.isPrimary===true?'admin':'regular';};
   function pageSeq(){var role=window.portalRole();if(!role)return [];var seq=[{id:'page-share',title:'מסך שיתוף והדגמה'},{id:'page-dash',title:(role==='regular')?'לוח בקרה':'דשבורד הצד שלי'}];if(role==='super'){seq.push({id:'page-combined',title:'דשבורד משולב'});}return seq;}
   var _curPage='page-login';
+  var _navigatingFromPop=false; /* [FIX9] set true while a popstate-driven showPage runs so it does not push again */
   /* [INJECT-FS] seamless fullscreen + landscape on user gesture; orientation.lock only AFTER fullscreen resolves (Android requirement); every path silent-fails (iOS/Safari) so navigation proceeds normally */
   window.tryFullscreenLandscape = function(){ try { var el=document.documentElement; var rf = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen || el.msRequestFullscreen; if (rf) { var p = rf.call(el); if (p && p.catch) { p.then(function(){ try{ if(screen.orientation && screen.orientation.lock){ screen.orientation.lock('landscape').catch(function(){}); } }catch(e){} }).catch(function(){}); } else { try{ if(screen.orientation && screen.orientation.lock){ screen.orientation.lock('landscape').catch(function(){}); } }catch(e){} } } } catch(e){} };
+  /* [FIX6] leaving list view: exit fullscreen + release the landscape lock so the phone returns to portrait; every path silent-fails (iOS/Safari) so navigation proceeds normally */
+  window.tryExitFullscreenPortrait = function(){ try{ var ef = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen || document.msExitFullscreen; if(ef){ try{ ef.call(document); }catch(e){} } }catch(e){} try{ if(screen.orientation && screen.orientation.unlock){ screen.orientation.unlock(); } }catch(e){} };
   /* [UXFIX-A2-F2] ultra-descriptive per-page nav labels (seniors); pageSeq titles still drive headers/toasts */
   var PAGE_NAV_LABELS={
     'page-share':{next:'לרשימת המוזמנים שלי'},
@@ -1276,6 +1282,8 @@ window.DASH_DATA = {};
     try{sessionStorage.setItem('wrsvpLastPage',id);}catch(e){}
     var pe=document.getElementById(id);if(pe)pe.scrollTop=0;
     renderPageNav();
+    /* [FIX9] History API: push the internal page so a native edge-swipe-back walks internal views instead of exiting the app. Skip when driven by popstate (no re-push) and when it would duplicate the current state entry. */
+    if(!_navigatingFromPop){try{var _cs=(history.state&&history.state.wrsvpPage)||null;if(_cs!==id){history.pushState({wrsvpPage:id},'');}}catch(e){}}
     try{document.dispatchEvent(new CustomEvent('wrsvp:page',{detail:{page:id}}));}catch(e){}
   };
   window.currentPage=function(){return _curPage;};
@@ -1294,7 +1302,20 @@ window.DASH_DATA = {};
     try{localStorage.removeItem(PORTAL_KEY);localStorage.removeItem('wrsvpNotifPrefs_v1');localStorage.removeItem('wrsvpPollSince');sessionStorage.removeItem('wrsvpLastPage');}catch(e){}
     location.reload();
   };}})();
+  /* [FIX9] boot: suppress the push during the very first navigation, then replaceState the initial page so the first history entry carries state (no stray extra entry) */
+  _navigatingFromPop=true;
   window.bootPages();
+  _navigatingFromPop=false;
+  try{history.replaceState({wrsvpPage:_curPage},'');}catch(e){}
+  /* [FIX9] native edge-swipe-back / browser Back: route BETWEEN internal views instead of leaving the app. Reads the page from history state (falls back to sessionStorage last page) and re-shows it WITHOUT pushing again. */
+  window.addEventListener('popstate',function(ev){
+    var pg=(ev&&ev.state&&ev.state.wrsvpPage)||'';
+    if(!pg){try{pg=sessionStorage.getItem('wrsvpLastPage')||'';}catch(e){}}
+    if(!pg)return;
+    _navigatingFromPop=true;
+    try{window.showPage(pg);}catch(e){}
+    _navigatingFromPop=false;
+  });
   /* ===== [SPA-PAGES F1] END ===== */
   /* ===== [SPA-PAGES F2] PAGE1 DEMO SIMULATION (client-only, nothing is saved) ===== */
   var demoRows=[]; var demoAtt=true;
@@ -1378,12 +1399,12 @@ window.DASH_DATA = {};
     if(pg==='page-dash'||pg==='page-combined'){try{pollOnce();}catch(e){}} /* [G2] instant catch-up on navigation */
   });
   /* [G5] bridge: the GAS dashboard action row posts to navigate the SPA (goto-share) or request fullscreen (goto-fullscreen) */
-  window.addEventListener('message',function(e){if(!e||!e.data)return;if(e.data.type==='wedding-goto-share'){try{window.showPage('page-share');if(window.shareTabSel)window.shareTabSel(1);}catch(err){}}if(e.data.type==='wedding-goto-fullscreen'){try{window.tryFullscreenLandscape();}catch(err){}}});
+  window.addEventListener('message',function(e){if(!e||!e.data)return;if(e.data.type==='wedding-goto-share'){try{window.showPage('page-share');if(window.shareTabSel)window.shareTabSel(1);}catch(err){}}if(e.data.type==='wedding-goto-fullscreen'){try{window.tryFullscreenLandscape();}catch(err){}}if(e.data.type==='wedding-exit-fullscreen'){try{window.tryExitFullscreenPortrait();}catch(err){}}});/* [FIX6] back-to-cards -> exit fullscreen + release orientation lock */
   /* boot-case: F1's bootPages() fired 'wrsvp:page' BEFORE this module existed, so cover the missed initial page */
   (function(){var pg=(typeof window.currentPage==='function')?window.currentPage():'';if(pg==='page-dash'){loadDashIframe(false);}if(pg==='page-combined'){loadCombinedIframe(false);}})();
   /* ===== [SPA-PAGES F3] END ===== */
   /* ===== [SPA-PAGES F4] REALTIME POLLING + TOASTS + SETTINGS ===== */
-  var PREFS_KEY='wrsvpNotifPrefs_v1'; var POLL_MS=5000; var _pollBusy=false;
+  var PREFS_KEY='wrsvpNotifPrefs_v1'; var POLL_MS=5000; var _pollBusy=false; var _lastSig=null; /* [FIX8] additive sig: refresh dashboard on any add OR edit */
   function getNotifPrefs(role){
     var p=null;try{p=JSON.parse(localStorage.getItem(PREFS_KEY)||'null');}catch(e){}
     if(!p||typeof p!=='object'){p={};}
@@ -1416,9 +1437,9 @@ window.DASH_DATA = {};
     var el=document.getElementById('notifPermHint');if(!el)return;
     var msg='';
     if(!notifSupported()){
-      msg=isStandalone()?'הדפדפן לא תומך בהתראות מערכת — יוצגו חלוניות בתוך האפליקציה בלבד.'
+      msg=isStandalone()?'הדפדפן לא תומך בהתראות מערכת - יוצגו חלוניות בתוך האפליקציה בלבד.'
         :'להתראות מערכת ב-iPhone: התקינו את האפליקציה למסך הבית (שיתוף ← הוסף למסך הבית). בינתיים יוצגו חלוניות בתוך האפליקציה.';
-    }else if(Notification.permission==='granted'){msg='✓ התראות מערכת פעילות — יופיעו גם כשהאפליקציה ברקע.';}
+    }else if(Notification.permission==='granted'){msg='✓ התראות מערכת פעילות - יופיעו גם כשהאפליקציה ברקע.';}
     else if(Notification.permission==='denied'){msg='התראות המערכת חסומות בדפדפן. אפשרו התראות לאתר בהגדרות הדפדפן; בינתיים יוצגו חלוניות בתוך האפליקציה.';}
     else{msg='בהפעלת התראות הדפדפן יבקש אישור חד-פעמי.';}
     el.textContent=msg;el.style.display=msg?'':'none';
@@ -1500,9 +1521,14 @@ window.DASH_DATA = {};
       _pollBusy=false;
       if(!d||!d.ok)return;
       try{localStorage.setItem('wrsvpPollSince',String(d.now||Date.now()));}catch(e){}
+      /* [FIX8] additive sig: on FIRST poll just store it; afterwards a changed sig means an add OR an edit -> force in-place refresh even with no new guests */
+      if(typeof d.sig!=='undefined'&&d.sig!==null){
+        if(_lastSig===null){_lastSig=d.sig;}
+        else if(d.sig!==_lastSig){_lastSig=d.sig;try{_notifyIframesOfChange();}catch(e){}}
+      }
       if(d.guests&&d.guests.length){try{_notifyIframesOfChange();}catch(e){}} /* [G2] refresh iframes on ANY new guest (attending true OR false) */
-      (d.guests||[]).filter(function(g){return g&&g.attending===true;}).slice(0,3).forEach(function(g){ /* [G3-NOTIF] visible=toast, hidden=OS notification (unique tag per guest ts => stacked banners) */
-        if(document.hidden&&notifGranted()){
+      (d.guests||[]).filter(function(g){return g&&g.attending===true;}).slice(0,3).forEach(function(g){ /* [FIX1] granted=>OS notification ONLY (foreground OR background); else in-app toast */
+        if(notifGranted()){
           var b=(g.men_count||0)+' גברים / '+(g.women_count||0)+' נשים'+(g.blessing?(' | ברכה: '+String(g.blessing)):'');
           notifyNative('אורח חדש אישר! '+String(g.guest_name||''),b,'wrsvp-live-'+(g.ts||Date.now()),'page-dash');
         }else{showGuestToast(g);}
@@ -1590,7 +1616,8 @@ window.DASH_DATA = {};
 
 <script>
 (function(){
-  var DISMISS_KEY='wrsvpInstallDismiss_v2';
+  var DISMISS_KEY='wrsvpInstallDismiss_v2'; /* [FIX5] legacy PERMANENT localStorage flag - cleared below when not installed so a returning uninstalled user is not blocked forever */
+  var DISMISS_SKEY='wrsvpInstallDismissSession_v1'; /* [FIX5] per-SESSION dismiss (sessionStorage) - avoids spam this visit but reappears on a fresh visit when still not installed */
   var overlay=document.getElementById('wrsvpImOverlay');
   var bodyEl=document.getElementById('wrsvpImBody');
   var primaryEl=document.getElementById('wrsvpImPrimary');
@@ -1616,8 +1643,8 @@ window.DASH_DATA = {};
   function loggedOut(){ /* State A: login page showing (same signal the page router uses) */
     try{return document.documentElement.getAttribute('data-auth')==='out';}catch(e){return false;}
   }
-  function dismissed(){ try{return localStorage.getItem(DISMISS_KEY)==='1';}catch(e){return false;} }
-  function setDismissed(){ try{localStorage.setItem(DISMISS_KEY,'1');}catch(e){} }
+  function dismissed(){ try{return sessionStorage.getItem(DISMISS_SKEY)==='1';}catch(e){return false;} } /* [FIX5] session-scoped, not permanent */
+  function setDismissed(){ try{sessionStorage.setItem(DISMISS_SKEY,'1');}catch(e){} }
   function hide(){ overlay.classList.remove('wrsvpIm-show'); }
   function concierge(){ /* A3 defines window.showInstallConcierge(); never throw if missing */
     try{ if(typeof window.showInstallConcierge==='function') window.showInstallConcierge(); }catch(e){}
@@ -1629,7 +1656,9 @@ window.DASH_DATA = {};
   }
 
   function maybeShow(){
-    if(standalone()||dismissed()||!loggedOut()) return;
+    /* [FIX5] if the app is NOT installed (not standalone), the prompt must be eligible again on a fresh visit: clear any legacy PERMANENT dismiss flag so an uninstalled/returning user is not blocked forever. Login is permanent (everyone is logged in), so we no longer gate on loggedOut() - a not-installed user still gets the prompt. */
+    if(!standalone()){ try{localStorage.removeItem(DISMISS_KEY);}catch(e){} }
+    if(standalone()||dismissed()) return;
     if(isIos()){
       toManual("באייפון: לחצו על כפתור השיתוף בתחתית המסך ➔ ואז 'הוסף למסך הבית' ⊞");
     }
