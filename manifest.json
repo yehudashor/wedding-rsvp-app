@@ -1,10 +1,11 @@
 {
-  "name": "החתונה של אבי ומיכל",
+  "name": "אישורי הגעה",
   "short_name": "אישורי הגעה",
   "lang": "he",
   "dir": "rtl",
   "display": "standalone",
-  "start_url": "./",
+  "display_override": ["standalone", "minimal-ui"],
+  "start_url": "/",
   "scope": "./",
   "theme_color": "#a9802f",
   "background_color": "#fffdf8",

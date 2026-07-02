@@ -429,7 +429,7 @@ html[data-auth="out"] #page-share,html[data-auth="out"] #page-dash,html[data-aut
 </style>
 <meta name="theme-color" content="#a9802f">
 <link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -1377,107 +1377,240 @@ window.DASH_DATA = {};
   }
 </script>
 
-<!-- PWA: Add-to-Home-Screen install prompt (added 2026-06-26), all namespaced wrsvpPwa -->
+<!-- =========================== WRSVP-INSTALL-MODAL START ===========================
+     Smart elderly-friendly PWA install modal (replaces the 2026-06-26 bottom banner).
+     Namespaced wrsvpIm / window._wrsvpDeferredPrompt. Appears ~4s after load, ONLY
+     when: NOT standalone + State A (html[data-auth="out"], logged out) + not
+     dismissed (localStorage key: wrsvpInstallDismiss_v2).
+     A3 contract: window.showInstallConcierge() is invoked DEFENSIVELY (only if
+     defined, never throws) from (a) the iOS/manual “הבנתי, סיימתי להתקין” button
+     and (b) the appinstalled listener below.
+     z-index 2147482000 = deliberately BELOW the WGI intro overlay (2147483000).
+     ================================================================================ -->
 <style>
-  #wrsvpPwaInstall{
-    position:fixed; inset:auto 0 0 0; z-index:2147483000;
-    display:none; box-sizing:border-box; direction:rtl; text-align:center;
-    font-family:'Assistant','Segoe UI',sans-serif;
-    background:#fffdf8; color:#43372a; border-top:6px solid #a9802f;
-    box-shadow:0 -14px 40px rgba(120,90,40,.28);
-    padding:22px 20px calc(22px + env(safe-area-inset-bottom,0px));
+  #wrsvpImOverlay{
+    position:fixed; inset:0; z-index:2147482000; /* below WGI overlay (2147483000) */
+    display:none; direction:rtl; box-sizing:border-box;
+    align-items:center; justify-content:center; padding:18px;
+    background:rgba(36,26,16,.55);
+    -webkit-tap-highlight-color:transparent;
   }
-  #wrsvpPwaInstall.wrsvpPwa-show{ display:block; animation:wrsvpPwaUp .3s ease; }
-  @keyframes wrsvpPwaUp{ from{transform:translateY(100%);} to{transform:translateY(0);} }
-  #wrsvpPwaInstall *{ box-sizing:border-box; }
-  .wrsvpPwa-inner{ max-width:560px; margin:0 auto; position:relative; }
-  .wrsvpPwa-msg{
-    font-family:'Frank Ruhl Libre',serif; font-size:1.35em; font-weight:700;
-    line-height:1.5; margin:6px 40px 18px; color:#4b6440;
+  #wrsvpImOverlay.wrsvpIm-show{ display:flex; }
+  #wrsvpImOverlay *{ box-sizing:border-box; }
+  .wrsvpIm-card{
+    width:100%; max-width:430px; text-align:center;
+    font-family:'Assistant','Heebo','Segoe UI',sans-serif; color:var(--ink,#43372a);
+    background:linear-gradient(180deg,#fffefb 0%,var(--ivory,#fbf6ec) 100%);
+    border-radius:22px; border-top:6px solid var(--gold,#a9802f);
+    box-shadow:0 24px 60px rgba(60,40,10,.35);
+    padding:26px 22px calc(24px + env(safe-area-inset-bottom,0px));
+    animation:wrsvpImPop .35s cubic-bezier(.2,.9,.3,1.2);
   }
-  .wrsvpPwa-btn{
-    display:block; width:100%; max-width:420px; margin:0 auto;
-    padding:18px 22px; min-height:60px; border:none; border-radius:14px; cursor:pointer;
-    font-family:'Frank Ruhl Libre',serif; font-size:1.3em; font-weight:700;
-    color:#fff; background:linear-gradient(180deg,#c9a44c,#a9802f);
+  @keyframes wrsvpImPop{ from{transform:translateY(26px) scale(.96);opacity:0;} to{transform:none;opacity:1;} }
+  .wrsvpIm-emoji{ font-size:2.6em; line-height:1; margin-bottom:8px; }
+  .wrsvpIm-title{
+    font-family:'Frank Ruhl Libre',serif; font-size:1.55em; font-weight:700;
+    color:var(--olive-d,#4b6440); margin-bottom:10px; line-height:1.3;
+  }
+  .wrsvpIm-body{ font-size:1.3em; line-height:1.55; margin:0 2px 20px; color:var(--ink,#43372a); }
+  .wrsvpIm-primary{
+    display:block; width:100%; min-height:62px; margin:0 0 12px;
+    padding:16px 20px; border:none; border-radius:14px; cursor:pointer;
+    font-family:'Assistant','Heebo','Segoe UI',sans-serif; font-size:1.35em; font-weight:700;
+    color:#fff; background:linear-gradient(180deg,var(--gold-soft,#c9a44c),var(--gold,#a9802f));
     box-shadow:0 10px 24px rgba(169,128,47,.34);
   }
-  .wrsvpPwa-btn:active{ transform:translateY(1px); }
-  .wrsvpPwa-close{
-    position:absolute; top:-6px; left:-4px; width:46px; height:46px;
-    border:none; border-radius:50%; background:#efe7d8; color:#8d7d66;
-    font-size:1.5em; font-weight:700; line-height:1; cursor:pointer;
+  .wrsvpIm-primary:active{ transform:translateY(1px); }
+  .wrsvpIm-later{
+    display:block; width:100%; min-height:52px;
+    padding:12px 18px; border:2px solid var(--line,#e6d8bd); border-radius:14px; cursor:pointer;
+    font-family:'Assistant','Heebo','Segoe UI',sans-serif; font-size:1.15em; font-weight:700;
+    color:var(--muted,#7c6c54); background:#fff;
   }
 </style>
 
-<div id="wrsvpPwaInstall" role="dialog" aria-live="polite">
-  <div class="wrsvpPwa-inner">
-    <button type="button" class="wrsvpPwa-close" id="wrsvpPwaClose" aria-label="סגור">&times;</button>
-    <div class="wrsvpPwa-msg" id="wrsvpPwaMsg">התקן את האפליקציה לגישה מהירה!</div>
-    <button type="button" class="wrsvpPwa-btn" id="wrsvpPwaBtn">התקן עכשיו</button>
+<div id="wrsvpImOverlay" role="dialog" aria-modal="true" aria-labelledby="wrsvpImTitle">
+  <div class="wrsvpIm-card">
+    <div class="wrsvpIm-emoji" aria-hidden="true">&#128242;</div>
+    <div class="wrsvpIm-title" id="wrsvpImTitle">אפליקציית החתונה</div>
+    <div class="wrsvpIm-body" id="wrsvpImBody">לנוחות מקסימלית, התקינו את אפליקציית החתונה על המכשיר שלכם.</div>
+    <button type="button" class="wrsvpIm-primary" id="wrsvpImPrimary">התקן אפליקציה</button>
+    <button type="button" class="wrsvpIm-later" id="wrsvpImLater">אולי מאוחר יותר</button>
   </div>
 </div>
 
 <script>
-(function () {
-  var DISMISS_KEY = 'wrsvpPwaPromptDismissed';
-  var deferred = null;
-  var el      = document.getElementById('wrsvpPwaInstall');
-  var msgEl   = document.getElementById('wrsvpPwaMsg');
-  var btnEl   = document.getElementById('wrsvpPwaBtn');
-  var closeEl = document.getElementById('wrsvpPwaClose');
+(function(){
+  var DISMISS_KEY='wrsvpInstallDismiss_v2';
+  var overlay=document.getElementById('wrsvpImOverlay');
+  var bodyEl=document.getElementById('wrsvpImBody');
+  var primaryEl=document.getElementById('wrsvpImPrimary');
+  var laterEl=document.getElementById('wrsvpImLater');
+  var mode='native'; /* 'native' = real browser install prompt; 'manual' = iOS / unsupported fallback */
 
-  function dismissed(){ try { return localStorage.getItem(DISMISS_KEY)==='1'; } catch(e){ return false; } }
-  function setDismissed(){ try { localStorage.setItem(DISMISS_KEY,'1'); } catch(e){} }
-  function show(){ if (dismissed()) return; el.classList.add('wrsvpPwa-show'); }
-  function hide(){ el.classList.remove('wrsvpPwa-show'); }
-  function standalone(){
-    return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
-           window.navigator.standalone === true;
-  }
-  function isIosSafari(){
-    var ua = window.navigator.userAgent || '';
-    var isIos = /iP(hone|ad|od)/.test(ua) ||
-                (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-    if (!isIos) return false;
-    var isWebkit = /WebKit/i.test(ua);
-    var isInApp = /CriOS|FxiOS|EdgiOS|OPiOS|FBAN|FBAV|Instagram|Line|GSA|YaBrowser|DuckDuckGo|MicroMessenger/i.test(ua);
-    return isWebkit && !isInApp;
-  }
-
-  closeEl.addEventListener('click', function(){ hide(); setDismissed(); });
-
-  // Android / Chromium
-  window.addEventListener('beforeinstallprompt', function (e) {
+  /* -- captured install prompt, exposed for A3/QA as window._wrsvpDeferredPrompt -- */
+  window._wrsvpDeferredPrompt=null;
+  window.addEventListener('beforeinstallprompt',function(e){
     e.preventDefault();
-    deferred = e;
-    if (standalone()) return;
-    msgEl.textContent = 'התקן את האפליקציה לגישה מהירה!';
-    btnEl.style.display = '';
-    show();
+    window._wrsvpDeferredPrompt=e;
   });
 
-  btnEl.addEventListener('click', function () {
-    if (!deferred) return;
-    deferred.prompt();
-    deferred.userChoice.finally(function () {
-      deferred = null; hide();
-    });
-  });
+  function standalone(){
+    return (window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches)||
+           window.navigator.standalone===true;
+  }
+  function isIos(){
+    var ua=window.navigator.userAgent||'';
+    return /iP(hone|ad|od)/.test(ua)||
+           (navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  }
+  function loggedOut(){ /* State A: login page showing (same signal the page router uses) */
+    try{return document.documentElement.getAttribute('data-auth')==='out';}catch(e){return false;}
+  }
+  function dismissed(){ try{return localStorage.getItem(DISMISS_KEY)==='1';}catch(e){return false;} }
+  function setDismissed(){ try{localStorage.setItem(DISMISS_KEY,'1');}catch(e){} }
+  function hide(){ overlay.classList.remove('wrsvpIm-show'); }
+  function concierge(){ /* A3 defines window.showInstallConcierge(); never throw if missing */
+    try{ if(typeof window.showInstallConcierge==='function') window.showInstallConcierge(); }catch(e){}
+  }
+  function toManual(text){
+    mode='manual';
+    bodyEl.textContent=text;
+    primaryEl.textContent='הבנתי, סיימתי להתקין';
+  }
 
-  window.addEventListener('appinstalled', function () { deferred = null; hide(); setDismissed(); });
+  function maybeShow(){
+    if(standalone()||dismissed()||!loggedOut()) return;
+    if(isIos()){
+      toManual("באייפון: לחצו על כפתור השיתוף בתחתית המסך ➔ ואז 'הוסף למסך הבית' ⊞");
+    }
+    overlay.classList.add('wrsvpIm-show');
+  }
 
-  // iOS Safari: no beforeinstallprompt - show manual instructions instead.
-  window.addEventListener('load', function () {
-    if (standalone() || dismissed()) return;
-    if (isIosSafari()) {
-      btnEl.style.display = 'none';
-      msgEl.textContent = "להתקנת האפליקציה, לחץ על כפתור השיתוף ואז 'הוסף למסך הבית'";
-      show();
+  primaryEl.addEventListener('click',function(){
+    if(mode==='manual'){
+      hide(); setDismissed(); concierge();
+      return;
+    }
+    var dp=window._wrsvpDeferredPrompt;
+    if(dp){
+      dp.prompt();
+      var choice=dp.userChoice;
+      window._wrsvpDeferredPrompt=null;
+      if(choice&&choice.finally){ choice.finally(hide); } else { hide(); }
+      /* on "accepted" the browser fires appinstalled -> A3's concierge takes over */
+    }else{
+      /* unsupported browser (no captured prompt): iOS-style manual fallback text */
+      toManual("להתקנה ידנית: פתחו את תפריט הדפדפן ➔ ובחרו 'הוסף למסך הבית' או 'התקנת אפליקציה' ⊞");
     }
   });
+
+  laterEl.addEventListener('click',function(){ setDismissed(); hide(); });
+
+  /* appinstalled: MINIMAL by contract - hide modal + hand off to A3's concierge */
+  window.addEventListener('appinstalled',function(){ hide(); setDismissed(); concierge(); });
+
+  function schedule(){ setTimeout(maybeShow,4000); }
+  if(document.readyState==='complete'){ schedule(); }
+  else{ window.addEventListener('load',schedule); }
 })();
 </script>
+<!-- ============================ WRSVP-INSTALL-MODAL END ============================ -->
+<!-- ========================= WRSVP-INSTALL-CONCIERGE START =========================
+     A3: post-install "find the icon" concierge screen. window.showInstallConcierge()
+     is a GLOBAL, idempotent, never-throwing function, called by the install modal
+     above from (a) its appinstalled listener and (b) the iOS/manual done-button.
+     Bright warm full-screen overlay (explicitly NOT dark); z-index 2147482500 =
+     above the install modal (2147482000), below the WGI intro (2147483000).
+     Shows icons/icon-512.png (the exact home-screen icon) very large in a gold
+     frame so the guest recognizes it on the home screen. Namespaced wrsvpCc.
+     ================================================================================ -->
+<style>
+  #wrsvpCcOverlay{
+    position:fixed; inset:0; z-index:2147482500; /* above install modal, below WGI */
+    display:none; direction:rtl; box-sizing:border-box; overflow:auto;
+    flex-direction:column; align-items:center; justify-content:center;
+    gap:26px; padding:28px 22px calc(28px + env(safe-area-inset-bottom,0px));
+    text-align:center;
+    background:linear-gradient(180deg,#ffffff 0%,var(--ivory,#fbf6ec) 55%,var(--parch,#f1e7d3) 100%);
+    font-family:'Assistant','Heebo','Segoe UI',sans-serif; color:var(--ink,#43372a);
+    -webkit-tap-highlight-color:transparent;
+  }
+  #wrsvpCcOverlay.wrsvpCc-show{ display:flex; }
+  #wrsvpCcOverlay *{ box-sizing:border-box; }
+  .wrsvpCc-frame{
+    width:min(60vw,320px); height:min(60vw,320px); flex:0 0 auto;
+    border-radius:28px; padding:8px; background:#fff;
+    border:5px solid var(--gold,#a9802f);
+    box-shadow:0 18px 48px rgba(96,70,20,.28);
+  }
+  .wrsvpCc-frame img{
+    width:100%; height:100%; display:block; border-radius:20px; object-fit:cover;
+  }
+  .wrsvpCc-text{
+    max-width:640px; margin:0; font-weight:600;
+    font-size:clamp(1.35rem,3.6vw,1.7rem); line-height:1.6;
+    color:var(--ink,#43372a);
+  }
+  .wrsvpCc-btn{
+    width:100%; max-width:430px; min-height:66px; flex:0 0 auto;
+    padding:18px 24px; border:none; border-radius:16px; cursor:pointer;
+    font-family:'Assistant','Heebo','Segoe UI',sans-serif;
+    font-size:clamp(1.25rem,3.2vw,1.45rem); font-weight:700; color:#fff;
+    background:linear-gradient(180deg,var(--gold-soft,#c9a44c),var(--gold,#a9802f));
+    box-shadow:0 12px 28px rgba(169,128,47,.34);
+  }
+  .wrsvpCc-btn:active{ transform:translateY(1px); }
+</style>
+
+<div id="wrsvpCcOverlay" role="dialog" aria-modal="true" aria-labelledby="wrsvpCcText">
+  <div class="wrsvpCc-frame" aria-hidden="true">
+    <img id="wrsvpCcImg" src="icons/icon-512.png" alt="">
+  </div>
+  <p class="wrsvpCc-text" id="wrsvpCcText"></p>
+  <button type="button" class="wrsvpCc-btn" id="wrsvpCcBtn">הבנתי, אני יוצא/ת לחפש את האייקון!</button>
+</div>
+
+<script>
+/* A3: global post-install concierge. Top-level window assignment (no hiding closure). */
+window.showInstallConcierge=function(){
+  try{
+    var overlay=document.getElementById('wrsvpCcOverlay');
+    var textEl=document.getElementById('wrsvpCcText');
+    var btn=document.getElementById('wrsvpCcBtn');
+    if(!overlay||!textEl||!btn) return;
+
+    var ua=window.navigator.userAgent||'';
+    var isIos=/iP(hone|ad|od)/.test(ua)||
+              (navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+    var isAndroid=/Android/i.test(ua);
+    if(isIos){
+      textEl.textContent='איזה יופי! האפליקציה הותקנה. עכשיו, החליקו למעלה (או לחצו על כפתור הבית) כדי לצאת מהדפדפן, וחפשו את תמונת החתן והכלה הזו במסך הבית שלכם. משם ניכנס מעכשיו!';
+    }else if(isAndroid){
+      textEl.textContent='איזה יופי! האפליקציה הותקנה. עכשיו, פשוט לחצו על כפתור הבית של הפלאפון שלכם (הכפתור שלוקח למסך הראשי), וחפשו את תמונת החתן והכלה הזו במסך הבית. משם ניכנס מעכשיו!';
+    }else{
+      textEl.textContent='איזה יופי! ההתקנה הסתיימה. אפשר לסגור את חלון הדפדפן הזה (ללחוץ על ה-X למעלה). התמונה של החתן והכלה מחכה לכם עכשיו על שולחן העבודה (Desktop) של המחשב!';
+    }
+
+    if(!overlay._wrsvpCcWired){ /* idempotent: wire the button once */
+      overlay._wrsvpCcWired=true;
+      btn.addEventListener('click',function(){
+        overlay.classList.remove('wrsvpCc-show'); /* hide first so a failed close still feels complete */
+        try{ window.close(); }catch(e){}
+      });
+    }
+
+    /* defensive: make sure the install modal underneath is closed */
+    try{
+      var im=document.getElementById('wrsvpImOverlay');
+      if(im) im.classList.remove('wrsvpIm-show');
+    }catch(e){}
+
+    overlay.classList.add('wrsvpCc-show');
+  }catch(e){}
+};
+</script>
+<!-- ========================== WRSVP-INSTALL-CONCIERGE END ========================== -->
 <!-- WGI-INTRO START =========================================================
      "Aurelia" - Liquid-Gold Ignition intro reveal for the engagement photo.
      100% SELF-CONTAINED & ISOLATED. Everything is namespaced with the `wgi-` /
