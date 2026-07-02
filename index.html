@@ -543,7 +543,7 @@ html[data-auth="out"] #page-share,html[data-auth="out"] #page-dash,html[data-aut
   <div class="page-inner">
     <h2 class="page-h">מסך שיתוף והדגמה</h2>
     <!-- [UXFIX-A2-F2] page-nav moved below title -->
-    <div class="page-nav"><button class="pn-back" id="pnBack1" onclick="pageBack()">חזור</button><button class="pn-next" id="pnNext1" onclick="pageNext()"></button></div>
+    <div class="page-nav"><button class="pn-back" id="pnBack1" onclick="pageBack()">חזור</button><button class="pn-next" id="pnNext1" onclick="tryFullscreenLandscape();pageNext()"></button></div>
     <div id="portalBanner" style="display:none;background:linear-gradient(135deg,#f5f0e8,#fffdf7);border:2px solid var(--gold);border-radius:16px;padding:18px 20px;margin-bottom:16px;font-family:'Frank Ruhl Libre',serif;">
       <div style="font-size:1.15em;font-weight:700;color:var(--olive-d);margin-bottom:10px;text-align:center;">&#127775; הפורטל האישי שלך</div>
       <div id="portalName" style="text-align:center;font-size:1em;color:var(--ink);margin-bottom:12px;"></div>
@@ -1248,9 +1248,11 @@ window.DASH_DATA = {};
   window.portalRole=function(rec){rec=rec||portalLoad();if(!rec||!rec.sid||!rec.token)return null;if(rec.sid===OWNER_SID)return 'super';return rec.isPrimary===true?'admin':'regular';};
   function pageSeq(){var role=window.portalRole();if(!role)return [];var seq=[{id:'page-share',title:'מסך שיתוף והדגמה'},{id:'page-dash',title:(role==='regular')?'לוח בקרה':'דשבורד הצד שלי'}];if(role==='super'){seq.push({id:'page-combined',title:'דשבורד משולב'});}return seq;}
   var _curPage='page-login';
+  /* [INJECT-FS] seamless fullscreen + landscape on user gesture; orientation.lock only AFTER fullscreen resolves (Android requirement); every path silent-fails (iOS/Safari) so navigation proceeds normally */
+  window.tryFullscreenLandscape = function(){ try { var el=document.documentElement; var rf = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen || el.msRequestFullscreen; if (rf) { var p = rf.call(el); if (p && p.catch) { p.then(function(){ try{ if(screen.orientation && screen.orientation.lock){ screen.orientation.lock('landscape').catch(function(){}); } }catch(e){} }).catch(function(){}); } else { try{ if(screen.orientation && screen.orientation.lock){ screen.orientation.lock('landscape').catch(function(){}); } }catch(e){} } } } catch(e){} };
   /* [UXFIX-A2-F2] ultra-descriptive per-page nav labels (seniors); pageSeq titles still drive headers/toasts */
   var PAGE_NAV_LABELS={
-    'page-share':{next:'הבא: למעבר לרשימת המוזמנים שלי'},
+    'page-share':{next:'לרשימת המוזמנים שלי'},
     'page-dash':{back:'חזור: למסך השיתוף וההדגמה',next:'הבא: למעבר ללוח המשולב של שני הצדדים'},
     'page-combined':{back:'חזור: לרשימת המוזמנים שלי'}
   };
