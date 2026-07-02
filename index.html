@@ -6,7 +6,7 @@
 <title>אישורי הגעה - חתונת חוקת ✕ שור</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700&family=Frank+Ruhl+Libre:wght@500;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700&family=Frank+Ruhl+Libre:wght@500;700;900&family=Heebo:wght@400;500;700;800&display=swap" rel="stylesheet">
 <style>
   :root{--ivory:#fbf6ec;--parch:#f1e7d3;--gold:#a9802f;--gold-soft:#c9a44c;--ink:#43372a;--muted:#7c6c54;
         --olive:#5f7a4e;--olive-d:#4b6440;--stone-d:#8d7d66;--card:#fffdf8;--line:#e6d8bd;--green:#1a6e3c;--navy:#33414f;}
@@ -375,6 +375,58 @@ p,li,.expl-text,.lnk .t,.stp .lbl{font-size:1.04em;}
 .share button,.picker button{padding-left:18px;padding-right:18px;}
 </style>
 <!-- PWA integration (added 2026-06-26) -->
+<style id="spa-shell-css">
+/* ===== [SPA-PAGES F1] SHELL: typography + app header + auth gates + page nav ===== */
+html{font-size:19px;}
+body,button,input,textarea,select{font-family:'Heebo','Assistant','Rubik',-apple-system,'Segoe UI',sans-serif;}
+h1,h2,h3,h4,.dash-h{font-family:'Heebo','Assistant',sans-serif;font-weight:800;}
+.page-inner{width:100%;max-width:1000px;margin:0 auto;text-align:right;}
+@media(max-width:760px){.page-inner{max-width:100%;}}
+.page-h{font-size:1.7em;color:var(--olive-d);margin:.2em 0 .5em;font-weight:800;text-align:center;}
+#appHeader{position:fixed;top:0;left:0;right:0;height:64px;z-index:900;display:none;align-items:center;justify-content:space-between;gap:10px;padding:0 16px;background:linear-gradient(180deg,#fffdf8,#f7efdd);border-bottom:2px solid var(--gold-soft);box-shadow:0 4px 14px rgba(120,86,30,.14);direction:rtl;}
+html[data-auth="in"] #appHeader{display:flex;}
+html[data-auth="in"] .slide{inset:64px 0 0 0;}
+#appHeader .hdr-title{font-weight:800;font-size:1.15em;color:var(--olive-d);white-space:nowrap;}
+#appHeader .hdr-user{flex:1;text-align:center;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+#appHeader button{min-height:46px;border:none;border-radius:12px;cursor:pointer;font-weight:700;font-size:1.05em;padding:8px 16px;}
+#hdrSettingsBtn{background:#efe7d8;color:var(--ink);font-size:1.25em;}
+#hdrLogoutBtn{background:linear-gradient(180deg,#c0392b,#96281b);color:#fff;}
+html[data-auth="in"] #page-login{display:none !important;}
+html[data-auth="out"] #page-share,html[data-auth="out"] #page-dash,html[data-auth="out"] #page-combined{display:none !important;}
+.page-nav{display:flex;gap:14px;justify-content:center;align-items:stretch;width:100%;max-width:1000px;margin:26px auto 8px;}
+.page-nav button{flex:1;min-height:68px;font-size:1.3em;font-weight:800;border:none;border-radius:16px;cursor:pointer;font-family:inherit;}
+.page-nav .pn-next{background:linear-gradient(180deg,var(--olive),var(--olive-d));color:#fff;box-shadow:0 10px 24px -8px rgba(75,100,64,.55);}
+.page-nav .pn-back{background:#efe7d8;color:var(--ink);flex:0 0 32%;}
+</style>
+<style id="demo-sim-css">
+/* ===== [SPA-PAGES F2] demo simulation styles ===== */
+.demo-new td{background:#fff3c4 !important;animation:demoFlash 1.2s ease;}
+@keyframes demoFlash{from{background:#ffd97a;}to{background:#fff3c4;}}
+.demo-btn{min-height:56px;border:none;border-radius:12px;font-weight:800;font-size:1.1em;cursor:pointer;font-family:inherit;}
+.demo-yes{background:var(--olive);color:#fff;} .demo-yes.sel{box-shadow:0 0 0 4px rgba(95,122,78,.35);} .demo-no{background:#efe7d8;color:var(--stone-d);} .demo-no.sel{box-shadow:0 0 0 4px rgba(141,125,102,.35);}
+#demoForm input,#demoForm textarea{width:100%;padding:12px 14px;border:1.5px solid var(--line);border-radius:10px;background:#fbf7ee;font-family:inherit;font-size:1.05em;margin-bottom:10px;}
+#demoForm .demo-counts{display:flex;gap:12px;} #demoForm .demo-counts>div{flex:1;text-align:right;} #demoForm label{display:block;font-weight:700;margin-bottom:4px;}
+</style>
+<style id="dash-pages-css">
+/* ===== [SPA-PAGES F3] rotate overlay (dashboard pages only) ===== */
+#rotateOverlay{position:fixed;inset:0;z-index:930;background:rgba(40,30,18,.74);display:none;align-items:center;justify-content:center;padding:20px;}
+#rotateOverlay .ro-card{background:#fffdf8;border-radius:18px;padding:28px 24px;max-width:420px;text-align:center;box-shadow:0 18px 48px rgba(0,0,0,.35);}
+#rotateOverlay .ro-msg{font-size:1.3em;font-weight:800;color:var(--ink);margin:10px 0 16px;line-height:1.5;}
+#rotateOverlay button{min-height:56px;padding:10px 26px;border:none;border-radius:12px;background:var(--olive);color:#fff;font-weight:800;font-size:1.1em;cursor:pointer;font-family:inherit;}
+</style>
+<style id="notif-css">
+/* ===== [SPA-PAGES F4] toasts + settings modal ===== */
+#toastWrap{position:fixed;bottom:24px;left:0;right:0;z-index:940;display:flex;flex-direction:column;align-items:center;gap:10px;pointer-events:none;}
+.wrsvp-toast{pointer-events:auto;background:#1a6e3c;color:#fff;border-radius:14px;padding:14px 22px;font-size:1.15em;font-weight:700;box-shadow:0 12px 30px rgba(0,0,0,.35);cursor:pointer;max-width:92vw;text-align:center;line-height:1.5;animation:toastIn .3s ease;}
+@keyframes toastIn{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
+#settingsOverlay{position:fixed;inset:0;z-index:960;background:rgba(40,30,18,.6);display:none;align-items:center;justify-content:center;padding:18px;}
+#settingsOverlay.open{display:flex;}
+#settingsOverlay .set-card{background:#fffdf8;border-radius:18px;padding:26px 22px;width:min(440px,94vw);text-align:right;box-shadow:0 18px 48px rgba(0,0,0,.35);}
+#settingsOverlay h3{margin:.1em 0 .7em;color:var(--olive-d);font-size:1.35em;}
+#settingsOverlay label.set-row{display:flex;align-items:center;gap:12px;font-size:1.1em;font-weight:700;margin-bottom:14px;cursor:pointer;}
+#settingsOverlay input[type=checkbox],#settingsOverlay input[type=radio]{width:24px;height:24px;accent-color:var(--olive);flex:0 0 auto;}
+#settingsOverlay .set-close{width:100%;min-height:54px;border:none;border-radius:12px;background:var(--olive);color:#fff;font-weight:800;font-size:1.1em;cursor:pointer;font-family:inherit;margin-top:6px;}
+</style>
 <meta name="theme-color" content="#a9802f">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
@@ -384,6 +436,37 @@ p,li,.expl-text,.lnk .t,.stp .lbl{font-size:1.04em;}
 <meta name="apple-mobile-web-app-title" content="אישורי הגעה">
 </head>
 <body>
+<script>
+/* PHASE1 anti-flash: synchronous auth check BEFORE first paint - logged-in users never see State A. */
+(function(){var v='out';try{var r=JSON.parse(localStorage.getItem('weddingOrgPortal_v1')||'null');if(r&&r.sid&&r.token){v='in';}}catch(e){}document.documentElement.setAttribute('data-auth',v);})();
+</script>
+<header id="appHeader" dir="rtl">
+  <div class="hdr-title">💍 אישורי הגעה</div>
+  <div class="hdr-user" id="hdrUser"></div>
+  <div style="display:flex;gap:8px;">
+    <button id="hdrSettingsBtn" type="button" aria-label="הגדרות" title="הגדרות">⚙️</button>
+    <button id="hdrLogoutBtn" type="button">התנתקות</button>
+  </div>
+</header>
+<div id="rotateOverlay" style="display:none;">
+  <div class="ro-card">
+    <div style="font-size:2.6em;">🔄</div>
+    <div class="ro-msg">לצפייה נוחה בלוח, סובבו את הטלפון לרוחב</div>
+    <button type="button" onclick="rotateOverlayDismiss()">המשך במסך זה</button>
+  </div>
+</div>
+<div id="toastWrap" dir="rtl"></div>
+<div id="settingsOverlay" dir="rtl">
+  <div class="set-card">
+    <h3>⚙️ הגדרות התראות</h3>
+    <label class="set-row"><input type="checkbox" id="prefLive" checked><span>קבל התראות חיות</span></label>
+    <div id="prefScopeWrap" style="display:none;border-top:1px solid var(--line);padding-top:12px;">
+      <label class="set-row"><input type="radio" name="prefScope" id="prefScopeSide" value="side"><span>התראות על כל מוזמני הצד שלי</span></label>
+      <label class="set-row"><input type="radio" name="prefScope" id="prefScopeMine" value="mine"><span>התראות רק על אורחים שהזמנתי אישית</span></label>
+    </div>
+    <button type="button" class="set-close" id="settingsCloseBtn">סגור</button>
+  </div>
+</div>
 <!-- ANNOTATE TOGGLE: flip ANNOTATE_ENABLED to true (one line) to restore the note feature -->
 <script>var ANNOTATE_ENABLED=false; if(!ANNOTATE_ENABLED){document.documentElement.setAttribute('data-noannotate','1');}</script>
 <style>html[data-noannotate] .note-btn,html[data-noannotate] .note-pop,html[data-noannotate] #help{display:none!important;}</style>
@@ -410,72 +493,81 @@ p,li,.expl-text,.lnk .t,.stp .lbl{font-size:1.04em;}
 
 
 <!-- SLIDE 3: MANAGER REGISTRATION (BEFORE guest) -->
-<section class="slide active" data-title="איך מארגן מתחיל">
-  <h2>איך מארגן מתחיל</h2>
-  <div class="slide-with-expl">
-    <div class="slide-main">
-      <div class="cap">ממלאים שם וצד בטופס למטה &#8595; &#8212; מקבלים מיד קישור-הפצה אמיתי לשליחה לאורחים + כפתורי WhatsApp/מייל. &#127381; הרשמה אמיתית &#8212; לא סימולציה.</div>
-      <div id="portalBanner" style="display:none;background:linear-gradient(135deg,#f5f0e8,#fffdf7);border:2px solid var(--gold);border-radius:16px;padding:18px 20px;margin-bottom:16px;font-family:'Frank Ruhl Libre',serif;">
-        <div style="font-size:1.15em;font-weight:700;color:var(--olive-d);margin-bottom:10px;text-align:center;">&#127775; הפורטל האישי שלך</div>
-        <div id="portalName" style="text-align:center;font-size:1em;color:var(--ink);margin-bottom:12px;"></div>
-        <div class="lnk" style="margin-bottom:12px;">
-          <div class="t">&#128228; קישור-הפצה &#8212; לשלוח לאורחים</div>
-          <div id="portalWaText" class="wa-text" style="white-space:pre-wrap;overflow-wrap:anywhere;font-size:.9em;color:var(--ink);background:#fff;border:1px dashed var(--line);border-radius:8px;padding:8px;margin:6px 0;"></div>
-          <span id="portalDispLink" class="u" style="display:block;word-break:break-all;overflow-wrap:anywhere;margin-top:4px;"></span>
-          <div class="share-steps" style="font-size:1em;font-weight:700;color:var(--olive-d);margin:8px 0 6px;line-height:1.7;">1. להעתיק את הקישור &nbsp; 2. לשלוח בוואטסאפ &nbsp; 3. לשלוח במייל</div>
-          <div class="share">
-            <button class="cp" id="cpPortalDisp" onclick="doCopy('cpPortalDisp', window._portalDisp||'')">&#128203; העתקה</button>
-            <button class="wa-btn" id="cpPortalWa" onclick="if(window._portalWaUrl)window.open(window._portalWaUrl,'_blank')">שיתוף בוואטסאפ</button>
-            <button class="em-btn" id="cpPortalEm" onclick="if(window._portalEmUrl)window.open(window._portalEmUrl,'_blank')">שיתוף במייל</button>
-          </div>
-        </div>
-        <!-- POLISH 2026-07-02: raw dashboard-link block removed - the dashboard lives ONLY in the embedded iframe below; the raw script.google.com URL is never shown. -->
-        <div id="portalPersonalDash" style="margin-top:8px;">
-          <div style="font-weight:700;color:var(--olive-d);margin-bottom:6px;font-size:.9em;">&#128200; הלוח האישי שלך (חי):</div>
-          <div style="text-align:center;margin-bottom:8px;">
-            <button id="portalCombinedBtn" style="display:none;padding:6px 20px;background:linear-gradient(135deg,#3a5a40,#588157);color:#fff;border:1.5px solid var(--olive-d);border-radius:20px;font-family:inherit;font-size:.9em;font-weight:700;cursor:pointer;">&#128202; צפייה בכל הנתונים - משולב</button>
-          </div>
-          <iframe id="portalDashIframe" src="about:blank" style="width:100%;height:520px;border:1px solid var(--line);border-radius:10px;background:#fff;" title="לוח אישי"></iframe>
-        </div>
-        <!-- POLISH 2026-07-02: the reset/logout button (“הרשמה מחדש - מחק נתונים”) was REMOVED - organisers stay permanently logged in; there is no self-serve state-clear. -->
+<!-- STATE A: LOGIN (Phase 1) -->
+<section class="slide active" id="page-login" data-title="כניסה">
+  <div class="page-inner" style="text-align:center;">
+    <h2 class="page-h">ברוכים הבאים</h2>
+    <div class="cap">לכניסה למערכת אישורי ההגעה, אנא הזינו את פרטיכם מטה.</div>
+    <div id="regIframeSection">
+      <div class="reg-iframe-wrap">
+        <h3>כניסה / הרשמה</h3>
+        <iframe id="regFrame" src="https://script.google.com/macros/s/AKfycbyMjAOKf5l_5hzeLy4DAEBanw9ZO3n3_S7TVXACYRrCQh_QeTNuuqqSUSm6bl59mRVM_A/exec?mode=register" style="border:none;width:100%;min-height:720px;display:block" title="הרשמת מארגן"></iframe>
       </div>
-      <div id="regIframeSection">
-        <div class="reg-iframe-wrap">
-          <h3>&#128229; הרשמת מארגן</h3>
-          <iframe id="regFrame" src="https://script.google.com/macros/s/AKfycbyMjAOKf5l_5hzeLy4DAEBanw9ZO3n3_S7TVXACYRrCQh_QeTNuuqqSUSm6bl59mRVM_A/exec?mode=register" style="border:none;width:100%;min-height:720px;display:block" title="הרשמת מארגן"></iframe>
+      <div id="regres" style="display:none;margin-top:16px;"></div>
+    </div>
+  </div>
+</section>
+<!-- PHASE2 PAGE 1: share + demo -->
+<section class="slide" id="page-share" data-title="מסך שיתוף והדגמה">
+  <div class="page-inner">
+    <h2 class="page-h">מסך שיתוף והדגמה</h2>
+    <div id="portalBanner" style="display:none;background:linear-gradient(135deg,#f5f0e8,#fffdf7);border:2px solid var(--gold);border-radius:16px;padding:18px 20px;margin-bottom:16px;font-family:'Frank Ruhl Libre',serif;">
+      <div style="font-size:1.15em;font-weight:700;color:var(--olive-d);margin-bottom:10px;text-align:center;">&#127775; הפורטל האישי שלך</div>
+      <div id="portalName" style="text-align:center;font-size:1em;color:var(--ink);margin-bottom:12px;"></div>
+      <div class="lnk" style="margin-bottom:12px;">
+        <div class="t">&#128228; קישור-הפצה &#8212; לשלוח לאורחים</div>
+        <div id="portalWaText" class="wa-text" style="white-space:pre-wrap;overflow-wrap:anywhere;font-size:.9em;color:var(--ink);background:#fff;border:1px dashed var(--line);border-radius:8px;padding:8px;margin:6px 0;"></div>
+        <span id="portalDispLink" class="u" style="display:none;word-break:break-all;overflow-wrap:anywhere;margin-top:4px;"></span>
+        <div class="share-steps" style="font-size:1em;font-weight:700;color:var(--olive-d);margin:8px 0 6px;line-height:1.7;">1. להעתיק את ההודעה &nbsp; 2. לשלוח בוואטסאפ &nbsp; 3. לשלוח במייל</div>
+        <div class="share">
+          <button class="cp" id="cpPortalDisp" onclick="doCopy('cpPortalDisp', window._portalWaText||'')">&#128203; העתקה</button>
+          <button class="wa-btn" id="cpPortalWa" onclick="if(window._portalWaUrl)window.open(window._portalWaUrl,'_blank')">שיתוף בוואטסאפ</button>
+          <button class="em-btn" id="cpPortalEm" onclick="if(window._portalEmUrl){var a=document.createElement('a');a.href=window._portalEmUrl;a.style.display='none';document.body.appendChild(a);a.click();a.remove();}">שיתוף במייל</button>
         </div>
-        <div id="regres" style="display:none;margin-top:16px;"></div>
       </div>
     </div>
-    <aside class="expl-panel">
-      <h4>&#128073; מדריך למארגן/ת</h4>
-      <div class="expl-item">
-        <div class="expl-label">&#128100; שם המארגן/ת</div>
-        <div class="expl-row"><span class="expl-tag">מה זה</span><span class="expl-text">השם שלך כפי שיופיע בלוח.</span></div>
-        <div class="expl-row"><span class="expl-tag">מה עושים</span><span class="expl-text">כותבים כאן לפני הכל.</span></div>
+    <div id="demoSection">
+      <div class="lnk" style="margin-top:18px;">
+        <h3 class="page-h" style="font-size:1.35em;">כך זה נראה לאורחים שלכם</h3>
+        <div class="cap" style="margin:0 0 10px;">מלאו את הטופס לדוגמה ולחצו שליחה - ותראו איך האישור מופיע אצלכם בלוחות. <b>(הדגמה בלבד - לא נשמר בבסיס הנתונים)</b></div>
+        <div id="demoForm">
+          <label for="demoName">שם האורח</label>
+          <input type="text" id="demoName" placeholder="למשל: ישראל ישראלי">
+          <div style="display:flex;gap:12px;margin-bottom:10px;">
+            <button type="button" class="demo-btn demo-yes sel" id="demoYes" onclick="demoSel(true)" style="flex:1;">מגיע/ה 🎉</button>
+            <button type="button" class="demo-btn demo-no" id="demoNo" onclick="demoSel(false)" style="flex:1;">לא מגיע/ה</button>
+          </div>
+          <div class="demo-counts">
+            <div><label for="demoMen">גברים</label><input type="number" id="demoMen" min="0" value="1" dir="ltr"></div>
+            <div><label for="demoWomen">נשים</label><input type="number" id="demoWomen" min="0" value="0" dir="ltr"></div>
+          </div>
+          <label for="demoBless">ברכה (לא חובה)</label>
+          <textarea id="demoBless" rows="2" placeholder="מזל טוב!"></textarea>
+          <button type="button" class="demo-btn" id="demoSend" onclick="demoSend()" style="width:100%;background:linear-gradient(180deg,var(--gold-soft),var(--gold));color:#fff;">שליחה (הדגמה)</button>
+        </div>
+        <div id="demoOut"></div>
       </div>
-      <div class="expl-item">
-        <div class="expl-label">&#128231; מייל (אופציונלי)</div>
-        <div class="expl-row"><span class="expl-tag">מה זה</span><span class="expl-text">לא גלוי לאורחים. לשחזור קישורים.</span></div>
-        <div class="expl-row"><span class="expl-tag">מתי</span><span class="expl-text">שימושי אם הקישורים אבדו בהמשך.</span></div>
-      </div>
-      <div class="expl-item">
-        <div class="expl-label">&#129333;/&#128112; בחירת צד</div>
-        <div class="expl-row"><span class="expl-tag">מה עושים</span><span class="expl-text">בוחרים אם אורחייך מצד החתן או הכלה.</span></div>
-        <div class="expl-row"><span class="expl-tag">מתי</span><span class="expl-text">פעם אחת. קובע באיזה לוח יופיעו.</span></div>
-      </div>
-      <div class="expl-item">
-        <div class="expl-label">&#128228; קישור-הפצה</div>
-        <div class="expl-row"><span class="expl-tag">מה זה</span><span class="expl-text">הקישור שהאורחים לוחצים לאישור הגעה.</span></div>
-        <div class="expl-row"><span class="expl-tag">מה עושים</span><span class="expl-text">שולחים בוואטסאפ/מייל עם ההזמנה.</span></div>
-        <div class="expl-row"><span class="expl-tag">מתי</span><span class="expl-text">מיד אחרי הרשמה, לפני החתונה.</span></div>
-      </div>
-      <div class="expl-item">
-        <div class="expl-label">&#9888; קישור הלוח האישי</div>
-        <div class="expl-row"><span class="expl-tag">מה זה</span><span class="expl-text">הכניסה שלך לראות מי מאורחייך אישר.</span></div>
-        <div class="expl-warn">&#9940; לא להעביר לאורחים! רק עבורך.</div>
-      </div>
-    </aside>
+    </div>
+    <div class="page-nav"><button class="pn-back" id="pnBack1" onclick="pageBack()">חזור</button><button class="pn-next" id="pnNext1" onclick="pageNext()"></button></div>
+  </div>
+</section>
+<!-- PHASE2 PAGE 2: dashboard (role-titled) -->
+<section class="slide" id="page-dash" data-title="לוח בקרה">
+  <div class="page-inner">
+    <h2 class="page-h" id="pageDashTitle">לוח בקרה</h2>
+    <div id="portalPersonalDash" style="margin-top:8px;">
+      <div style="font-weight:700;color:var(--olive-d);margin-bottom:6px;font-size:.9em;">&#128200; הלוח האישי שלך (חי):</div>
+      <iframe id="portalDashIframe" src="about:blank" style="width:100%;height:68vh;min-height:480px;border:1px solid var(--line);border-radius:10px;background:#fff;" title="לוח אישי"></iframe>
+    </div>
+    <div class="page-nav"><button class="pn-back" id="pnBack2" onclick="pageBack()">חזור</button><button class="pn-next" id="pnNext2" onclick="pageNext()"></button></div>
+  </div>
+</section>
+<!-- PHASE2 PAGE 3: combined (super only) -->
+<section class="slide" id="page-combined" data-title="דשבורד משולב">
+  <div class="page-inner">
+    <h2 class="page-h">דשבורד משולב</h2>
+    <div id="combinedPageBody"><iframe id="portalCombinedIframe" src="about:blank" style="width:100%;height:68vh;min-height:480px;border:1px solid var(--line);border-radius:10px;background:#fff;" title="דשבורד משולב"></iframe></div>
+    <div class="page-nav"><button class="pn-back" id="pnBack3" onclick="pageBack()">חזור</button><button class="pn-next" id="pnNext3" onclick="pageNext()" style="display:none"></button></div>
   </div>
 </section>
 
@@ -525,6 +617,7 @@ window.DASH_DATA = {};
 
   /* ===== LIVE STATE ===== */
   var state = deepClone(D);
+  state.personal = state.personal || []; /* [SPA-PAGES FIX-V2] seed: DASH_DATA={} leaves state.personal undefined; the unguarded .push in the restore-on-load IIFE / _deckRegister threw a TypeError that aborted the whole main IIFE on every logged-in load (blank auth-gated shell, dead router/logout). Seeding here covers all push sites. */
   var simManagers = [];
 
   function recomputePersonalSummary(rows){
@@ -658,47 +751,29 @@ window.DASH_DATA = {};
     var subjEnc=encodeURIComponent('אישור הגעה לחתונת אבי חוקת ומיכל שור');
     var bodyEnc=encodeURIComponent(waText);
     window._portalDisp=rec.distributionLink||'';
+    window._portalWaText=waText; /* PHASE3: העתקה copies the full WA message, not the raw link */
     window._portalWaUrl='https://wa.me/?text='+encoded;
     window._portalEmUrl='mailto:?subject='+subjEnc+'&body='+bodyEnc;
     var nameEl=document.getElementById('portalName');
     var wtEl=document.getElementById('portalWaText');
     var dlEl=document.getElementById('portalDispLink');
-    var dashIframe=document.getElementById('portalDashIframe');
     if(nameEl)nameEl.textContent=rec.name+' - '+sideLabel;
+    var hu=document.getElementById('hdrUser');if(hu)hu.textContent=rec.name+' · '+sideLabel;
     if(wtEl)wtEl.textContent=waText;
     if(dlEl)dlEl.textContent=rec.distributionLink||'';
-    /* B1.4: embed the GAS dashboard as an IFRAME built from EXEC_URL + token + phone (raw
-       script.google.com URL is never shown as visible text). */
-    if(dashIframe&&rec.token){
-      var dashSrc=EXEC_URL+'?mode=dashboard&token='+encodeURIComponent(rec.token)+'&phone='+encodeURIComponent(rec.phone||'');
-      if(dashIframe.getAttribute('src')!==dashSrc){dashIframe.src=dashSrc;}
-    }
-    /* B3: super-admin COMBINED view, OWNER-SID-gated only. Yehuda's own token is reused; no
-       master token in the client. Gili and every other sid never get this button. */
-    var combBtn=document.getElementById('portalCombinedBtn');
-    if(combBtn){
-      if(rec.sid===OWNER_SID&&rec.token){
-        combBtn.style.display='inline-block';
-        combBtn.onclick=function(){
-          if(dashIframe){dashIframe.src=EXEC_URL+'?mode=combined&token='+encodeURIComponent(rec.token)+'&phone='+encodeURIComponent(rec.phone||'');}
-        };
-      }else{
-        combBtn.style.display='none';
-        combBtn.onclick=null;
-      }
-    }
+    /* PHASE2 (F3): dashboard iframes are lazy-loaded per page by loadDashIframe/loadCombinedIframe */
     banner.style.display='block';
     if(iframeSection)iframeSection.style.display='none';
   }
 
   /* _portalReset() removed 2026-07-02 together with the reset button - login is permanent. */
 
-  window._deckRegister=function(name,side,sid,dispLink,dashLink,token,phone){
+  window._deckRegister=function(name,side,sid,dispLink,dashLink,token,phone,isPrimary){
     side=(side==='bride')?'bride':'groom';
     var resolvedDisp=dispLink||(EXEC_URL+'?sid='+sid+'&ch=wa');
     window._activeMgr={name:name,side:side,sid:sid,dispatchLink:resolvedDisp,dashboardLink:dashLink||''};
     /* B1.3: persist token+phone additively so State B can build the dashboard iframe src. */
-    var rec={name:name,side:side,sid:sid,distributionLink:resolvedDisp,dashboardLink:dashLink||'',token:token||'',phone:phone||''};
+    var rec={name:name,side:side,sid:sid,distributionLink:resolvedDisp,dashboardLink:dashLink||'',token:token||'',phone:phone||'',isPrimary:isPrimary===true};
     portalSave(rec);
     renderPortalBlock(rec);
     var exists=(state.personal||[]).some(function(p){return p.sender_id===sid;});
@@ -713,6 +788,8 @@ window.DASH_DATA = {};
     if(typeof refreshCombinedSlide==='function'){refreshCombinedSlide();}
     if(typeof updateWaBubble==='function'){updateWaBubble(name,resolvedDisp);}
     if(typeof refreshP5Live==='function'){refreshP5Live();}
+    try{document.documentElement.setAttribute('data-auth','in');}catch(e){}
+    if(typeof window.bootPages==='function'){window.bootPages();}
   };
 
   // Restore portal from localStorage on page load
@@ -737,10 +814,14 @@ window.DASH_DATA = {};
 
   function showPersonal(idx){
     curPersonalIdx=idx;
+    /* QA FIX: #pBody belonged to a removed demo slide - guard the null-write so the
+       wedding-reg-done login path never throws (latent TypeError found by V2). */
+    var pB=document.getElementById('pBody');
+    if(!pB){return;}
     var e=pErs[idx];
-    if(!e){document.getElementById('pBody').innerHTML='<p class="empty">אין נתונים</p>';return;}
+    if(!e){pB.innerHTML='<p class="empty">אין נתונים</p>';return;}
     var d=e.data||{};
-    document.getElementById('pBody').innerHTML='<div class="dash"><div class="dash-h">לוח אישי &#8212; '+esc(d.senderName||e.name)+'</div>'+banner(d.summary,'דרכך')+tbl5(d.rows,idx)+'</div>';
+    pB.innerHTML='<div class="dash"><div class="dash-h">לוח אישי &#8212; '+esc(d.senderName||e.name)+'</div>'+banner(d.summary,'דרכך')+tbl5(d.rows,idx)+'</div>';
     var bs=document.querySelectorAll('#pPick button');
     for(var k=0;k<bs.length;k++)bs[k].classList.toggle('sel',k===idx);
   }
@@ -1073,19 +1154,13 @@ window.DASH_DATA = {};
   // SPA BRIDGE: when the embedded registration iframe posts done, save the portal (State B)
   // and transition in-place to the manager portal (no reload). Permissive origin: we key off
   // e.data.type only (the GAS iframe origin differs from ours), never hard-failing on origin.
-  window.addEventListener('message',function(e){ if(e&&e.data&&e.data.type==='wedding-reg-done'){ try{ if(e.data.sid&&typeof window._deckRegister==='function'){ window._deckRegister(e.data.name||'מארגן חדש', e.data.side||'groom', e.data.sid, e.data.distributionLink||'', e.data.dashboardLink||'', e.data.token||'', e.data.phone||''); } }catch(err){} try{ var pb=document.getElementById('portalBanner'); if(pb){ pb.style.display='block'; setTimeout(function(){pb.scrollIntoView({behavior:'smooth',block:'start'});},80); } }catch(err2){} } });
+  window.addEventListener('message',function(e){ if(e&&e.data&&e.data.type==='wedding-reg-done'){ try{ if(e.data.sid&&typeof window._deckRegister==='function'){ window._deckRegister(e.data.name||'מארגן חדש', e.data.side||'groom', e.data.sid, e.data.distributionLink||'', e.data.dashboardLink||'', e.data.token||'', e.data.phone||'', e.data.isPrimary===true); } }catch(err){} try{ if(typeof window.bootPages==='function'){window.bootPages();} }catch(err2){} } });
   // SPA SEAMLESS HEIGHT: the register iframe (2B) posts its content height so we can grow the
   // frame and kill the internal scrollbar (critical for elderly users). 720px stays as the floor.
   window.addEventListener('message',function(e){ if(e&&e.data&&e.data.type==='wedding-reg-height'){ try{ var f=document.getElementById('regFrame'); var hgt=parseInt(e.data.height,10); if(f&&hgt&&!isNaN(hgt)){ f.style.height=Math.max(720,hgt)+'px'; } }catch(err){} } });
-  document.getElementById('next').onclick=function(){go(i+1);};
-  document.getElementById('prev').onclick=function(){go(i-1);};
-  document.addEventListener('keydown',function(e){
-    if(e.target.tagName==='TEXTAREA'||e.target.tagName==='INPUT')return;
-    if(e.key==='ArrowLeft'||e.key==='PageDown')go(i+1);
-    else if(e.key==='ArrowRight'||e.key==='PageUp')go(i-1);
-    else if(e.key==='Home')go(0);
-    else if(e.key==='End')go(slides.length-1);
-  });
+  /* [SPA-PAGES F1] free navigation REMOVED: next/prev onclick + arrow-key nav deleted so pages
+     switch ONLY through showPage/pageNext/pageBack (auth+role gated). slides/go/gotoTitle kept
+     for the hidden annotation tool. */
 
   /* ===== ANNOTATION TOOL ===== */
   var KEY='momNotes_rsvp';
@@ -1117,6 +1192,177 @@ window.DASH_DATA = {};
     document.body.appendChild(a);a.click();a.remove();
   };
   refreshNoteUI();
+  /* ===== [SPA-PAGES F1] ROUTER + AUTH BOOT ===== */
+  window.portalRole=function(rec){rec=rec||portalLoad();if(!rec||!rec.sid||!rec.token)return null;if(rec.sid===OWNER_SID)return 'super';return rec.isPrimary===true?'admin':'regular';};
+  function pageSeq(){var role=window.portalRole();if(!role)return [];var seq=[{id:'page-share',title:'מסך שיתוף והדגמה'},{id:'page-dash',title:(role==='regular')?'לוח בקרה':'דשבורד הצד שלי'}];if(role==='super'){seq.push({id:'page-combined',title:'דשבורד משולב'});}return seq;}
+  var _curPage='page-login';
+  function renderPageNav(){
+    var seq=pageSeq();var map={'page-share':1,'page-dash':2,'page-combined':3};
+    Object.keys(map).forEach(function(pid){
+      var n=map[pid];var back=document.getElementById('pnBack'+n);var next=document.getElementById('pnNext'+n);
+      if(!back||!next)return;
+      var idx=-1;for(var k=0;k<seq.length;k++){if(seq[k].id===pid)idx=k;}
+      if(idx<0){back.style.display='none';next.style.display='none';return;}
+      back.style.display=(idx>0)?'':'none';back.textContent='חזור';
+      if(idx<seq.length-1){next.style.display='';next.textContent='הבא: '+seq[idx+1].title;}else{next.style.display='none';}
+    });
+  }
+  window.showPage=function(id){
+    var seq=pageSeq();
+    var ok=(id==='page-login')||seq.some(function(p){return p.id===id;});
+    if(!ok){id=seq.length?seq[0].id:'page-login';}
+    _curPage=id;
+    ['page-login','page-share','page-dash','page-combined'].forEach(function(pid){var el=document.getElementById(pid);if(el)el.classList.toggle('active',pid===id);});
+    try{sessionStorage.setItem('wrsvpLastPage',id);}catch(e){}
+    var pe=document.getElementById(id);if(pe)pe.scrollTop=0;
+    renderPageNav();
+    try{document.dispatchEvent(new CustomEvent('wrsvp:page',{detail:{page:id}}));}catch(e){}
+  };
+  window.currentPage=function(){return _curPage;};
+  window.pageNext=function(){var seq=pageSeq();for(var k=0;k<seq.length;k++){if(seq[k].id===_curPage&&k<seq.length-1){window.showPage(seq[k+1].id);return;}}};
+  window.pageBack=function(){var seq=pageSeq();for(var k=0;k<seq.length;k++){if(seq[k].id===_curPage&&k>0){window.showPage(seq[k-1].id);return;}}};
+  window.bootPages=function(){
+    var role=window.portalRole();
+    if(!role){document.documentElement.setAttribute('data-auth','out');window.showPage('page-login');return;}
+    document.documentElement.setAttribute('data-auth','in');
+    var t=document.getElementById('pageDashTitle');if(t)t.textContent=(role==='regular')?'לוח בקרה':'דשבורד הצד שלי';
+    var last='';try{last=sessionStorage.getItem('wrsvpLastPage')||'';}catch(e){}
+    window.showPage((last&&last!=='page-login')?last:'page-share');
+  };
+  (function(){var lb=document.getElementById('hdrLogoutBtn');if(lb){lb.onclick=function(){
+    if(!window.confirm('להתנתק מהמערכת?'))return;
+    try{localStorage.removeItem(PORTAL_KEY);localStorage.removeItem('wrsvpNotifPrefs_v1');localStorage.removeItem('wrsvpPollSince');sessionStorage.removeItem('wrsvpLastPage');}catch(e){}
+    location.reload();
+  };}})();
+  window.bootPages();
+  /* ===== [SPA-PAGES F1] END ===== */
+  /* ===== [SPA-PAGES F2] PAGE1 DEMO SIMULATION (client-only, nothing is saved) ===== */
+  var demoRows=[]; var demoAtt=true;
+  window.demoSel=function(yes){demoAtt=yes;var y=document.getElementById('demoYes'),n=document.getElementById('demoNo');if(y)y.classList.toggle('sel',yes);if(n)n.classList.toggle('sel',!yes);};
+  function demoTbl(rows,hiIdx){
+    if(!rows||!rows.length)return '<p class="empty">אין רשומות עדיין.</p>';
+    var h='<table class="dt"><thead><tr><th>שם</th><th>מגיע?</th><th>גברים</th><th>נשים</th><th>ברכה</th><th>מתי אישר</th></tr></thead><tbody>';
+    for(var k=0;k<rows.length;k++){var g=rows[k];
+      h+='<tr'+(k===hiIdx?' class="demo-new"':'')+'><td class="nm">'+esc(g.guest_name)+'</td><td>'+att(g.attending)+'</td><td>'+(g.men_count||0)+'</td><td>'+(g.women_count||0)+'</td><td class="bl">'+esc(g.blessing||'')+'</td><td dir="ltr">'+fmt(g.timestamp||'')+'</td></tr>';}
+    return h+'</tbody></table>';
+  }
+  window.demoSend=function(){
+    var nm=(document.getElementById('demoName').value||'').trim()||'אורח/ת לדוגמה';
+    var men=parseInt(document.getElementById('demoMen').value,10);if(isNaN(men)||men<0)men=0;
+    var women=parseInt(document.getElementById('demoWomen').value,10);if(isNaN(women)||women<0)women=0;
+    var bl=(document.getElementById('demoBless').value||'').trim();
+    demoRows.push({guest_name:nm,attending:demoAtt,men_count:demoAtt?men:0,women_count:demoAtt?women:0,blessing:bl,timestamp:new Date().toString()});
+    renderDemoOut();
+  };
+  function renderDemoOut(){
+    var role=(typeof window.portalRole==='function'&&window.portalRole())||'regular';
+    var rec=portalLoad()||{};var side=(rec.side==='bride')?'bride':'groom';
+    var hi=demoRows.length-1;
+    function block(title,rows,hiIn){return '<div style="margin:14px 0;"><div style="font-weight:800;font-size:1.15em;color:var(--olive-d);margin-bottom:6px;">'+title+'</div>'+demoTbl(rows,hiIn)+'</div>';}
+    var h='<div class="cap" style="font-weight:700;color:#b23b3b;margin:14px 0 4px;">(הדגמה בלבד - לא נשמר בבסיס הנתונים)</div>';
+    if(role==='regular'){h+=block('לוח אישי',demoRows,hi);}
+    else if(role==='admin'){h+=block('לוח הצד שלי ('+(side==='groom'?'צד החתן':'צד הכלה')+')',demoRows,hi)+block('לוח משולב',demoRows,hi);}
+    else{var groom=(side==='groom')?demoRows:[];var bride=(side==='bride')?demoRows:[];
+      h+=block('לוח אישי',demoRows,hi)+block('צד החתן',groom,(side==='groom')?hi:-1)+block('צד הכלה',bride,(side==='bride')?hi:-1)+block('לוח משולב',demoRows,hi);}
+    var out=document.getElementById('demoOut');if(!out)return;out.innerHTML=h;
+    setTimeout(function(){var el=out.querySelector('.demo-new');if(el)el.scrollIntoView({behavior:'smooth',block:'center'});},60);
+  }
+  /* ===== [SPA-PAGES F2] END ===== */
+  /* ===== [SPA-PAGES F3] DASHBOARD PAGES (lazy GAS iframes + rotate overlay + goto-share) ===== */
+  function dashUrl(mode){var rec=portalLoad();if(!rec||!rec.token)return '';return EXEC_URL+'?mode='+mode+'&token='+encodeURIComponent(rec.token)+'&phone='+encodeURIComponent(rec.phone||'');}
+  function loadDashIframe(force){var f=document.getElementById('portalDashIframe');if(!f)return;var u=dashUrl('dashboard');if(!u)return;if(force||f.getAttribute('src')!==u){f.src=u;}}
+  function loadCombinedIframe(force){var rec=portalLoad();if(!rec||rec.sid!==OWNER_SID)return;/* GILI + admins never load combined */var f=document.getElementById('portalCombinedIframe');if(!f)return;var u=dashUrl('combined');if(!u)return;if(force||f.getAttribute('src')!==u){f.src=u;}}
+  window._reloadDashIframes=function(){loadDashIframe(true);loadCombinedIframe(true);};
+  function updateRotateOverlay(pg){
+    pg=pg||(typeof window.currentPage==='function'?window.currentPage():'');
+    var ov=document.getElementById('rotateOverlay');if(!ov)return;
+    var isDash=(pg==='page-dash'||pg==='page-combined');
+    var portrait=false;try{portrait=window.matchMedia('(orientation: portrait)').matches&&window.matchMedia('(max-width: 820px)').matches;}catch(e){}
+    var dismissed=false;try{dismissed=sessionStorage.getItem('wrsvpRotateOk')==='1';}catch(e){}
+    ov.style.display=(isDash&&portrait&&!dismissed)?'flex':'none';
+  }
+  window.rotateOverlayDismiss=function(){try{sessionStorage.setItem('wrsvpRotateOk','1');}catch(e){}updateRotateOverlay();};
+  document.addEventListener('wrsvp:page',function(ev){
+    var pg=ev&&ev.detail&&ev.detail.page;
+    if(pg==='page-dash'){loadDashIframe(false);}
+    if(pg==='page-combined'){loadCombinedIframe(false);}
+    updateRotateOverlay(pg);
+  });
+  try{window.addEventListener('resize',function(){updateRotateOverlay();},{passive:true});}catch(e){window.addEventListener('resize',function(){updateRotateOverlay();});}
+  try{window.addEventListener('orientationchange',function(){updateRotateOverlay();});}catch(e){}
+  /* D1 bridge: the GAS dashboard action row posts this to navigate the SPA to Page 1 */
+  window.addEventListener('message',function(e){if(e&&e.data&&e.data.type==='wedding-goto-share'){try{window.showPage('page-share');}catch(err){}}});
+  updateRotateOverlay();
+  /* boot-case: F1's bootPages() fired 'wrsvp:page' BEFORE this module existed, so cover the missed initial page */
+  (function(){var pg=(typeof window.currentPage==='function')?window.currentPage():'';if(pg==='page-dash'){loadDashIframe(false);}if(pg==='page-combined'){loadCombinedIframe(false);}})();
+  /* ===== [SPA-PAGES F3] END ===== */
+  /* ===== [SPA-PAGES F4] REALTIME POLLING + TOASTS + SETTINGS ===== */
+  var PREFS_KEY='wrsvpNotifPrefs_v1'; var POLL_MS=30000;
+  function getNotifPrefs(role){
+    var p=null;try{p=JSON.parse(localStorage.getItem(PREFS_KEY)||'null');}catch(e){}
+    if(!p||typeof p!=='object'){p={};}
+    if(typeof p.enabled!=='boolean'){p.enabled=true;} /* toggle1 default ON */
+    if(p.scope!=='mine'&&p.scope!=='side'){p.scope='side';}
+    if(role==='regular'){p.scope='mine';} /* regular is always own-guests-only */
+    return p;
+  }
+  function saveNotifPrefs(p){try{localStorage.setItem(PREFS_KEY,JSON.stringify(p));}catch(e){}}
+  /* settings modal */
+  (function(){
+    var gear=document.getElementById('hdrSettingsBtn');var ov=document.getElementById('settingsOverlay');
+    if(gear&&ov){gear.onclick=function(){
+      var role=(typeof window.portalRole==='function'&&window.portalRole())||'regular';
+      var p=getNotifPrefs(role);
+      var live=document.getElementById('prefLive');if(live)live.checked=(p.enabled!==false);
+      var wrap=document.getElementById('prefScopeWrap');if(wrap)wrap.style.display=(role==='admin'||role==='super')?'':'none';
+      var rs=document.getElementById('prefScopeSide'),rm=document.getElementById('prefScopeMine');
+      if(rs)rs.checked=(p.scope!=='mine');if(rm)rm.checked=(p.scope==='mine');
+      ov.classList.add('open');
+    };}
+    function persist(){
+      var role=(typeof window.portalRole==='function'&&window.portalRole())||'regular';
+      var p=getNotifPrefs(role);
+      var live=document.getElementById('prefLive');if(live)p.enabled=!!live.checked;
+      var rm=document.getElementById('prefScopeMine');p.scope=(rm&&rm.checked)?'mine':'side';
+      if(role==='regular')p.scope='mine';
+      saveNotifPrefs(p);
+    }
+    ['prefLive','prefScopeSide','prefScopeMine'].forEach(function(id){var el=document.getElementById(id);if(el)el.addEventListener('change',persist);});
+    var cb=document.getElementById('settingsCloseBtn');if(cb)cb.onclick=function(){if(ov)ov.classList.remove('open');};
+    if(ov)ov.addEventListener('click',function(e){if(e.target===ov)ov.classList.remove('open');});
+  })();
+  /* toasts */
+  function showGuestToast(g){
+    var wrap=document.getElementById('toastWrap');if(!wrap||!g)return;
+    var t=document.createElement('div');t.className='wrsvp-toast';
+    var txt='אורח חדש אישר! '+String(g.guest_name||'')+' | '+(g.men_count||0)+' גברים / '+(g.women_count||0)+' נשים';
+    if(g.blessing){txt+=' | ברכה: '+String(g.blessing);}
+    t.textContent=txt;
+    t.onclick=function(){
+      try{if(typeof window._reloadDashIframes==='function'){window._reloadDashIframes();}}catch(e){}
+      try{window.showPage('page-dash');}catch(e){}
+      if(t.parentNode)t.parentNode.removeChild(t);
+    };
+    wrap.appendChild(t);
+    setTimeout(function(){if(t.parentNode)t.parentNode.removeChild(t);},10000);
+  }
+  /* poll loop */
+  function _pollSince(){var v=Number(localStorage.getItem('wrsvpPollSince'));if(!v||isNaN(v)){v=Date.now();try{localStorage.setItem('wrsvpPollSince',String(v));}catch(e){}}return v;}
+  function pollOnce(){
+    var rec=portalLoad();var role=(typeof window.portalRole==='function')?window.portalRole(rec):null;
+    if(!role||!rec||!rec.token)return;               /* logged-in only */
+    var p=getNotifPrefs(role);if(!p.enabled)return;  /* toggle1 off => no polling */
+    if(document.hidden)return;                       /* save quota in background */
+    var scope=(role==='regular')?'mine':((p.scope==='mine')?'mine':'side');
+    var url=EXEC_URL+'?mode=check_updates&token='+encodeURIComponent(rec.token)+'&phone='+encodeURIComponent(rec.phone||'')+'&scope='+scope+'&since='+_pollSince()+'&_='+Date.now();
+    fetch(url).then(function(r){return r.json();}).then(function(d){
+      if(!d||!d.ok)return;
+      try{localStorage.setItem('wrsvpPollSince',String(d.now||Date.now()));}catch(e){}
+      (d.guests||[]).filter(function(g){return g&&g.attending===true;}).slice(0,3).forEach(showGuestToast);
+    }).catch(function(){});
+  }
+  setInterval(pollOnce,POLL_MS);
+  /* ===== [SPA-PAGES F4] END ===== */
 })();
 </script>
 
