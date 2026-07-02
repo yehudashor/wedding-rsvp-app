@@ -439,6 +439,9 @@ p,li,.expl-text,.lnk .t,.stp .lbl{font-size:1.04em;}
         </div>
         <div id="portalPersonalDash" style="margin-top:8px;">
           <div style="font-weight:700;color:var(--olive-d);margin-bottom:6px;font-size:.9em;">&#128200; הלוח האישי שלך (חי):</div>
+          <div style="text-align:center;margin-bottom:8px;">
+            <button id="portalCombinedBtn" style="display:none;padding:6px 20px;background:linear-gradient(135deg,#3a5a40,#588157);color:#fff;border:1.5px solid var(--olive-d);border-radius:20px;font-family:inherit;font-size:.9em;font-weight:700;cursor:pointer;">&#128202; צפייה בכל הנתונים - משולב</button>
+          </div>
           <iframe id="portalDashIframe" src="about:blank" style="width:100%;height:520px;border:1px solid var(--line);border-radius:10px;background:#fff;" title="לוח אישי"></iframe>
         </div>
         <div style="text-align:center;margin-top:10px;">
@@ -451,9 +454,6 @@ p,li,.expl-text,.lnk .t,.stp .lbl{font-size:1.04em;}
           <iframe id="regFrame" src="https://script.google.com/macros/s/AKfycbyMjAOKf5l_5hzeLy4DAEBanw9ZO3n3_S7TVXACYRrCQh_QeTNuuqqSUSm6bl59mRVM_A/exec?mode=register" style="border:none;width:100%;min-height:720px;display:block" title="הרשמת מארגן"></iframe>
         </div>
         <div id="regres" style="display:none;margin-top:16px;"></div>
-        <div style="margin-top:10px;text-align:center;">
-          <button id="recoverBtn" style="display:none;padding:6px 18px;background:#f0e8d0;border:1.5px solid var(--line);border-radius:20px;font-family:inherit;font-size:.9em;cursor:pointer;" onclick="rRecover()">&#128269; הצג שוב את הקישורים</button>
-        </div>
       </div>
     </div>
     <aside class="expl-panel">
@@ -483,10 +483,6 @@ p,li,.expl-text,.lnk .t,.stp .lbl{font-size:1.04em;}
         <div class="expl-label">&#9888; קישור הלוח האישי</div>
         <div class="expl-row"><span class="expl-tag">מה זה</span><span class="expl-text">הכניסה שלך לראות מי מאורחייך אישר.</span></div>
         <div class="expl-warn">&#9940; לא להעביר לאורחים! רק עבורך.</div>
-      </div>
-      <div class="expl-item">
-        <div class="expl-label">&#128269; שכחתי את הקישורים</div>
-        <div class="expl-row"><span class="expl-tag">מתי</span><span class="expl-text">לוחצים אם הקישורים אבדו &#8212; מציג שוב.</span></div>
       </div>
     </aside>
   </div>
@@ -622,6 +618,7 @@ window.DASH_DATA = {};
      dashboard (personal/side/combined) with edit/delete, and the guest attaches to it. */
   window._activeMgr=null;
   var PORTAL_KEY='weddingOrgPortal_v1';
+  var OWNER_SID='baa34f647c10'; /* B3: super-admin combined view is OWNER-SID-gated (no master token in client) */
   function portalSave(rec){try{localStorage.setItem(PORTAL_KEY,JSON.stringify(rec));}catch(e){}}
   function portalLoad(){try{var s=localStorage.getItem(PORTAL_KEY);return s?JSON.parse(s):null;}catch(e){return null;}}
   function portalClear(){try{localStorage.removeItem(PORTAL_KEY);}catch(e){}}
@@ -682,7 +679,26 @@ window.DASH_DATA = {};
     if(wtEl)wtEl.textContent=waText;
     if(dlEl)dlEl.textContent=rec.distributionLink||'';
     if(dashEl)dashEl.textContent=rec.dashboardLink||'';
-    if(dashIframe&&rec.dashboardLink&&dashIframe.getAttribute('src')!==rec.dashboardLink){dashIframe.src=rec.dashboardLink;}
+    /* B1.4: embed the GAS dashboard as an IFRAME built from EXEC_URL + token + phone (raw
+       script.google.com URL is never shown as visible text). */
+    if(dashIframe&&rec.token){
+      var dashSrc=EXEC_URL+'?mode=dashboard&token='+encodeURIComponent(rec.token)+'&phone='+encodeURIComponent(rec.phone||'');
+      if(dashIframe.getAttribute('src')!==dashSrc){dashIframe.src=dashSrc;}
+    }
+    /* B3: super-admin COMBINED view, OWNER-SID-gated only. Yehuda's own token is reused; no
+       master token in the client. Gili and every other sid never get this button. */
+    var combBtn=document.getElementById('portalCombinedBtn');
+    if(combBtn){
+      if(rec.sid===OWNER_SID&&rec.token){
+        combBtn.style.display='inline-block';
+        combBtn.onclick=function(){
+          if(dashIframe){dashIframe.src=EXEC_URL+'?mode=combined&token='+encodeURIComponent(rec.token)+'&phone='+encodeURIComponent(rec.phone||'');}
+        };
+      }else{
+        combBtn.style.display='none';
+        combBtn.onclick=null;
+      }
+    }
     banner.style.display='block';
     if(iframeSection)iframeSection.style.display='none';
   }
@@ -697,11 +713,12 @@ window.DASH_DATA = {};
     if(typeof refreshP5Live==='function'){refreshP5Live();}
   };
 
-  window._deckRegister=function(name,side,sid,dispLink,dashLink){
+  window._deckRegister=function(name,side,sid,dispLink,dashLink,token,phone){
     side=(side==='bride')?'bride':'groom';
     var resolvedDisp=dispLink||(EXEC_URL+'?sid='+sid+'&ch=wa');
     window._activeMgr={name:name,side:side,sid:sid,dispatchLink:resolvedDisp,dashboardLink:dashLink||''};
-    var rec={name:name,side:side,sid:sid,distributionLink:resolvedDisp,dashboardLink:dashLink||''};
+    /* B1.3: persist token+phone additively so State B can build the dashboard iframe src. */
+    var rec={name:name,side:side,sid:sid,distributionLink:resolvedDisp,dashboardLink:dashLink||'',token:token||'',phone:phone||''};
     portalSave(rec);
     renderPortalBlock(rec);
     var exists=(state.personal||[]).some(function(p){return p.sender_id===sid;});
@@ -900,21 +917,14 @@ window.DASH_DATA = {};
     var res=document.getElementById('regres');
     res.innerHTML=buildResultHtml(n,rSide,sid,dispLink,dashLink);
     res.style.display='block';
-    document.getElementById('recoverBtn').style.display='inline-block';
+    var _rb=document.getElementById('recoverBtn'); if(_rb){_rb.style.display='inline-block';} /* B1.2: recover button removed; guard the now-absent element */
     setTimeout(function(){res.scrollIntoView({behavior:'smooth',block:'nearest'});},80);
 
     // Update WA bubble in guest slide
     updateWaBubble(n, dispLink);
   };
 
-  window.rRecover=function(){
-    var res=document.getElementById('regres');
-    if(simManagers.length===0){alert("עוד לא נרשמת. מלאי את הטופס למעלה.");return;}
-    var m=simManagers[simManagers.length-1];
-    res.innerHTML=buildResultHtml(m.name,m.side,m.sid,m.dispatchLink,m.dashLink);
-    res.style.display='block';
-    setTimeout(function(){res.scrollIntoView({behavior:'smooth',block:'nearest'});},80);
-  };
+  /* B1.2: SPA demo rRecover removed — the unified register/login form is the only entry. */
 
   /* ===== SLIDE 4: GUEST FLOW ===== */
   var gAtt2=null, gMen2=1, gWomen2=0;
@@ -1083,7 +1093,7 @@ window.DASH_DATA = {};
   // SPA BRIDGE: when the embedded registration iframe posts done, save the portal (State B)
   // and transition in-place to the manager portal (no reload). Permissive origin: we key off
   // e.data.type only (the GAS iframe origin differs from ours), never hard-failing on origin.
-  window.addEventListener('message',function(e){ if(e&&e.data&&e.data.type==='wedding-reg-done'){ try{ if(e.data.sid&&typeof window._deckRegister==='function'){ window._deckRegister(e.data.name||'מארגן חדש', e.data.side||'groom', e.data.sid, e.data.distributionLink||'', e.data.dashboardLink||''); } }catch(err){} try{ var pb=document.getElementById('portalBanner'); if(pb){ pb.style.display='block'; setTimeout(function(){pb.scrollIntoView({behavior:'smooth',block:'start'});},80); } }catch(err2){} } });
+  window.addEventListener('message',function(e){ if(e&&e.data&&e.data.type==='wedding-reg-done'){ try{ if(e.data.sid&&typeof window._deckRegister==='function'){ window._deckRegister(e.data.name||'מארגן חדש', e.data.side||'groom', e.data.sid, e.data.distributionLink||'', e.data.dashboardLink||'', e.data.token||'', e.data.phone||''); } }catch(err){} try{ var pb=document.getElementById('portalBanner'); if(pb){ pb.style.display='block'; setTimeout(function(){pb.scrollIntoView({behavior:'smooth',block:'start'});},80); } }catch(err2){} } });
   // SPA SEAMLESS HEIGHT: the register iframe (2B) posts its content height so we can grow the
   // frame and kill the internal scrollbar (critical for elderly users). 720px stays as the floor.
   window.addEventListener('message',function(e){ if(e&&e.data&&e.data.type==='wedding-reg-height'){ try{ var f=document.getElementById('regFrame'); var hgt=parseInt(e.data.height,10); if(f&&hgt&&!isNaN(hgt)){ f.style.height=Math.max(720,hgt)+'px'; } }catch(err){} } });
