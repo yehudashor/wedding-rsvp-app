@@ -460,6 +460,19 @@ html[data-auth="in"] #page-share{padding-top:10px;}
 #settingsOverlay label.set-row{display:flex;align-items:center;gap:12px;font-size:1.1em;font-weight:700;margin-bottom:14px;cursor:pointer;}
 #settingsOverlay input[type=checkbox],#settingsOverlay input[type=radio]{width:24px;height:24px;accent-color:var(--olive);flex:0 0 auto;}
 #settingsOverlay .set-close{width:100%;min-height:54px;border:none;border-radius:12px;background:var(--olive);color:#fff;font-weight:800;font-size:1.1em;cursor:pointer;font-family:inherit;margin-top:6px;}
+/* [INVITE-CAPTURE] share-time name modal (elderly-friendly, RTL). Additive - mirrors #settingsOverlay. */
+#inviteNameOverlay{position:fixed;inset:0;z-index:1200;background:rgba(40,30,18,.6);display:none;align-items:center;justify-content:center;padding:18px;}
+#inviteNameOverlay.open{display:flex;}
+#inviteNameOverlay #inviteNameModal{background:#fffdf8;border-radius:18px;padding:26px 22px;width:min(460px,94vw);text-align:right;box-shadow:0 18px 48px rgba(0,0,0,.35);}
+#inviteNameOverlay h3{margin:.1em 0 .5em;color:var(--olive-d);font-size:1.4em;}
+#inviteNameOverlay .in-lead{font-size:1.05em;font-weight:600;color:var(--ink);line-height:1.6;margin-bottom:14px;}
+#inviteNameOverlay #inviteNameInput{width:100%;box-sizing:border-box;min-height:60px;font-size:1.25em;font-weight:700;text-align:right;padding:12px 14px;border:2px solid var(--gold-soft);border-radius:12px;font-family:inherit;color:var(--ink);background:#fff;}
+#inviteNameOverlay #inviteNameInput:focus{outline:none;border-color:var(--olive);}
+#inviteNameOverlay #inviteNameMsg{display:none;font-size:1.05em;font-weight:700;color:#b23b3b;line-height:1.5;margin:10px 0 0;}
+#inviteNameOverlay .in-btns{display:flex;gap:12px;margin-top:18px;}
+#inviteNameOverlay #inviteNameConfirmBtn{flex:1;min-height:58px;border:none;border-radius:12px;background:var(--olive);color:#fff;font-weight:800;font-size:1.15em;cursor:pointer;font-family:inherit;}
+#inviteNameOverlay #inviteNameConfirmBtn:disabled{opacity:.6;cursor:default;}
+#inviteNameOverlay #inviteNameCancelBtn{flex:0 0 40%;min-height:58px;border:2px solid var(--gold-soft);border-radius:12px;background:#f5f0e8;color:var(--ink);font-weight:800;font-size:1.15em;cursor:pointer;font-family:inherit;}
 </style>
 <meta name="theme-color" content="#a9802f">
 <link rel="manifest" href="manifest.json">
@@ -500,6 +513,19 @@ html[data-auth="in"] #page-share{padding-top:10px;}
       <label class="set-row"><input type="radio" name="prefScope" id="prefScopeMine" value="mine"><span>התראות רק על אורחים שהזמנתי אישית</span></label>
     </div>
     <button type="button" class="set-close" id="settingsCloseBtn">סגור</button>
+  </div>
+</div>
+<!-- [INVITE-CAPTURE] share-time name modal (additive). Captures the invited guest's name before minting a tracked link. -->
+<div id="inviteNameOverlay" dir="rtl">
+  <div id="inviteNameModal" role="dialog" aria-modal="true" aria-labelledby="inviteNameTitle">
+    <h3 id="inviteNameTitle">&#128100; למי שולחים את ההזמנה?</h3>
+    <div class="in-lead">כתבו את שם המוזמן/ת, ואז נכין קישור אישי כדי שנדע מי אישר ומי עדיין לא.</div>
+    <input type="text" id="inviteNameInput" placeholder="שם המוזמן/ת" autocomplete="off" enterkeyhint="done">
+    <div id="inviteNameMsg"></div>
+    <div class="in-btns">
+      <button type="button" id="inviteNameConfirmBtn">שליחה</button>
+      <button type="button" id="inviteNameCancelBtn">ביטול</button>
+    </div>
   </div>
 </div>
 <!-- ANNOTATE TOGGLE: flip ANNOTATE_ENABLED to true (one line) to restore the note feature -->
@@ -562,9 +588,9 @@ html[data-auth="in"] #page-share{padding-top:10px;}
         <span id="portalDispLink" class="u" style="display:none;word-break:break-all;overflow-wrap:anywhere;margin-top:4px;"></span>
         <div class="share-steps" style="font-size:1em;font-weight:700;color:var(--olive-d);margin:8px 0 6px;line-height:1.7;">1. להעתיק את ההודעה &nbsp; 2. לשלוח בוואטסאפ &nbsp; 3. לשלוח במייל</div>
         <div class="share">
-          <button class="cp" id="cpPortalDisp" onclick="doCopy('cpPortalDisp', window._portalWaText||'')" style="white-space:nowrap;">קישור - הפצה</button>
-          <button class="wa-btn" id="cpPortalWa" onclick="if(window._portalWaUrl)window.open(window._portalWaUrl,'_blank')">שיתוף בוואטסאפ</button>
-          <button class="em-btn" id="cpPortalEm" onclick="if(window._portalEmUrl){var a=document.createElement('a');a.href=window._portalEmUrl;a.style.display='none';document.body.appendChild(a);a.click();a.remove();}">שיתוף במייל</button>
+          <button class="cp" id="cpPortalDisp" onclick="startShareCapture('copy')" style="white-space:nowrap;">קישור - הפצה</button>
+          <button class="wa-btn" id="cpPortalWa" onclick="startShareCapture('wa')">שיתוף בוואטסאפ</button>
+          <button class="em-btn" id="cpPortalEm" onclick="startShareCapture('em')">שיתוף במייל</button>
         </div>
       </div>
     </div>
@@ -902,6 +928,108 @@ window.DASH_DATA = {};
     banner.style.display='block';
     if(iframeSection)iframeSection.style.display='none';
   }
+
+  /* ===== [INVITE-CAPTURE] share-time name modal + mint + unique tracked link (additive) ===== */
+  /* Flow: a share button opens a mandatory RTL name modal; on confirm we mint a unique invite
+     token via the backend and share a link carrying ?...&g=<token>. Does NOT mutate the global
+     _portalWaText/_portalWaUrl/_portalEmUrl - the unique text is local to this share action. */
+  var _shareCaptureMode=null;   /* 'copy' | 'wa' | 'em' */
+  var _shareCaptureBusy=false;
+
+  function _inviteMsg(txt){
+    var m=document.getElementById('inviteNameMsg');
+    if(!m)return;
+    if(txt){m.textContent=txt;m.style.display='block';}
+    else{m.textContent='';m.style.display='none';}
+  }
+  function _inviteBusy(on){
+    _shareCaptureBusy=!!on;
+    var b=document.getElementById('inviteNameConfirmBtn');
+    if(b)b.disabled=!!on;
+  }
+  function closeShareCapture(){
+    _shareCaptureMode=null;
+    _inviteBusy(false);
+    _inviteMsg('');
+    var ov=document.getElementById('inviteNameOverlay');
+    if(ov)ov.classList.remove('open');
+  }
+  window.closeShareCapture=closeShareCapture;
+
+  function startShareCapture(mode){
+    _shareCaptureMode=(mode==='wa'||mode==='em')?mode:'copy';
+    var ov=document.getElementById('inviteNameOverlay');
+    var inp=document.getElementById('inviteNameInput');
+    if(!ov||!inp)return;
+    _inviteBusy(false);
+    _inviteMsg('');
+    inp.value='';
+    ov.classList.add('open');
+    setTimeout(function(){try{inp.focus();}catch(e){}},60);
+  }
+  window.startShareCapture=startShareCapture;
+
+  function _doShareCaptureConfirm(){
+    if(_shareCaptureBusy)return;
+    var inp=document.getElementById('inviteNameInput');
+    var name=inp?String(inp.value||'').trim():'';
+    if(!name){_inviteMsg('יש להזין שם');if(inp){try{inp.focus();}catch(e){}}return;}
+    var rec=(typeof portalLoad==='function')?portalLoad():null;
+    if(!rec||!rec.token){_inviteMsg('שגיאה - נא לרענן ולנסות שוב');return;}
+    var mode=_shareCaptureMode||'copy';
+    var body={action:'mintInvite',token:rec.token,invitee_name:name};
+    _inviteBusy(true);
+    _inviteMsg('');
+    /* text/plain avoids a CORS preflight against Apps Script (mirrors the push-subscribe call) */
+    fetch(EXEC_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body)})
+      .then(function(r){return r.json();})
+      .then(function(res){
+        if(!res||res.ok!==true||!res.g){
+          _inviteBusy(false);
+          _inviteMsg('לא הצלחנו להכין קישור. נא לנסות שוב.');
+          return;
+        }
+        var g=res.g;
+        var base=rec.distributionLink||'';
+        var uniqueLink=base+(base.indexOf('?')>=0?'&':'?')+'g='+encodeURIComponent(g);
+        var waText=buildWaMessageTextPortal(rec.name, uniqueLink);
+        if(mode==='wa'){
+          window.open('https://wa.me/?text='+encodeURIComponent(waText),'_blank');
+        }else if(mode==='em'){
+          var subjEnc=encodeURIComponent('אישור הגעה לחתונת אבי חוקת ומיכל שור');
+          var bodyEnc=encodeURIComponent(waText);
+          var url='mailto:?subject='+subjEnc+'&body='+bodyEnc;
+          var a=document.createElement('a');a.href=url;a.style.display='none';document.body.appendChild(a);a.click();a.remove();
+        }else{
+          doCopy('cpPortalDisp', waText);
+        }
+        closeShareCapture();
+      })
+      .catch(function(){
+        _inviteBusy(false);
+        _inviteMsg('בעיית תקשורת. נא לנסות שוב.');
+      });
+  }
+
+  (function _wireShareCapture(){
+    function wire(){
+      var ov=document.getElementById('inviteNameOverlay');
+      if(!ov)return;
+      var confirmBtn=document.getElementById('inviteNameConfirmBtn');
+      var cancelBtn=document.getElementById('inviteNameCancelBtn');
+      var inp=document.getElementById('inviteNameInput');
+      if(confirmBtn)confirmBtn.addEventListener('click',_doShareCaptureConfirm);
+      if(cancelBtn)cancelBtn.addEventListener('click',closeShareCapture);
+      /* backdrop click closes; a click inside the modal card must not bubble to the overlay */
+      ov.addEventListener('click',function(e){if(e.target===ov){closeShareCapture();}});
+      var modal=document.getElementById('inviteNameModal');
+      if(modal)modal.addEventListener('click',function(e){e.stopPropagation();});
+      if(inp)inp.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();_doShareCaptureConfirm();}});
+    }
+    if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',wire);}
+    else{wire();}
+  })();
+  /* ===== [INVITE-CAPTURE] END ===== */
 
   /* MULTI-ACCOUNT: build the header switcher. Shows only when >1 account is stored.
      Choosing an account sets it active and re-loads BOTH the dashboard iframe and the
