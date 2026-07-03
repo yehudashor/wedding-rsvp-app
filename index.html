@@ -398,8 +398,8 @@ html[data-auth="out"] #page-share,html[data-auth="out"] #page-dash,html[data-aut
 .page-nav .pn-next{background:linear-gradient(180deg,var(--olive),var(--olive-d));color:#fff;box-shadow:0 10px 24px -8px rgba(75,100,64,.55);}
 .page-nav .pn-back{background:#efe7d8;color:var(--ink);flex:0 0 32%;}
 /* [G5] compact mini nav for dash / combined pages */
-.page-nav-mini{display:flex;justify-content:flex-start;gap:10px;width:100%;max-width:1000px;margin:8px auto;}
-.pn-mini{min-height:44px;padding:6px 16px;border:none;border-radius:10px;background:#efe7d8;color:var(--ink);font-weight:700;font-size:1em;cursor:pointer;font-family:inherit;}
+.page-nav-mini{display:flex;justify-content:center;gap:10px;width:100%;max-width:1000px;margin:10px auto;}
+.pn-mini{flex:1;min-height:44px;padding:6px 16px;border:none;border-radius:10px;background:#efe7d8;color:var(--ink);font-weight:700;font-size:1em;cursor:pointer;font-family:inherit;}
 html:fullscreen #portalDashIframe,html:fullscreen #portalCombinedIframe{height:86vh;}
 </style>
 <style id="demo-sim-css">
@@ -656,10 +656,9 @@ html[data-auth="in"] #page-share{padding-top:10px;}
 <!-- PHASE2 PAGE 2: dashboard (role-titled) -->
 <section class="slide" id="page-dash" data-title="לוח בקרה">
   <div class="page-inner">
-    <h2 class="page-h" id="pageDashTitle">לוח בקרה</h2>
     <!-- [G5] compact dash nav: back-to-share + super-only route to page-combined -->
     <div class="page-nav-mini"><button type="button" class="pn-mini" onclick="showPage('page-share')">⬅️ חזור למסך השיתוף</button><button type="button" class="pn-mini" id="pnCombinedGo" onclick="showPage('page-combined')" style="display:none">ללוח המשולב ➡️</button></div>
-    <div id="portalPersonalDash" style="margin-top:8px;">
+    <div id="portalPersonalDash" style="margin-top:10px;">
       <div style="font-weight:700;color:var(--olive-d);margin-bottom:6px;font-size:.9em;">&#128200; הלוח האישי שלך (חי):</div>
       <iframe id="portalDashIframe" src="about:blank" style="width:100%;height:68vh;min-height:480px;border:1px solid var(--line);border-radius:10px;background:#fff;" title="לוח אישי"></iframe>
     </div>
@@ -668,10 +667,9 @@ html[data-auth="in"] #page-share{padding-top:10px;}
 <!-- PHASE2 PAGE 3: combined (super only) -->
 <section class="slide" id="page-combined" data-title="דשבורד משולב">
   <div class="page-inner">
-    <h2 class="page-h">דשבורד משולב</h2>
     <!-- [G5] compact combined nav: back to dashboard -->
     <div class="page-nav-mini"><button type="button" class="pn-mini" onclick="showPage('page-dash')">⬅️ חזור ללוח הבקרה</button></div>
-    <div id="combinedPageBody"><iframe id="portalCombinedIframe" src="about:blank" style="width:100%;height:68vh;min-height:480px;border:1px solid var(--line);border-radius:10px;background:#fff;" title="דשבורד משולב"></iframe></div>
+    <div id="combinedPageBody" style="margin-top:10px;"><iframe id="portalCombinedIframe" src="about:blank" style="width:100%;height:68vh;min-height:480px;border:1px solid var(--line);border-radius:10px;background:#fff;" title="דשבורד משולב"></iframe></div>
   </div>
 </section>
 
@@ -977,7 +975,8 @@ window.DASH_DATA = {};
     var rec=(typeof portalLoad==='function')?portalLoad():null;
     if(!rec||!rec.token){_inviteMsg('שגיאה - נא לרענן ולנסות שוב');return;}
     var mode=_shareCaptureMode||'copy';
-    var body={action:'mintInvite',token:rec.token,invitee_name:name};
+    var channel=(mode==='em')?'email':'wa';
+    var body={action:'mintInvite',token:rec.token,invitee_name:name,channel:channel};
     _inviteBusy(true);
     _inviteMsg('');
     /* text/plain avoids a CORS preflight against Apps Script (mirrors the push-subscribe call) */
@@ -990,7 +989,8 @@ window.DASH_DATA = {};
           return;
         }
         var g=res.g;
-        var base=rec.distributionLink||'';
+        var base=(rec.distributionLink||'').replace(/([?&])ch=[^&]*/,'$1ch='+channel);
+        if(base.indexOf('ch=')<0){base+=(base.indexOf('?')>=0?'&':'?')+'ch='+channel;}
         var uniqueLink=base+(base.indexOf('?')>=0?'&':'?')+'g='+encodeURIComponent(g);
         var waText=buildWaMessageTextPortal(rec.name, uniqueLink);
         if(mode==='wa'){
