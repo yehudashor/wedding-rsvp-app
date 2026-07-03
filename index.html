@@ -1622,76 +1622,70 @@ window.DASH_DATA = {};
     window.addEventListener('pointerdown',_reqOnce,{once:true});
     window.addEventListener('click',_reqOnce,{once:true});
   })();
-  /* [G3-NOTIF v3] Elderly-proof GUIDED permission wizard. A big unmissable overlay shown on EVERY app
-     open (browser AND installed) whenever OS-notification permission is not yet granted. Flow:
-     intro -> ask ("now press approve") -> the button fires the browser's native prompt -> done
-     ("notifications on") -> continue to install (if not installed) or back to the app (if installed).
-     Browser reality: only the user can press "Allow" in the browser's own prompt; the wizard drives it
-     and guides that one tap. On "Block" it shows settings guidance. A small "later" link session-snoozes
-     to avoid ever locking a user out (re-appears on the next real open). Notification system only. */
+  /* [G3-NOTIF v3] Elderly-proof notification wizard, INSTALLED-APP ONLY. It appears ONLY when the app runs
+     as an installed PWA (isStandalone) and OS-notification permission is still 'default'. Deliberate:
+     users install first (via the separate install modal), then grant notifications once, in the installed
+     context, so the grant sticks and there is no duplicate browser+app prompt. A MANDATORY "I understand"
+     checkbox gates the button, forcing the user to read the instruction (in the browser prompt: change the
+     choice to Always, then Allow) so nobody accidentally denies. On grant: subscribe + show "done" +
+     auto-close, and it never re-appears. 'denied' -> nothing shown. Notification system only. */
   (function(){
-    var OV_ID='wrsvpNotifNag', SNOOZE='wrsvpNotifNagSnooze_v1', _step='intro';
+    var OV_ID='wrsvpNotifNag', _step='ask';
     function granted(){return notifSupported()&&Notification.permission==='granted';}
-    function iosNeedsInstall(){try{return (!('Notification' in window))&&/iphone|ipad|ipod/i.test(navigator.userAgent||'')&&!isStandalone();}catch(e){return false;}}
-    function eligible(){if(iosNeedsInstall())return true;return notifSupported()&&Notification.permission==='default';}
-    function snoozed(){try{return sessionStorage.getItem(SNOOZE)==='1';}catch(e){return false;}}
+    function eligible(){return isStandalone()&&notifSupported()&&Notification.permission==='default';}
     function isVisible(){var ov=document.getElementById(OV_ID);return !!ov&&ov.style.display==='flex';}
+    function updateBtn(){var b=document.getElementById('wrsvpNnBtn'),c=document.getElementById('wrsvpNnChk');if(!b)return;var lock=(_step==='ask')&&!(c&&c.checked);b.disabled=lock;b.style.opacity=lock?'.45':'';b.style.cursor=lock?'not-allowed':'pointer';}
     function build(){
       if(document.getElementById(OV_ID))return document.getElementById(OV_ID);
       var st=document.createElement('style');
       st.textContent='#wrsvpNotifNag{position:fixed;inset:0;z-index:99999;display:none;align-items:center;justify-content:center;background:rgba(20,25,20,.72);}'
-        +'#wrsvpNotifNag .nn-card{background:#fff;max-width:440px;width:88%;border-radius:22px;padding:30px 26px;text-align:center;font-family:inherit;box-shadow:0 24px 60px -12px rgba(0,0,0,.5);}'
-        +'#wrsvpNotifNag .nn-emoji{font-size:3.4em;line-height:1;margin-bottom:8px;}'
+        +'#wrsvpNotifNag .nn-card{background:#fff;max-width:460px;width:90%;border-radius:22px;padding:28px 24px;text-align:center;font-family:inherit;box-shadow:0 24px 60px -12px rgba(0,0,0,.5);}'
+        +'#wrsvpNotifNag .nn-emoji{font-size:3.2em;line-height:1;margin-bottom:8px;}'
         +'#wrsvpNotifNag .nn-title{font-size:1.5em;font-weight:800;color:#2c3e50;margin-bottom:10px;}'
-        +'#wrsvpNotifNag .nn-text{font-size:1.15em;line-height:1.55;color:#444;margin-bottom:22px;}'
-        +'#wrsvpNotifNag .nn-btn{display:block;width:100%;min-height:64px;font-size:1.35em;font-weight:800;font-family:inherit;border:none;border-radius:16px;background:linear-gradient(180deg,#4b6440,#3a4f32);color:#fff;cursor:pointer;box-shadow:0 10px 22px -8px rgba(75,100,64,.7);}'
-        +'#wrsvpNotifNag .nn-later{margin-top:14px;background:none;border:none;color:#999;font-size:.95em;font-family:inherit;cursor:pointer;text-decoration:underline;}';
+        +'#wrsvpNotifNag .nn-text{font-size:1.18em;line-height:1.6;color:#333;margin-bottom:16px;}'
+        +'#wrsvpNotifNag .nn-chk{display:flex;align-items:center;gap:10px;justify-content:center;font-size:1.1em;font-weight:700;color:#2c3e50;background:#f3efe6;border-radius:14px;padding:14px 12px;margin-bottom:16px;cursor:pointer;}'
+        +'#wrsvpNotifNag .nn-chk input{width:26px;height:26px;flex:none;}'
+        +'#wrsvpNotifNag .nn-btn{display:block;width:100%;min-height:64px;font-size:1.35em;font-weight:800;font-family:inherit;border:none;border-radius:16px;background:linear-gradient(180deg,#4b6440,#3a4f32);color:#fff;cursor:pointer;box-shadow:0 10px 22px -8px rgba(75,100,64,.7);}';
       document.head.appendChild(st);
       var ov=document.createElement('div');ov.id=OV_ID;ov.setAttribute('dir','rtl');
-      ov.innerHTML='<div class="nn-card"><div class="nn-emoji" id="wrsvpNnEmoji"></div><div class="nn-title" id="wrsvpNnTitle"></div><div class="nn-text" id="wrsvpNnText"></div><button type="button" class="nn-btn" id="wrsvpNnBtn"></button><button type="button" class="nn-later" id="wrsvpNnLater"></button></div>';
+      ov.innerHTML='<div class="nn-card"><div class="nn-emoji" id="wrsvpNnEmoji"></div><div class="nn-title" id="wrsvpNnTitle"></div><div class="nn-text" id="wrsvpNnText"></div><label class="nn-chk" id="wrsvpNnChkWrap"><input type="checkbox" id="wrsvpNnChk"><span id="wrsvpNnChkTxt"></span></label><button type="button" class="nn-btn" id="wrsvpNnBtn"></button></div>';
       document.body.appendChild(ov);
-      document.getElementById('wrsvpNnLater').textContent='אחר כך';
+      document.getElementById('wrsvpNnChkTxt').textContent='קראתי והבנתי: אשנה ל"תמיד" ואלחץ "אישור"';
       document.getElementById('wrsvpNnBtn').addEventListener('click',onPrimary);
-      document.getElementById('wrsvpNnLater').addEventListener('click',function(){try{sessionStorage.setItem(SNOOZE,'1');}catch(e){}hide();});
+      document.getElementById('wrsvpNnChk').addEventListener('change',updateBtn);
       return ov;
     }
-    function set(emoji,title,text,btn,showLater){
-      var e=document.getElementById('wrsvpNnEmoji'),t=document.getElementById('wrsvpNnTitle'),x=document.getElementById('wrsvpNnText'),b=document.getElementById('wrsvpNnBtn'),l=document.getElementById('wrsvpNnLater');
-      if(e)e.textContent=emoji;if(t)t.textContent=title;if(x)x.textContent=text;if(b)b.textContent=btn;if(l)l.style.display=showLater?'':'none';
+    function set(emoji,title,text,btn,showChk){
+      var e=document.getElementById('wrsvpNnEmoji'),t=document.getElementById('wrsvpNnTitle'),x=document.getElementById('wrsvpNnText'),b=document.getElementById('wrsvpNnBtn'),w=document.getElementById('wrsvpNnChkWrap');
+      if(e)e.textContent=emoji;if(t)t.textContent=title;if(x)x.textContent=text;if(b){b.textContent=btn;b.style.display=btn?'':'none';}if(w)w.style.display=showChk?'':'none';
+      updateBtn();
     }
     function render(step){
       _step=step;
-      if(step==='ios'){set('📲','צריך להתקין קודם','כדי לקבל התראות ב-iPhone צריך קודם להתקין את האפליקציה למסך הבית. לחצו כדי להמשיך להתקנה.','המשך להתקנה',true);return;}
-      if(step==='blocked'){set('🔒','ההתראות חסומות','ההתראות חסומות במכשיר הזה (נחסמו בעבר). להפעלה חד-פעמית: בטלפון פתחו הגדרות ← אפליקציות ← אישורי הגעה ← התראות ← אפשרו; במחשב לחצו על סמל המנעול ליד כתובת האתר ← התראות ← אפשרו. אחר כך לחצו "בדוק שוב".','בדוק שוב',true);return;}
-      if(step==='ask'){set('👇','אישור התראות','עוד לחיצה אחת: לחצו על "הפעל התראות". יקפוץ חלון קטן של הדפדפן - בחרו בו "אפשר", ואם מופיעה אפשרות "תמיד" או "בכל ביקור" בחרו אותה.','הפעל התראות',true);return;}
-      if(step==='done'){set('🎉','מצוין!','ההתראות מופעלות. מעכשיו תקבלו התראה בכל פעם שאורח מאשר הגעה, גם כשהאפליקציה סגורה.','המשך',false);return;}
-      set('🔔','להפעיל התראות?','כדי לקבל התראה בכל פעם שאורח מאשר הגעה, גם כשהאפליקציה סגורה. לחצו על "אישור" כדי להמשיך.','אישור',true);
-    }
-    function showInstall(){try{var im=document.getElementById('wrsvpImOverlay');if(im)im.classList.add('wrsvpIm-show');}catch(e){}}
-    function finish(){hide();if(!isStandalone()){showInstall();}}
-    function doEnable(){
-      if(granted()){try{wrsvpPushSubscribe();}catch(e){}render('done');setTimeout(finish,1600);return;}
-      try{
-        Notification.requestPermission().then(function(res){
-          if(res==='granted'){try{updateNotifHint();}catch(e){}try{notifyNative('התראות הופעלו','מעכשיו תקבלו התראה כשאורח מאשר הגעה.','wrsvp-perm-ok','page-dash');}catch(e){}try{wrsvpPushSubscribe();}catch(e){}render('done');setTimeout(finish,1600);}
-          else if(notifSupported()&&Notification.permission==='denied'){hide();}
-          else{render('ask');}
-        }).catch(function(){render('ask');});
-      }catch(e){render('ask');}
-    }
-    function onPrimary(){
-      if(_step==='intro'){render('ask');return;}
-      if(_step==='ask'){doEnable();return;}
-      if(_step==='blocked'){if(granted()){try{wrsvpPushSubscribe();}catch(e){}render('done');setTimeout(finish,1600);}else{render('blocked');}return;}
-      if(_step==='ios'){hide();showInstall();return;}
-      finish();
+      if(step==='done'){set('🎉','מצוין!','ההתראות מופעלות. מעכשיו תקבלו התראה בכל פעם שאורח מאשר הגעה, גם כשהאפליקציה סגורה.','',false);return;}
+      set('🔔','הפעלת התראות','שימו לב! מיד ייפתח חלון קטן של הדפדפן. עליכם לשנות בו את הבחירה ל"תמיד", ואז ללחוץ "אישור". קודם סמנו את התיבה למטה, ואז לחצו על הכפתור הירוק.','הפעל התראות',true);
     }
     function hide(){var ov=document.getElementById(OV_ID);if(ov)ov.style.display='none';}
+    function finish(){hide();}
+    function doEnable(){
+      if(granted()){try{wrsvpPushSubscribe();}catch(e){}render('done');setTimeout(finish,1800);return;}
+      try{
+        Notification.requestPermission().then(function(res){
+          if(res==='granted'){try{updateNotifHint();}catch(e){}try{notifyNative('התראות הופעלו','מעכשיו תקבלו התראה בכל פעם שאורח מאשר הגעה.','wrsvp-perm-ok','page-dash');}catch(e){}try{wrsvpPushSubscribe();}catch(e){}render('done');setTimeout(finish,1800);}
+          else if(notifSupported()&&Notification.permission==='denied'){hide();}
+        }).catch(function(){});
+      }catch(e){}
+    }
+    function onPrimary(){
+      if(_step==='ask'){var c=document.getElementById('wrsvpNnChk');if(!c||!c.checked){updateBtn();return;}doEnable();return;}
+      finish();
+    }
     function open(){
-      if(!eligible()||snoozed())return;
+      if(!eligible())return;
       if(isVisible())return;
       build();
-      render(iosNeedsInstall()?'ios':'ask');
+      var c=document.getElementById('wrsvpNnChk');if(c)c.checked=false;
+      render('ask');
       document.getElementById(OV_ID).style.display='flex';
     }
     function tick(){if(!granted())open();}
