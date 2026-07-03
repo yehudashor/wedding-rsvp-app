@@ -812,6 +812,8 @@ window.DASH_DATA = {};
     v2.activeSid=rec.sid;                                            /* and becomes active */
     _portalWriteV2(v2);
     try{localStorage.setItem(PORTAL_KEY,JSON.stringify(rec));}catch(e){} /* keep v1 mirrored for the pre-paint anti-flash fallback */
+    /* [WEBPUSH] logged in -> register THIS browser for push NOW (idempotent; no-ops until OS permission is granted). Fixes the root cause where permission was granted (wizard) BEFORE login, so nothing ever subscribed and no push was ever delivered. */
+    try{ if(typeof wrsvpPushSubscribe==='function'){ setTimeout(function(){try{wrsvpPushSubscribe();}catch(e){}},900); } }catch(e){}
   }
   function portalLoad(){
     var v2=_portalMigrate();
@@ -1611,17 +1613,10 @@ window.DASH_DATA = {};
       }
     });
   }
-  /* [G3-NOTIF v2] Guarantee the OS-permission prompt actually appears. The toggle 'change' never
-     fires for a default-checked box, so a user who just opens the app never triggers the request and
-     every notification falls back to an in-app toast. Fix: request permission on the FIRST real user
-     gesture (pointerdown/click), which is load-safe and browser-allowed. Once granted, real AND demo
-     notifications go out as OS notifications only (no in-app toast). */
-  (function(){
-    if(!notifSupported()||Notification.permission!=='default')return;
-    function _reqOnce(){ try{maybeRequestNotifPermission();}catch(e){} }
-    window.addEventListener('pointerdown',_reqOnce,{once:true});
-    window.addEventListener('click',_reqOnce,{once:true});
-  })();
+  /* [G3-NOTIF v2 DISABLED] The old first-gesture auto-request fired the browser permission prompt on the
+     FIRST tap ANYWHERE (before the wizard's green button) and again as the tap bubbled to window, causing
+     several premature/duplicate prompts. The installed-app wizard is now the SOLE trigger of the request,
+     so this auto-request is removed. */
   /* [G3-NOTIF v3] Elderly-proof notification wizard, INSTALLED-APP ONLY. It appears ONLY when the app runs
      as an installed PWA (isStandalone) and OS-notification permission is still 'default'. Deliberate:
      users install first (via the separate install modal), then grant notifications once, in the installed
@@ -1630,7 +1625,7 @@ window.DASH_DATA = {};
      choice to Always, then Allow) so nobody accidentally denies. On grant: subscribe + show "done" +
      auto-close, and it never re-appears. 'denied' -> nothing shown. Notification system only. */
   (function(){
-    var OV_ID='wrsvpNotifNag', _step='ask';
+    var OV_ID='wrsvpNotifNag', _step='ask', _asked=false;
     function granted(){return notifSupported()&&Notification.permission==='granted';}
     function eligible(){return isStandalone()&&notifSupported()&&Notification.permission==='default';}
     function isVisible(){var ov=document.getElementById(OV_ID);return !!ov&&ov.style.display==='flex';}
@@ -1650,7 +1645,7 @@ window.DASH_DATA = {};
       var ov=document.createElement('div');ov.id=OV_ID;ov.setAttribute('dir','rtl');
       ov.innerHTML='<div class="nn-card"><div class="nn-emoji" id="wrsvpNnEmoji"></div><div class="nn-title" id="wrsvpNnTitle"></div><div class="nn-text" id="wrsvpNnText"></div><label class="nn-chk" id="wrsvpNnChkWrap"><input type="checkbox" id="wrsvpNnChk"><span id="wrsvpNnChkTxt"></span></label><button type="button" class="nn-btn" id="wrsvpNnBtn"></button></div>';
       document.body.appendChild(ov);
-      document.getElementById('wrsvpNnChkTxt').textContent='קראתי והבנתי: אשנה ל"תמיד" ואלחץ "אישור"';
+      document.getElementById('wrsvpNnChkTxt').textContent='קראתי והבנתי: אשנה ל"תמיד" ואלחץ "זה בסדר"';
       document.getElementById('wrsvpNnBtn').addEventListener('click',onPrimary);
       document.getElementById('wrsvpNnChk').addEventListener('change',updateBtn);
       return ov;
@@ -1663,18 +1658,20 @@ window.DASH_DATA = {};
     function render(step){
       _step=step;
       if(step==='done'){set('🎉','מצוין!','ההתראות מופעלות. מעכשיו תקבלו התראה בכל פעם שאורח מאשר הגעה, גם כשהאפליקציה סגורה.','',false);return;}
-      set('🔔','הפעלת התראות','שימו לב! מיד ייפתח חלון קטן של הדפדפן. עליכם לשנות בו את הבחירה ל"תמיד", ואז ללחוץ "אישור". קודם סמנו את התיבה למטה, ואז לחצו על הכפתור הירוק.','הפעל התראות',true);
+      set('🔔','הפעלת התראות','שימו לב! מיד ייפתח חלון קטן של הדפדפן. עליכם לשנות בו את הבחירה ל"תמיד", ואז ללחוץ "זה בסדר". קודם סמנו את התיבה למטה, ואז לחצו על הכפתור הירוק.','הפעל התראות',true);
     }
     function hide(){var ov=document.getElementById(OV_ID);if(ov)ov.style.display='none';}
     function finish(){hide();}
     function doEnable(){
       if(granted()){try{wrsvpPushSubscribe();}catch(e){}render('done');setTimeout(finish,1800);return;}
+      if(_asked)return; _asked=true;
       try{
         Notification.requestPermission().then(function(res){
           if(res==='granted'){try{updateNotifHint();}catch(e){}try{notifyNative('התראות הופעלו','מעכשיו תקבלו התראה בכל פעם שאורח מאשר הגעה.','wrsvp-perm-ok','page-dash');}catch(e){}try{wrsvpPushSubscribe();}catch(e){}render('done');setTimeout(finish,1800);}
           else if(notifSupported()&&Notification.permission==='denied'){hide();}
-        }).catch(function(){});
-      }catch(e){}
+          else{_asked=false;}
+        }).catch(function(){_asked=false;});
+      }catch(e){_asked=false;}
     }
     function onPrimary(){
       if(_step==='ask'){var c=document.getElementById('wrsvpNnChk');if(!c||!c.checked){updateBtn();return;}doEnable();return;}
@@ -1776,7 +1773,7 @@ window.DASH_DATA = {};
       var rs=document.getElementById('prefScopeSide'),rm=document.getElementById('prefScopeMine');
       if(rs)rs.checked=(p.scope!=='mine');if(rm)rm.checked=(p.scope==='mine');
       updateNotifHint(); /* [G3-NOTIF] */
-      try{maybeRequestNotifPermission();}catch(e){} /* [G3-NOTIF v2] opening settings is a gesture -> prompt for OS permission if still default */
+      /* [G3-NOTIF v2 DISABLED] opening settings no longer auto-requests OS permission; the wizard is the sole trigger. */
       ov.classList.add('open');
     };}
     function persist(){
