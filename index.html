@@ -1662,7 +1662,7 @@ window.DASH_DATA = {};
     function render(step){
       _step=step;
       if(step==='ios'){set('📲','צריך להתקין קודם','כדי לקבל התראות ב-iPhone צריך קודם להתקין את האפליקציה למסך הבית. לחצו כדי להמשיך להתקנה.','המשך להתקנה',true);return;}
-      if(step==='blocked'){set('🔒','ההתראות חסומות','ההתראות חסומות כרגע בדפדפן. כדי להפעיל: לחצו על סמל המנעול ליד כתובת האתר, פתחו "הגדרות אתר", ושנו "התראות" ל"אישור". אחר כך לחצו למטה.','בדוק שוב',true);return;}
+      if(step==='blocked'){set('🔒','ההתראות חסומות','ההתראות חסומות במכשיר הזה (נחסמו בעבר). להפעלה חד-פעמית: בטלפון פתחו הגדרות ← אפליקציות ← אישורי הגעה ← התראות ← אפשרו; במחשב לחצו על סמל המנעול ליד כתובת האתר ← התראות ← אפשרו. אחר כך לחצו "בדוק שוב".','בדוק שוב',true);return;}
       if(step==='ask'){set('👇','אישור התראות','עכשיו לוחצים אישור: לחצו על הכפתור הירוק למטה, ואז לחצו "אישור" בחלון הקטן שיקפוץ מהדפדפן.','הפעל התראות',true);return;}
       if(step==='done'){set('🎉','מצוין!','ההתראות מופעלות. מעכשיו תקבלו התראה בכל פעם שאורח מאשר הגעה, גם כשהאפליקציה סגורה.','המשך',false);return;}
       set('🔔','להפעיל התראות?','כדי לקבל התראה בכל פעם שאורח מאשר הגעה, גם כשהאפליקציה סגורה. לחצו על "אישור" כדי להמשיך.','אישור',true);
@@ -1670,10 +1670,10 @@ window.DASH_DATA = {};
     function showInstall(){try{var im=document.getElementById('wrsvpImOverlay');if(im)im.classList.add('wrsvpIm-show');}catch(e){}}
     function finish(){hide();if(!isStandalone()){showInstall();}}
     function doEnable(){
-      if(granted()){try{wrsvpPushSubscribe();}catch(e){}render('done');return;}
+      if(granted()){try{wrsvpPushSubscribe();}catch(e){}render('done');setTimeout(finish,1600);return;}
       try{
         Notification.requestPermission().then(function(res){
-          if(res==='granted'){try{updateNotifHint();}catch(e){}try{notifyNative('התראות הופעלו','מעכשיו תקבלו התראה כשאורח מאשר הגעה.','wrsvp-perm-ok','page-dash');}catch(e){}try{wrsvpPushSubscribe();}catch(e){}render('done');}
+          if(res==='granted'){try{updateNotifHint();}catch(e){}try{notifyNative('התראות הופעלו','מעכשיו תקבלו התראה כשאורח מאשר הגעה.','wrsvp-perm-ok','page-dash');}catch(e){}try{wrsvpPushSubscribe();}catch(e){}render('done');setTimeout(finish,1600);}
           else if(notifSupported()&&Notification.permission==='denied'){render('blocked');}
           else{render('ask');}
         }).catch(function(){render('ask');});
@@ -1682,7 +1682,7 @@ window.DASH_DATA = {};
     function onPrimary(){
       if(_step==='intro'){render('ask');return;}
       if(_step==='ask'){doEnable();return;}
-      if(_step==='blocked'){if(granted()){try{wrsvpPushSubscribe();}catch(e){}render('done');}else{render('blocked');}return;}
+      if(_step==='blocked'){if(granted()){try{wrsvpPushSubscribe();}catch(e){}render('done');setTimeout(finish,1600);}else{render('blocked');}return;}
       if(_step==='ios'){hide();showInstall();return;}
       finish();
     }
@@ -1691,7 +1691,7 @@ window.DASH_DATA = {};
       if(!eligible()||snoozed())return;
       if(isVisible())return;
       build();
-      render(iosNeedsInstall()?'ios':((notifSupported()&&Notification.permission==='denied')?'blocked':'intro'));
+      render(iosNeedsInstall()?'ios':((notifSupported()&&Notification.permission==='denied')?'blocked':'ask'));
       document.getElementById(OV_ID).style.display='flex';
     }
     function tick(){if(!granted())open();}
