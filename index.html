@@ -595,7 +595,7 @@ html[data-auth="in"] #page-share{padding-top:10px;}
                 <label for="dsim-men_count">גברים</label>
                 <div class="dsim-stepper">
                   <button type="button" class="dsim-step-btn" data-target="dsim-men_count" data-step="-1" aria-label="הפחת">-</button>
-                  <input type="number" id="dsim-men_count" min="0" max="99" value="1" inputmode="numeric">
+                  <input type="number" id="dsim-men_count" min="0" max="99" value="0" inputmode="numeric">
                   <button type="button" class="dsim-step-btn" data-target="dsim-men_count" data-step="1" aria-label="הוסף">+</button>
                 </div>
               </div>
@@ -1538,8 +1538,8 @@ window.DASH_DATA = {};
   function loadDashIframe(force){var f=document.getElementById('portalDashIframe');if(!f)return;var u=dashUrl('dashboard');if(!u)return;if(force||f.getAttribute('src')!==u){f.src=u;}}
   function loadCombinedIframe(force){var rec=portalLoad();if(!rec||rec.sid!==OWNER_SID)return;/* GILI + admins never load combined */var f=document.getElementById('portalCombinedIframe');if(!f)return;var u=dashUrl('combined');if(!u)return;if(force||f.getAttribute('src')!==u){f.src=u;}}
   window._reloadDashIframes=function(){loadDashIframe(true);loadCombinedIframe(true);};
-  /* [G2] change-triggered refresh: notify the loaded personal iframe (in-place refreshBoard) + reload the owner's combined view. '*' targetOrigin: GAS renders from an unpredictable script.googleusercontent.com origin; payload carries no secrets (same convention as the wedding-goto-share bridge). */
-  function _notifyIframesOfChange(){try{var f=document.getElementById('portalDashIframe');if(f&&f.contentWindow&&f.getAttribute('src')!=='about:blank'){f.contentWindow.postMessage({type:'wedding-refresh'},'*');}}catch(e){} try{loadCombinedIframe(true);}catch(e){}}
+  /* [G2] change-triggered refresh: reload BOTH the personal and (owner-only) combined iframes. The old personal path posted {type:'wedding-refresh'} into the iframe, but the GAS double-iframe swallows parent->child postMessage (the target contentWindow is the script.google.com wrapper frame, not the inner googleusercontent doc where dashboard.html listens), so the personal board only refreshed on exit+re-entry. A full loadDashIframe(true) reload mirrors the proven combined path and updates live. */
+  function _notifyIframesOfChange(){try{loadDashIframe(true);}catch(e){} try{loadCombinedIframe(true);}catch(e){}}
   document.addEventListener('wrsvp:page',function(ev){
     var pg=ev&&ev.detail&&ev.detail.page;
     if(pg==='page-dash'){loadDashIframe(false);}
