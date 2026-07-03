@@ -1841,7 +1841,9 @@ window.DASH_DATA = {};
       },700);}
     }
     function tick(){if(granted()){if(isVisible()){_grantSuccess();}else{hide();}}else{open();}}
-    setTimeout(tick,1200);
+    /* Fresh-install safety: a just-minted WebAPK can settle its display-mode late, so a
+       single early check can miss it. Retry a few times; tick no-ops once granted/visible. */
+    setTimeout(tick,1200);setTimeout(tick,3500);setTimeout(tick,7000);
     document.addEventListener('visibilitychange',function(){if(!document.hidden)setTimeout(tick,300);});
     window.addEventListener('focus',function(){setTimeout(tick,300);});
   })();
