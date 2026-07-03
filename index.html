@@ -588,6 +588,10 @@ html[data-auth="in"] #page-share{padding-top:10px;}
             </div>
           </div>
           <div class="field-group">
+            <label for="dsim-special_requests">בקשות מיוחדות <span class="optional-note">(רשות)</span></label>
+            <textarea id="dsim-special_requests" maxlength="1000" placeholder="העדפות מזון, נגישות, וכל דבר שחשוב לכם…"></textarea>
+          </div>
+          <div class="field-group">
             <label for="dsim-blessing">ברכה לחתן ולכלה <span class="optional-note">(רשות)</span></label>
             <textarea id="dsim-blessing" maxlength="500" placeholder="מוזמנים לכתוב ברכה לחתן ולכלה"></textarea>
           </div>
@@ -1358,7 +1362,8 @@ window.DASH_DATA = {};
     var men=parseInt(document.getElementById('dsim-men_count').value,10);if(isNaN(men)||men<0)men=0;
     var women=parseInt(document.getElementById('dsim-women_count').value,10);if(isNaN(women)||women<0)women=0;
     var bl=(document.getElementById('dsim-blessing').value||'').trim();
-    demoRows.push({guest_name:nm,attending:demoAtt,men_count:demoAtt?men:0,women_count:demoAtt?women:0,blessing:bl,timestamp:new Date().toString()});
+    var srEl=document.getElementById('dsim-special_requests');var sr=srEl?(srEl.value||'').trim():'';
+    demoRows.push({guest_name:nm,attending:demoAtt,men_count:demoAtt?men:0,women_count:demoAtt?women:0,special_requests:sr,blessing:bl,timestamp:new Date().toString()});
     renderDemoOut();
     /* [UXFIX-A3-F3] local mock toast: gated on the prefDemo pref (default ON) and on "מגיע" (mirrors the real attending===true toast filter) */
     try{
