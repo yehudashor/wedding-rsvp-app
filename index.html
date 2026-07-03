@@ -1685,7 +1685,7 @@ window.DASH_DATA = {};
       render('ask');
       document.getElementById(OV_ID).style.display='flex';
     }
-    function tick(){if(!granted())open();}
+    function tick(){if(granted()){hide();}else{open();}}
     setTimeout(tick,1200);
     document.addEventListener('visibilitychange',function(){if(!document.hidden)setTimeout(tick,300);});
     window.addEventListener('focus',function(){setTimeout(tick,300);});
