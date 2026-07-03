@@ -1370,9 +1370,12 @@ window.DASH_DATA = {};
       var role=(typeof window.portalRole==='function'&&window.portalRole())||'regular';
       var p=getNotifPrefs(role);
       if(demoAtt&&p.demo!==false){
-        showDemoToast({guest_name:nm,men_count:men,women_count:women,blessing:bl});
-        /* [G3-NOTIF] demo OS notification, in addition to the toast, so the user sees the real thing (fires even when visible: that IS the demo) */
-        notifyNative('[התראת הדגמה] אורח מדומה אישר! '+nm,(men||0)+' גברים / '+(women||0)+' נשים'+(bl?(' | ברכה: '+bl):''),'wrsvp-demo-'+Date.now(),'page-share');
+        /* [G3-NOTIF v2] granted => REAL OS notification ONLY (no in-app toast); not granted => in-app toast fallback */
+        if(notifGranted()){
+          notifyNative('[התראת הדגמה] אורח מדומה אישר! '+nm,(men||0)+' גברים / '+(women||0)+' נשים'+(bl?(' | ברכה: '+bl):''),'wrsvp-demo-'+Date.now(),'page-share');
+        }else{
+          showDemoToast({guest_name:nm,men_count:men,women_count:women,blessing:bl});
+        }
       }
     }catch(e){}
   };
@@ -1468,6 +1471,17 @@ window.DASH_DATA = {};
       }
     });
   }
+  /* [G3-NOTIF v2] Guarantee the OS-permission prompt actually appears. The toggle 'change' never
+     fires for a default-checked box, so a user who just opens the app never triggers the request and
+     every notification falls back to an in-app toast. Fix: request permission on the FIRST real user
+     gesture (pointerdown/click), which is load-safe and browser-allowed. Once granted, real AND demo
+     notifications go out as OS notifications only (no in-app toast). */
+  (function(){
+    if(!notifSupported()||Notification.permission!=='default')return;
+    function _reqOnce(){ try{maybeRequestNotifPermission();}catch(e){} }
+    window.addEventListener('pointerdown',_reqOnce,{once:true});
+    window.addEventListener('click',_reqOnce,{once:true});
+  })();
   /* ===== [G3-NOTIF] END ===== */
   /* settings modal */
   (function(){
@@ -1481,6 +1495,7 @@ window.DASH_DATA = {};
       var rs=document.getElementById('prefScopeSide'),rm=document.getElementById('prefScopeMine');
       if(rs)rs.checked=(p.scope!=='mine');if(rm)rm.checked=(p.scope==='mine');
       updateNotifHint(); /* [G3-NOTIF] */
+      try{maybeRequestNotifPermission();}catch(e){} /* [G3-NOTIF v2] opening settings is a gesture -> prompt for OS permission if still default */
       ov.classList.add('open');
     };}
     function persist(){
