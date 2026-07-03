@@ -1633,7 +1633,7 @@ window.DASH_DATA = {};
     var OV_ID='wrsvpNotifNag', SNOOZE='wrsvpNotifNagSnooze_v1', _step='intro';
     function granted(){return notifSupported()&&Notification.permission==='granted';}
     function iosNeedsInstall(){try{return (!('Notification' in window))&&/iphone|ipad|ipod/i.test(navigator.userAgent||'')&&!isStandalone();}catch(e){return false;}}
-    function eligible(){return !granted()&&(notifSupported()||iosNeedsInstall());}
+    function eligible(){if(iosNeedsInstall())return true;return notifSupported()&&Notification.permission==='default';}
     function snoozed(){try{return sessionStorage.getItem(SNOOZE)==='1';}catch(e){return false;}}
     function isVisible(){var ov=document.getElementById(OV_ID);return !!ov&&ov.style.display==='flex';}
     function build(){
@@ -1674,7 +1674,7 @@ window.DASH_DATA = {};
       try{
         Notification.requestPermission().then(function(res){
           if(res==='granted'){try{updateNotifHint();}catch(e){}try{notifyNative('התראות הופעלו','מעכשיו תקבלו התראה כשאורח מאשר הגעה.','wrsvp-perm-ok','page-dash');}catch(e){}try{wrsvpPushSubscribe();}catch(e){}render('done');setTimeout(finish,1600);}
-          else if(notifSupported()&&Notification.permission==='denied'){render('blocked');}
+          else if(notifSupported()&&Notification.permission==='denied'){hide();}
           else{render('ask');}
         }).catch(function(){render('ask');});
       }catch(e){render('ask');}
@@ -1691,7 +1691,7 @@ window.DASH_DATA = {};
       if(!eligible()||snoozed())return;
       if(isVisible())return;
       build();
-      render(iosNeedsInstall()?'ios':((notifSupported()&&Notification.permission==='denied')?'blocked':'ask'));
+      render(iosNeedsInstall()?'ios':'ask');
       document.getElementById(OV_ID).style.display='flex';
     }
     function tick(){if(!granted())open();}
