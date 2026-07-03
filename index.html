@@ -465,11 +465,16 @@ html[data-auth="in"] #page-share{padding-top:10px;}
 <body>
 <script>
 /* PHASE1 anti-flash: synchronous auth check BEFORE first paint - logged-in users never see State A. */
-(function(){var v='out';try{var r=JSON.parse(localStorage.getItem('weddingOrgPortal_v1')||'null');if(r&&r.sid&&r.token){v='in';}}catch(e){}document.documentElement.setAttribute('data-auth',v);})();
+(function(){var v='out';try{var v2=JSON.parse(localStorage.getItem('weddingOrgPortal_v2')||'null');if(v2&&v2.accounts&&v2.activeSid&&v2.accounts[v2.activeSid]&&v2.accounts[v2.activeSid].token){v='in';}else{var r=JSON.parse(localStorage.getItem('weddingOrgPortal_v1')||'null');if(r&&r.sid&&r.token){v='in';}}}catch(e){}document.documentElement.setAttribute('data-auth',v);})();
 </script>
 <header id="appHeader" dir="rtl">
   <div class="hdr-title">💍 אישורי הגעה</div>
   <div class="hdr-user" id="hdrUser"></div>
+  <!-- MULTI-ACCOUNT: switcher populated by renderAccountSwitcher(); hidden when only one account -->
+  <div id="hdrAcctSwitch" style="display:none;position:relative;">
+    <button id="hdrAcctBtn" type="button" title="החלף מארגן/ת" style="background:#efe7d8;color:var(--ink);white-space:nowrap;">החלף מארגן/ת ▾</button>
+    <div id="hdrAcctMenu" role="menu" style="display:none;position:absolute;top:52px;left:0;min-width:220px;background:#fff;border:2px solid var(--gold);border-radius:12px;box-shadow:0 8px 24px rgba(120,86,30,.22);padding:6px;z-index:1000;text-align:right;"></div>
+  </div>
   <div style="display:flex;gap:8px;">
     <button id="hdrSettingsBtn" type="button" aria-label="הגדרות" title="הגדרות">⚙️</button>
     <button id="hdrLogoutBtn" type="button">התנתקות</button>
@@ -542,6 +547,8 @@ html[data-auth="in"] #page-share{padding-top:10px;}
     <div id="portalBanner" style="display:none;background:linear-gradient(135deg,#f5f0e8,#fffdf7);border:2px solid var(--gold);border-radius:16px;padding:18px 20px;margin-bottom:16px;font-family:'Frank Ruhl Libre',serif;">
       <div style="font-size:1.15em;font-weight:700;color:var(--olive-d);margin-bottom:10px;text-align:center;">&#127775; הפורטל האישי שלך</div>
       <div id="portalName" style="text-align:center;font-size:1em;color:var(--ink);margin-bottom:12px;"></div>
+      <!-- MULTI-ACCOUNT: shows whose link is about to be sent -->
+      <div id="portalShareAs" style="text-align:center;font-size:.95em;font-weight:700;color:var(--olive-d);margin-bottom:10px;"></div>
       <div class="lnk" style="margin-bottom:12px;">
         <div class="t" style="white-space:nowrap;text-align:center;">&#128228; קישור-הפצה - לשלוח לאורחים</div>
         <div id="portalWaText" class="wa-text" style="white-space:pre-wrap;overflow-wrap:anywhere;font-size:.9em;color:var(--ink);background:#fff;border:1px dashed var(--line);border-radius:8px;padding:8px;margin:6px 0;"></div>
@@ -757,10 +764,61 @@ window.DASH_DATA = {};
   /* FIX 2: capture the LIVE-registered manager into local state so it shows in every
      dashboard (personal/side/combined) with edit/delete, and the guest attaches to it. */
   window._activeMgr=null;
-  var PORTAL_KEY='weddingOrgPortal_v1';
+  var PORTAL_KEY='weddingOrgPortal_v1';       /* legacy single-slot (migration source + fallback) */
+  var PORTAL_KEY_V2='weddingOrgPortal_v2';    /* MULTI-ACCOUNT: {activeSid, accounts:{sid:rec}} */
   var OWNER_SID='baa34f647c10'; /* B3: super-admin combined view is OWNER-SID-gated (no master token in client) */
-  function portalSave(rec){try{localStorage.setItem(PORTAL_KEY,JSON.stringify(rec));}catch(e){}}
-  function portalLoad(){try{var s=localStorage.getItem(PORTAL_KEY);return s?JSON.parse(s):null;}catch(e){return null;}}
+  /* ===== MULTI-ACCOUNT IDENTITY (2026-07-03) =====================================
+     ROOT-CAUSE FIX: the SPA used to store ONE organiser in weddingOrgPortal_v1, so on a
+     shared browser the LAST login clobbered everyone and every token/link was derived from
+     that single record (organiser A ended up acting as organiser B). v2 keeps a map of
+     accounts keyed by sid plus a single activeSid; portalLoad() returns the ACTIVE record
+     with the SAME shape callers already expect, so no downstream caller breaks. */
+  function _portalReadV2(){try{var s=localStorage.getItem(PORTAL_KEY_V2);var o=s?JSON.parse(s):null;if(!o||typeof o!=='object')o=null;if(o&&(!o.accounts||typeof o.accounts!=='object'))o.accounts={};return o;}catch(e){return null;}}
+  function _portalWriteV2(o){try{localStorage.setItem(PORTAL_KEY_V2,JSON.stringify(o));}catch(e){}}
+  /* One-time migration: if v2 is absent but a legacy v1 record exists, import it so a
+     currently-logged-in user stays logged in (and becomes the active account). */
+  function _portalMigrate(){
+    var v2=_portalReadV2();
+    if(v2&&v2.accounts&&Object.keys(v2.accounts).length){return v2;}
+    var legacy=null;try{var ls=localStorage.getItem(PORTAL_KEY);legacy=ls?JSON.parse(ls):null;}catch(e){}
+    if(legacy&&legacy.sid){
+      v2={activeSid:legacy.sid,accounts:{}};
+      v2.accounts[legacy.sid]=legacy;
+      _portalWriteV2(v2);
+      return v2;
+    }
+    return v2||{activeSid:null,accounts:{}};
+  }
+  function portalSave(rec){
+    if(!rec||!rec.sid){try{localStorage.setItem(PORTAL_KEY,JSON.stringify(rec));}catch(e){}return;}
+    var v2=_portalMigrate();
+    v2.accounts=v2.accounts||{};
+    v2.accounts[rec.sid]=Object.assign({},v2.accounts[rec.sid],rec); /* new login ACCUMULATES, never erases another account */
+    v2.activeSid=rec.sid;                                            /* and becomes active */
+    _portalWriteV2(v2);
+    try{localStorage.setItem(PORTAL_KEY,JSON.stringify(rec));}catch(e){} /* keep v1 mirrored for the pre-paint anti-flash fallback */
+  }
+  function portalLoad(){
+    var v2=_portalMigrate();
+    if(v2&&v2.activeSid&&v2.accounts&&v2.accounts[v2.activeSid]){return v2.accounts[v2.activeSid];}
+    /* fallback: legacy v1 record */
+    try{var s=localStorage.getItem(PORTAL_KEY);return s?JSON.parse(s):null;}catch(e){return null;}
+  }
+  function portalAccounts(){var v2=_portalMigrate();var a=[];if(v2&&v2.accounts){for(var k in v2.accounts){if(v2.accounts.hasOwnProperty(k)&&v2.accounts[k]&&v2.accounts[k].sid){a.push(v2.accounts[k]);}}}return a;}
+  function portalSetActive(sid){var v2=_portalMigrate();if(v2&&v2.accounts&&v2.accounts[sid]){v2.activeSid=sid;_portalWriteV2(v2);try{localStorage.setItem(PORTAL_KEY,JSON.stringify(v2.accounts[sid]));}catch(e){}return true;}return false;}
+  function portalRemoveActive(){
+    var v2=_portalMigrate();
+    if(!v2||!v2.accounts){return null;}
+    if(v2.activeSid){delete v2.accounts[v2.activeSid];}
+    var rest=Object.keys(v2.accounts);
+    v2.activeSid=rest.length?rest[0]:null;
+    _portalWriteV2(v2);
+    if(v2.activeSid){try{localStorage.setItem(PORTAL_KEY,JSON.stringify(v2.accounts[v2.activeSid]));}catch(e){}}
+    else{try{localStorage.removeItem(PORTAL_KEY);}catch(e){}}
+    return v2.activeSid?v2.accounts[v2.activeSid]:null;
+  }
+  /* debug hook for verification */
+  window.__wrsvpPortalDebug=function(){try{var v=JSON.parse(localStorage.getItem('weddingOrgPortal_v2')||'{}');return {activeSid:v.activeSid||null,accountSids:Object.keys(v.accounts||{})};}catch(e){return {err:String(e)};}};
   /* portalClear() removed 2026-07-02 together with the reset button - login is permanent. */
 
   /* LIVE personal-dashboard wiring (additive). Returns the organizer's real exec dashboard URL, or '' */
@@ -798,6 +856,10 @@ window.DASH_DATA = {};
   }
 
   function renderPortalBlock(rec){
+    /* MULTI-ACCOUNT: always render the ACTIVE account so the board + share link stay in sync.
+       Fall back to the passed rec only if there is no active record yet. */
+    var active=(typeof portalLoad==='function')?portalLoad():null;
+    if(active)rec=active;
     var banner=document.getElementById('portalBanner');
     var iframeSection=document.getElementById('regIframeSection');
     if(!banner||!rec)return;
@@ -814,13 +876,53 @@ window.DASH_DATA = {};
     var wtEl=document.getElementById('portalWaText');
     var dlEl=document.getElementById('portalDispLink');
     if(nameEl)nameEl.textContent=rec.name+' - '+sideLabel;
-    var hu=document.getElementById('hdrUser');if(hu)hu.textContent=rec.name+' · '+sideLabel;
+    var hu=document.getElementById('hdrUser');if(hu)hu.textContent='מחובר/ת כ: '+rec.name+' · '+sideLabel;
+    var saEl=document.getElementById('portalShareAs');if(saEl)saEl.textContent='משתף בתור: '+rec.name;
     if(wtEl)wtEl.textContent=waText;
     if(dlEl)dlEl.textContent=rec.distributionLink||'';
+    if(typeof renderAccountSwitcher==='function'){try{renderAccountSwitcher();}catch(e){}}
     /* PHASE2 (F3): dashboard iframes are lazy-loaded per page by loadDashIframe/loadCombinedIframe */
     banner.style.display='block';
     if(iframeSection)iframeSection.style.display='none';
   }
+
+  /* MULTI-ACCOUNT: build the header switcher. Shows only when >1 account is stored.
+     Choosing an account sets it active and re-loads BOTH the dashboard iframe and the
+     share card so board + link switch together. */
+  function _sideHeb(s){return s==='groom'?'צד החתן':(s==='bride'?'צד הכלה':'');}
+  function switchToAccount(sid){
+    if(!portalSetActive(sid))return;
+    var rec=portalLoad();
+    if(rec){try{window._activeMgr={name:rec.name,side:rec.side,sid:rec.sid,dispatchLink:rec.distributionLink||'',dashboardLink:rec.dashboardLink||''};}catch(e){}}
+    try{if(typeof window._reloadDashIframes==='function')window._reloadDashIframes();}catch(e){}
+    if(rec){renderPortalBlock(rec);}
+    try{if(rec&&typeof updateWaBubble==='function')updateWaBubble(rec.name,rec.distributionLink||'');}catch(e){}
+    try{if(typeof refreshP5Live==='function')refreshP5Live();}catch(e){}
+  }
+  window.switchToAccount=switchToAccount;
+  function renderAccountSwitcher(){
+    var wrap=document.getElementById('hdrAcctSwitch');var menu=document.getElementById('hdrAcctMenu');
+    if(!wrap||!menu)return;
+    var accts=(typeof portalAccounts==='function')?portalAccounts():[];
+    if(accts.length<2){wrap.style.display='none';menu.style.display='none';return;}
+    wrap.style.display='';
+    var active=(typeof portalLoad==='function')?portalLoad():null;
+    var aSid=active&&active.sid;
+    var html='';
+    for(var i=0;i<accts.length;i++){
+      var r=accts[i];var isA=(r.sid===aSid);
+      var lbl=(r.name||'מארגן')+' · '+_sideHeb(r.side);
+      html+='<button type="button" role="menuitem" data-sid="'+esc(r.sid)+'" style="display:block;width:100%;text-align:right;margin:2px 0;background:'+(isA?'#f5e9c8':'#f5f0e8')+';color:var(--ink);border:1px solid var(--gold-soft);border-radius:10px;padding:10px 12px;font-weight:700;cursor:pointer;">'+(isA?'✓ ':'')+esc(lbl)+'</button>';
+    }
+    menu.innerHTML=html;
+    var btns=menu.querySelectorAll('button[data-sid]');
+    for(var k=0;k<btns.length;k++){btns[k].onclick=function(){var sid=this.getAttribute('data-sid');menu.style.display='none';switchToAccount(sid);};}
+  }
+  window.renderAccountSwitcher=renderAccountSwitcher;
+  (function(){var b=document.getElementById('hdrAcctBtn');var menu=document.getElementById('hdrAcctMenu');
+    if(b&&menu){b.onclick=function(ev){ev.stopPropagation();menu.style.display=(menu.style.display==='none'||!menu.style.display)?'block':'none';};
+      document.addEventListener('click',function(){menu.style.display='none';});}
+  })();
 
   /* _portalReset() removed 2026-07-02 together with the reset button - login is permanent. */
 
@@ -1302,8 +1404,23 @@ window.DASH_DATA = {};
     window.showPage((last&&last!=='page-login')?last:'page-share');
   };
   (function(){var lb=document.getElementById('hdrLogoutBtn');if(lb){lb.onclick=function(){
-    if(!window.confirm('להתנתק מהמערכת?'))return;
-    try{localStorage.removeItem(PORTAL_KEY);localStorage.removeItem('wrsvpNotifPrefs_v1');localStorage.removeItem('wrsvpPollSince');sessionStorage.removeItem('wrsvpLastPage');}catch(e){}
+    /* MULTI-ACCOUNT logout: remove ONLY the active account. If another remains, switch to it
+       and stay logged in; only when none remain do we fully log out to State A. */
+    var others=(typeof portalAccounts==='function')?portalAccounts().length:0;
+    var msg=(others>1)?'להתנתק מהחשבון הפעיל? (חשבונות אחרים יישארו מחוברים)':'להתנתק מהמערכת?';
+    if(!window.confirm(msg))return;
+    var next=(typeof portalRemoveActive==='function')?portalRemoveActive():null;
+    if(next&&next.sid){
+      /* another account is now active - re-render board + share card, do not reload out */
+      try{window._activeMgr={name:next.name,side:next.side,sid:next.sid,dispatchLink:next.distributionLink||'',dashboardLink:next.dashboardLink||''};}catch(e){}
+      try{if(typeof window._reloadDashIframes==='function')window._reloadDashIframes();}catch(e){}
+      try{renderPortalBlock(next);}catch(e){}
+      try{if(typeof updateWaBubble==='function')updateWaBubble(next.name,next.distributionLink||'');}catch(e){}
+      try{if(typeof refreshP5Live==='function')refreshP5Live();}catch(e){}
+      return;
+    }
+    /* no accounts left - full logout to State A */
+    try{localStorage.removeItem(PORTAL_KEY);localStorage.removeItem(PORTAL_KEY_V2);localStorage.removeItem('wrsvpNotifPrefs_v1');localStorage.removeItem('wrsvpPollSince');sessionStorage.removeItem('wrsvpLastPage');}catch(e){}
     location.reload();
   };}})();
   /* [FIX9] boot: suppress the push during the very first navigation, then replaceState the initial page so the first history entry carries state (no stray extra entry) */
