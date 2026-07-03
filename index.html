@@ -1755,7 +1755,7 @@ window.DASH_DATA = {};
   (function(){
     var OV_ID='wrsvpNotifNag', _step='ask', _asked=false;
     function granted(){return notifSupported()&&Notification.permission==='granted';}
-    function eligible(){return isStandalone()&&notifSupported()&&Notification.permission==='default';}
+    function eligible(){return isStandalone()&&notifSupported()&&(Notification.permission==='default'||Notification.permission==='denied');}
     function isVisible(){var ov=document.getElementById(OV_ID);return !!ov&&ov.style.display==='flex';}
     function updateBtn(){var b=document.getElementById('wrsvpNnBtn'),c=document.getElementById('wrsvpNnChk');if(!b)return;var lock=(_step==='ask')&&!(c&&c.checked);b.disabled=lock;b.style.opacity=lock?'.45':'';b.style.cursor=lock?'not-allowed':'pointer';}
     function build(){
@@ -1786,6 +1786,7 @@ window.DASH_DATA = {};
     function render(step){
       _step=step;
       if(step==='done'){set('🎉','מצוין!','ההתראות מופעלות. מעכשיו תקבלו התראה בכל פעם שאורח מאשר הגעה, גם כשהאפליקציה סגורה.','',false);return;}
+      if(step==='blocked'){set('🔒','ההתראות חסומות במכשיר','כדי לפתוח את החסימה: היכנסו להגדרות הטלפון, בחרו "אפליקציות", מצאו את "אישורי הגעה", הקישו על "התראות" ואפשרו אותן. אחר כך חזרו לכאן - הכל ימשיך לבד.','בדקתי - נסה שוב',false);return;}
       set('🔔','הפעלת התראות','שימו לב! מיד ייפתח חלון קטן של הדפדפן. עליכם לשנות בו את הבחירה ל"תמיד", ואז ללחוץ "זה בסדר". קודם סמנו את התיבה למטה, ואז לחצו על הכפתור הירוק.','הפעל התראות',true);
     }
     var _watch=null,_done=false;
@@ -1809,13 +1810,18 @@ window.DASH_DATA = {};
       try{
         Notification.requestPermission().then(function(res){
           if(res==='granted'){_grantSuccess();}
-          else if(notifSupported()&&Notification.permission==='denied'){hide();}
+          else if(notifSupported()&&Notification.permission==='denied'){render('blocked');}
           else{_asked=false;}
         }).catch(function(){_asked=false;});
       }catch(e){_asked=false;}
     }
     function onPrimary(){
       if(_step==='ask'){var c=document.getElementById('wrsvpNnChk');if(!c||!c.checked){updateBtn();return;}doEnable();return;}
+      if(_step==='blocked'){
+        if(granted()){_grantSuccess();}
+        else if(notifSupported()&&Notification.permission==='default'){render('ask');}
+        return;
+      }
       finish();
     }
     function open(){
@@ -1823,11 +1829,16 @@ window.DASH_DATA = {};
       if(isVisible())return;
       build();
       var c=document.getElementById('wrsvpNnChk');if(c)c.checked=false;
-      render('ask');
+      render((notifSupported()&&Notification.permission==='denied')?'blocked':'ask');
       document.getElementById(OV_ID).style.display='flex';
       /* Poll while the wizard is open: detects the grant within ~0.7s even when the
-         requestPermission promise never resolves (Android WebAPK) and no focus event fires. */
-      if(!_watch&&!_done){_watch=setInterval(function(){if(granted()){_grantSuccess();}},700);}
+         requestPermission promise never resolves (Android WebAPK) and no focus event fires.
+         Also auto-advances the blocked screen: denied -> default flips to ask, granted -> done. */
+      if(!_watch&&!_done){_watch=setInterval(function(){
+        if(granted()){_grantSuccess();}
+        else if(_step==='blocked'&&notifSupported()&&Notification.permission==='default'){render('ask');}
+        else if(_step==='ask'&&notifSupported()&&Notification.permission==='denied'&&!_asked){render('blocked');}
+      },700);}
     }
     function tick(){if(granted()){if(isVisible()){_grantSuccess();}else{hide();}}else{open();}}
     setTimeout(tick,1200);
