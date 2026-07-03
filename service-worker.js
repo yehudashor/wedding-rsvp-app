@@ -2,7 +2,7 @@
  * Caches NOTHING: the app and the dashboards always load fresh from the network,
  * so there is never stale content, and live Apps Script data is never blocked.
  * This worker exists only to keep the app installable (Add to Home Screen). */
-const SW_VERSION = 'wrsvp-passthrough-v12-notify-20260703';
+const SW_VERSION = 'wrsvp-passthrough-v13-push-20260703';
 
 self.addEventListener('install', function () {
   // take over as soon as possible
@@ -22,6 +22,23 @@ self.addEventListener('activate', function (event) {
    A fetch handler must exist for installability; this one forwards everything,
    so nothing is ever served from a cache. */
 self.addEventListener('fetch', function () { /* no-op: always go to the network */ });
+
+/* [WEBPUSH] Push event: payload-less by design. The Worker sends an empty body,
+   so there is no data to read - we just show a fixed RTL Hebrew notification and
+   route the tap to the dashboard via the existing notificationclick handler. */
+self.addEventListener('push', function (event) {
+  event.waitUntil(
+    self.registration.showNotification('אורח חדש אישר הגעה! 🎉', {
+      body: 'היכנסו ללוח הבקרה לצפייה בפרטים.',
+      tag: 'wrsvp-push',
+      dir: 'rtl',
+      lang: 'he',
+      icon: 'icons/icon-192.png',
+      badge: 'icons/icon-192.png',
+      data: { page: 'page-dash' }
+    })
+  );
+});
 
 /* [G3-NOTIF] Notification click: focus the app and route it to a SPA page.
    Local notifications are shown BY THE PAGE via reg.showNotification();

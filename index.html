@@ -1598,7 +1598,7 @@ window.DASH_DATA = {};
     try{
       Notification.requestPermission().then(function(res){
         updateNotifHint();
-        if(res==='granted'){notifyNative('התראות הופעלו ✓','מעכשיו תקבלו התראה כשאורח מאשר הגעה.','wrsvp-perm-ok','page-dash');}
+        if(res==='granted'){notifyNative('התראות הופעלו ✓','מעכשיו תקבלו התראה כשאורח מאשר הגעה.','wrsvp-perm-ok','page-dash');try{wrsvpPushSubscribe();}catch(e){}}
       }).catch(function(){updateNotifHint();});
     }catch(e){updateNotifHint();}
   }
@@ -1622,6 +1622,76 @@ window.DASH_DATA = {};
     window.addEventListener('pointerdown',_reqOnce,{once:true});
     window.addEventListener('click',_reqOnce,{once:true});
   })();
+  /* ===== [WEBPUSH] real push subscribe + prefs sync (posts to GAS) ===== */
+  var WRSVP_VAPID_PUBLIC='BHDVMl9B6gtPgjCW-0sZkkau0T7EH7xyZbaRYyIBzMjbpQcZ20bb2dou68N80VFyg50lxqqoc7pGOQfGfRfw2b0';
+  function _urlB64ToUint8(base64String){
+    var padding='='.repeat((4-base64String.length%4)%4);
+    var b64=(base64String+padding).replace(/-/g,'+').replace(/_/g,'/');
+    var raw=window.atob(b64);var out=new Uint8Array(raw.length);
+    for(var i=0;i<raw.length;i++){out[i]=raw.charCodeAt(i);}
+    return out;
+  }
+  function _pushScopeForRole(role,prefs){
+    if(role==='regular')return 'mine';
+    return (prefs&&prefs.scope==='mine')?'mine':'side';
+  }
+  /* Subscribe THIS browser to push and register the endpoint with GAS. Best-effort. */
+  function wrsvpPushSubscribe(){
+    try{
+      if(!notifSupported()||Notification.permission!=='granted')return;
+      var rec=(typeof portalLoad==='function')?portalLoad():null;
+      if(!rec||!rec.sid||!rec.token)return;                 /* logged-in organisers only */
+      var role=(typeof window.portalRole==='function'&&window.portalRole(rec))||'regular';
+      var prefs=getNotifPrefs(role);
+      navigator.serviceWorker.ready.then(function(reg){
+        return reg.pushManager.getSubscription().then(function(existing){
+          if(existing)return existing;
+          return reg.pushManager.subscribe({
+            userVisibleOnly:true,
+            applicationServerKey:_urlB64ToUint8(WRSVP_VAPID_PUBLIC)
+          });
+        });
+      }).then(function(sub){
+        if(!sub||!sub.endpoint)return;
+        var body={
+          action:'pushSubscribe',
+          endpoint:sub.endpoint,
+          sid:rec.sid,
+          token:rec.token,
+          side:rec.side||'',
+          scope:_pushScopeForRole(role,prefs),
+          enabled:prefs.enabled!==false
+        };
+        /* text/plain avoids a CORS preflight against Apps Script */
+        return fetch(EXEC_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body)});
+      }).catch(function(){});
+    }catch(e){}
+  }
+  /* Push updated enabled/scope for THIS browser's endpoint (called on toggle change). Best-effort. */
+  function wrsvpPushPrefsSync(){
+    try{
+      if(!notifSupported())return;
+      var rec=(typeof portalLoad==='function')?portalLoad():null;
+      if(!rec||!rec.sid)return;
+      var role=(typeof window.portalRole==='function'&&window.portalRole(rec))||'regular';
+      var prefs=getNotifPrefs(role);
+      navigator.serviceWorker.ready.then(function(reg){
+        return reg.pushManager.getSubscription();
+      }).then(function(sub){
+        if(!sub||!sub.endpoint)return;
+        var body={
+          action:'pushPrefs',
+          endpoint:sub.endpoint,
+          enabled:prefs.enabled!==false,
+          scope:_pushScopeForRole(role,prefs)
+        };
+        return fetch(EXEC_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body)});
+      }).catch(function(){});
+    }catch(e){}
+  }
+  window.wrsvpPushSubscribe=wrsvpPushSubscribe;
+  window.wrsvpPushPrefsSync=wrsvpPushPrefsSync;
+  /* ===== [WEBPUSH] END ===== */
   /* ===== [G3-NOTIF] END ===== */
   /* settings modal */
   (function(){
@@ -1647,10 +1717,12 @@ window.DASH_DATA = {};
       if(role==='regular')p.scope='mine';
       saveNotifPrefs(p);
     }
-    ['prefLive','prefDemo','prefScopeSide','prefScopeMine'].forEach(function(id){var el=document.getElementById(id);if(el)el.addEventListener('change',function(){persist();if((id==='prefLive'||id==='prefDemo')&&el.checked){maybeRequestNotifPermission();}});}); /* [UXFIX-A3-F3] prefDemo added; [G3-NOTIF] permission on first enable */
+    ['prefLive','prefDemo','prefScopeSide','prefScopeMine'].forEach(function(id){var el=document.getElementById(id);if(el)el.addEventListener('change',function(){persist();if((id==='prefLive'||id==='prefDemo')&&el.checked){maybeRequestNotifPermission();}if(id==='prefLive'&&el.checked){try{wrsvpPushSubscribe();}catch(e){}}if(id==='prefLive'||id==='prefScopeSide'||id==='prefScopeMine'){try{wrsvpPushPrefsSync();}catch(e){}}});}); /* [UXFIX-A3-F3] prefDemo added; [G3-NOTIF] permission on first enable; [WEBPUSH] subscribe/prefs-sync */
     var cb=document.getElementById('settingsCloseBtn');if(cb)cb.onclick=function(){if(ov)ov.classList.remove('open');};
     if(ov)ov.addEventListener('click',function(e){if(e.target===ov)ov.classList.remove('open');});
   })();
+  /* [WEBPUSH] if OS permission is already granted at load, ensure this browser is subscribed. */
+  try{ if(typeof notifGranted==='function'&&notifGranted()){ setTimeout(function(){try{wrsvpPushSubscribe();}catch(e){}},1500); } }catch(e){}
   /* toasts */
   function showGuestToast(g){
     var wrap=document.getElementById('toastWrap');if(!wrap||!g)return;
