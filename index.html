@@ -1566,7 +1566,7 @@ window.DASH_DATA = {};
   /* ===== [G3-NOTIF] OS notifications: helper + permission flow (local-only, no push server) ===== */
   function notifSupported(){return ('Notification' in window)&&('serviceWorker' in navigator);}
   function notifGranted(){return notifSupported()&&Notification.permission==='granted';}
-  function isStandalone(){try{return window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone===true;}catch(e){return false;}}
+  function isStandalone(){try{return window.matchMedia('(display-mode: standalone)').matches||window.matchMedia('(display-mode: minimal-ui)').matches||window.matchMedia('(display-mode: fullscreen)').matches||window.navigator.standalone===true;}catch(e){return false;}}
   /* Android Chrome: new Notification() THROWS in page context -> ALWAYS reg.showNotification() */
   function notifyNative(title,body,tag,page){
     if(!notifGranted())return false;
