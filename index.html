@@ -1788,14 +1788,27 @@ window.DASH_DATA = {};
       if(step==='done'){set('🎉','מצוין!','ההתראות מופעלות. מעכשיו תקבלו התראה בכל פעם שאורח מאשר הגעה, גם כשהאפליקציה סגורה.','',false);return;}
       set('🔔','הפעלת התראות','שימו לב! מיד ייפתח חלון קטן של הדפדפן. עליכם לשנות בו את הבחירה ל"תמיד", ואז ללחוץ "זה בסדר". קודם סמנו את התיבה למטה, ואז לחצו על הכפתור הירוק.','הפעל התראות',true);
     }
-    function hide(){var ov=document.getElementById(OV_ID);if(ov)ov.style.display='none';}
+    var _watch=null,_done=false;
+    function hide(){var ov=document.getElementById(OV_ID);if(ov)ov.style.display='none';if(_watch){clearInterval(_watch);_watch=null;}}
     function finish(){hide();}
+    /* SINGLE success path: notify + SUBSCRIBE + done-screen + auto-close. Guarded so the
+       promise path, the poll watcher and tick can all detect the grant without duplicates.
+       Critical: the Android WebAPK requestPermission promise sometimes never resolves after
+       the user grants; previously the fallback close path skipped the push SUBSCRIBE entirely. */
+    function _grantSuccess(){
+      if(_done)return; _done=true;
+      if(_watch){clearInterval(_watch);_watch=null;}
+      try{updateNotifHint();}catch(e){}
+      try{notifyNative('התראות הופעלו','מעכשיו תקבלו התראה בכל פעם שאורח מאשר הגעה.','wrsvp-perm-ok','page-dash');}catch(e){}
+      try{wrsvpPushSubscribe();}catch(e){}
+      render('done');setTimeout(finish,1800);
+    }
     function doEnable(){
-      if(granted()){try{wrsvpPushSubscribe();}catch(e){}render('done');setTimeout(finish,1800);return;}
+      if(granted()){_grantSuccess();return;}
       if(_asked)return; _asked=true;
       try{
         Notification.requestPermission().then(function(res){
-          if(res==='granted'){try{updateNotifHint();}catch(e){}try{notifyNative('התראות הופעלו','מעכשיו תקבלו התראה בכל פעם שאורח מאשר הגעה.','wrsvp-perm-ok','page-dash');}catch(e){}try{wrsvpPushSubscribe();}catch(e){}render('done');setTimeout(finish,1800);}
+          if(res==='granted'){_grantSuccess();}
           else if(notifSupported()&&Notification.permission==='denied'){hide();}
           else{_asked=false;}
         }).catch(function(){_asked=false;});
@@ -1812,8 +1825,11 @@ window.DASH_DATA = {};
       var c=document.getElementById('wrsvpNnChk');if(c)c.checked=false;
       render('ask');
       document.getElementById(OV_ID).style.display='flex';
+      /* Poll while the wizard is open: detects the grant within ~0.7s even when the
+         requestPermission promise never resolves (Android WebAPK) and no focus event fires. */
+      if(!_watch&&!_done){_watch=setInterval(function(){if(granted()){_grantSuccess();}},700);}
     }
-    function tick(){if(granted()){hide();}else{open();}}
+    function tick(){if(granted()){if(isVisible()){_grantSuccess();}else{hide();}}else{open();}}
     setTimeout(tick,1200);
     document.addEventListener('visibilitychange',function(){if(!document.hidden)setTimeout(tick,300);});
     window.addEventListener('focus',function(){setTimeout(tick,300);});
