@@ -1622,6 +1622,60 @@ window.DASH_DATA = {};
     window.addEventListener('pointerdown',_reqOnce,{once:true});
     window.addEventListener('click',_reqOnce,{once:true});
   })();
+  /* [G3-NOTIF v3] Elderly-proof PERSISTENT permission nag: a big unmissable overlay shown on EVERY app
+     open (and on return-to-app) whenever OS-notification permission is not yet granted; it disappears
+     for good only once granted. The big button tap is the user gesture that drives the native prompt.
+     Browser reality: after the user picks "Block" the native prompt cannot be reopened by code, so the
+     overlay then shows manual "enable in settings" guidance. A small "later" link session-snoozes it to
+     avoid ever locking a user out; it re-appears on the next real open. Notification system only. */
+  (function(){
+    var OV_ID='wrsvpNotifNag', SNOOZE='wrsvpNotifNagSnooze_v1';
+    function granted(){return notifSupported()&&Notification.permission==='granted';}
+    function iosNeedsInstall(){try{return (!('Notification' in window))&&/iphone|ipad|ipod/i.test(navigator.userAgent||'')&&!isStandalone();}catch(e){return false;}}
+    function eligible(){return !granted()&&(notifSupported()||iosNeedsInstall());}
+    function snoozed(){try{return sessionStorage.getItem(SNOOZE)==='1';}catch(e){return false;}}
+    function build(){
+      if(document.getElementById(OV_ID))return document.getElementById(OV_ID);
+      var st=document.createElement('style');
+      st.textContent='#wrsvpNotifNag{position:fixed;inset:0;z-index:99999;display:none;align-items:center;justify-content:center;background:rgba(20,25,20,.72);}'
+        +'#wrsvpNotifNag .nn-card{background:#fff;max-width:440px;width:88%;border-radius:22px;padding:30px 26px;text-align:center;font-family:inherit;box-shadow:0 24px 60px -12px rgba(0,0,0,.5);}'
+        +'#wrsvpNotifNag .nn-emoji{font-size:3.4em;line-height:1;margin-bottom:8px;}'
+        +'#wrsvpNotifNag .nn-title{font-size:1.5em;font-weight:800;color:#2c3e50;margin-bottom:10px;}'
+        +'#wrsvpNotifNag .nn-text{font-size:1.15em;line-height:1.55;color:#444;margin-bottom:22px;}'
+        +'#wrsvpNotifNag .nn-btn{display:block;width:100%;min-height:64px;font-size:1.35em;font-weight:800;font-family:inherit;border:none;border-radius:16px;background:linear-gradient(180deg,#4b6440,#3a4f32);color:#fff;cursor:pointer;box-shadow:0 10px 22px -8px rgba(75,100,64,.7);}'
+        +'#wrsvpNotifNag .nn-later{margin-top:14px;background:none;border:none;color:#999;font-size:.95em;font-family:inherit;cursor:pointer;text-decoration:underline;}';
+      document.head.appendChild(st);
+      var ov=document.createElement('div');ov.id=OV_ID;ov.setAttribute('dir','rtl');
+      ov.innerHTML='<div class="nn-card"><div class="nn-emoji">&#128276;</div><div class="nn-title">&#1500;&#1492;&#1508;&#1506;&#1497;&#1500; &#1492;&#1514;&#1512;&#1488;&#1493;&#1514;?</div><div class="nn-text" id="wrsvpNotifNagText"></div><button type="button" class="nn-btn" id="wrsvpNotifNagBtn"></button><button type="button" class="nn-later" id="wrsvpNotifNagLater">&#1488;&#1495;&#1512; &#1499;&#1498;</button></div>';
+      document.body.appendChild(ov);
+      document.getElementById('wrsvpNotifNagBtn').addEventListener('click',onBtn);
+      document.getElementById('wrsvpNotifNagLater').addEventListener('click',function(){try{sessionStorage.setItem(SNOOZE,'1');}catch(e){}hide();});
+      return ov;
+    }
+    function refresh(){
+      var t=document.getElementById('wrsvpNotifNagText'),b=document.getElementById('wrsvpNotifNagBtn');if(!t||!b)return;
+      if(iosNeedsInstall()){t.textContent='כדי לקבל התראות ב-iPhone צריך קודם להתקין את האפליקציה למסך הבית: לחצו על כפתור השיתוף למטה, ואז "הוסף למסך הבית", ופתחו את האפליקציה משם.';b.textContent='הבנתי';return;}
+      if(notifSupported()&&Notification.permission==='denied'){t.textContent='ההתראות חסומות כרגע בדפדפן. כדי להפעיל: לחצו על סמל המנעול ליד כתובת האתר, פתחו "הגדרות אתר", ושנו "התראות" ל"אישור". אחר כך חזרו לכאן ולחצו למטה.';b.textContent='בדוק שוב';return;}
+      t.textContent='כדי שתקבלו התראה בכל פעם שאורח מאשר הגעה, גם כשהאפליקציה סגורה, צריך לאשר התראות. לחצו על הכפתור הירוק, ואז על "אישור".';b.textContent='אשר התראות';
+    }
+    function show(){if(!eligible()||snoozed())return;build();refresh();document.getElementById(OV_ID).style.display='flex';}
+    function hide(){var ov=document.getElementById(OV_ID);if(ov)ov.style.display='none';}
+    function onBtn(){
+      if(granted()){hide();return;}
+      if(iosNeedsInstall()){hide();return;}
+      if(notifSupported()&&Notification.permission==='denied'){if(granted()){hide();try{wrsvpPushSubscribe();}catch(e){}}else{refresh();}return;}
+      try{
+        Notification.requestPermission().then(function(res){
+          if(res==='granted'){hide();try{updateNotifHint();}catch(e){}try{notifyNative('התראות הופעלו','מעכשיו תקבלו התראה כשאורח מאשר הגעה.','wrsvp-perm-ok','page-dash');}catch(e){}try{wrsvpPushSubscribe();}catch(e){}}
+          else{refresh();}
+        }).catch(function(){refresh();});
+      }catch(e){refresh();}
+    }
+    function tick(){if(granted()){hide();}else{show();}}
+    setTimeout(tick,1200);
+    document.addEventListener('visibilitychange',function(){if(!document.hidden)setTimeout(tick,300);});
+    window.addEventListener('focus',function(){setTimeout(tick,300);});
+  })();
   /* ===== [WEBPUSH] real push subscribe + prefs sync (posts to GAS) ===== */
   var WRSVP_VAPID_PUBLIC='BHDVMl9B6gtPgjCW-0sZkkau0T7EH7xyZbaRYyIBzMjbpQcZ20bb2dou68N80VFyg50lxqqoc7pGOQfGfRfw2b0';
   function _urlB64ToUint8(base64String){
