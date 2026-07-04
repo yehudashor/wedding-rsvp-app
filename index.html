@@ -401,7 +401,9 @@ html[data-auth="out"] #page-share,html[data-auth="out"] #page-dash,html[data-aut
 .page-nav-mini{display:flex;justify-content:center;gap:10px;width:100%;max-width:1000px;margin:0 auto 10px;}
 .pn-mini{flex:1;min-height:44px;padding:6px 16px;border:none;border-radius:10px;background:#efe7d8;color:var(--ink);font-weight:700;font-size:1em;cursor:pointer;font-family:inherit;}
 /* [UIPOLISH2 2026-07-04] pull nav + content tight (~0.25cm) under the header on dash/combined */
-#page-dash,#page-combined{padding-top:10px;}
+/* [UIPOLISH3 2026-07-04 - part א] trim the big bottom padding so the dashboard card
+   can reach (nearly) the bottom of the viewport instead of stopping ~2cm short. */
+#page-dash,#page-combined{padding-top:10px;padding-bottom:12px;}
 html:fullscreen #portalDashIframe,html:fullscreen #portalCombinedIframe{height:86vh;}
 </style>
 <style id="demo-sim-css">
@@ -661,7 +663,10 @@ html[data-auth="in"] #page-share{padding-top:10px;}
     <!-- [G5] compact dash nav: back-to-share + super-only route to page-combined -->
     <div class="page-nav-mini"><button type="button" class="pn-mini" onclick="showPage('page-share')">⬅️ חזור למסך השיתוף</button><button type="button" class="pn-mini" id="pnCombinedGo" onclick="showPage('page-combined')" style="display:none">ללוח המשולב ➡️</button></div>
     <div id="portalPersonalDash" style="margin-top:0;">
-      <iframe id="portalDashIframe" src="about:blank" style="width:100%;height:68vh;min-height:480px;border:1px solid var(--line);border-radius:10px;background:#fff;" title="לוח אישי"></iframe>
+      <!-- [UIPOLISH3 2026-07-04 - part א] dynamic fill-to-bottom. The 68vh is kept FIRST as a
+           fallback for browsers without dvh support; modern browsers take the calc() override
+           (viewport minus header 64 + dash top-pad + mini-nav ≈ 150px) so the card reaches the bottom. -->
+      <iframe id="portalDashIframe" src="about:blank" style="width:100%;height:68vh;height:calc(100dvh - 150px);min-height:480px;border:1px solid var(--line);border-radius:10px;background:#fff;" title="לוח אישי"></iframe>
     </div>
   </div>
 </section>
@@ -670,7 +675,7 @@ html[data-auth="in"] #page-share{padding-top:10px;}
   <div class="page-inner">
     <!-- [G5] compact combined nav: back to dashboard -->
     <div class="page-nav-mini"><button type="button" class="pn-mini" onclick="showPage('page-dash')">⬅️ חזור ללוח הבקרה</button></div>
-    <div id="combinedPageBody" style="margin-top:0;"><iframe id="portalCombinedIframe" src="about:blank" style="width:100%;height:68vh;min-height:480px;border:1px solid var(--line);border-radius:10px;background:#fff;" title="דשבורד משולב"></iframe></div>
+    <div id="combinedPageBody" style="margin-top:0;"><iframe id="portalCombinedIframe" src="about:blank" style="width:100%;height:68vh;height:calc(100dvh - 150px);min-height:480px;border:1px solid var(--line);border-radius:10px;background:#fff;" title="דשבורד משולב"></iframe></div>
   </div>
 </section>
 
