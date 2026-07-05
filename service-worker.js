@@ -2,7 +2,7 @@
  * Caches NOTHING: the app and the dashboards always load fresh from the network,
  * so there is never stale content, and live Apps Script data is never blocked.
  * This worker exists only to keep the app installable (Add to Home Screen). */
-const SW_VERSION = 'wrsvp-passthrough-v19-deskrepair-20260705';
+const SW_VERSION = 'wrsvp-passthrough-v20-deskrepair2-20260705';
 
 self.addEventListener('install', function () {
   // take over as soon as possible

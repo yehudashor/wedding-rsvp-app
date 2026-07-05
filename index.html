@@ -432,7 +432,7 @@ html:fullscreen #portalDashIframe,html:fullscreen #portalCombinedIframe{height:8
    REGISTER mode reports its true taller height via postMessage, so f.style.height still grows past
    this floor. Mobile <768px keeps the inline min-height:720px untouched. */
 @media (min-width:768px){
-  #regFrame{min-height:460px !important;}
+  #regFrame{min-height:180px !important;}
 }
 /* [B1-5 2026-07-05 / REV2] DESKTOP/TABLET ONLY: dashboards open to FULL screen width. The only real
    cap was this SPA wrapper (.page-inner{max-width:1000px} globally); dashboard.html's content (#dashboard-content)
@@ -1560,7 +1560,7 @@ window.DASH_DATA = {};
   window.addEventListener('message',function(e){ if(e&&e.data&&e.data.type==='wedding-reg-done'){ try{ if(e.data.sid&&typeof window._deckRegister==='function'){ window._deckRegister(e.data.name||'מארגן חדש', e.data.side||'groom', e.data.sid, e.data.distributionLink||'', e.data.dashboardLink||'', e.data.token||'', e.data.phone||'', e.data.isPrimary===true); } }catch(err){} try{ if(typeof window.bootPages==='function'){window.bootPages();} }catch(err2){} } });
   // SPA SEAMLESS HEIGHT: the register iframe (2B) posts its content height so we can grow the
   // frame and kill the internal scrollbar (critical for elderly users). 720px stays as the floor.
-  window.addEventListener('message',function(e){ if(e&&e.data&&e.data.type==='wedding-reg-height'){ try{ var f=document.getElementById('regFrame'); var hgt=parseInt(e.data.height,10); /* [B1-2a 2026-07-05] lower the iframe height floor on DESKTOP only (>=768: 520) so the short login card hugs its content; mobile keeps the 720 floor untouched. Register reports its true taller height and overrides the floor. */ if(f&&hgt&&!isNaN(hgt)){ f.style.height=Math.max((window.innerWidth>=768?460:720),hgt)+'px'; } /* [B1-2a->2c 2026-07-05] desktop floor 520->460 to match #regFrame min-height:460 (C1); mobile 720 untouched */ }catch(err){} } });
+  window.addEventListener('message',function(e){ if(e&&e.data&&e.data.type==='wedding-reg-height'){ try{ var f=document.getElementById('regFrame'); var hgt=parseInt(e.data.height,10); /* [B1-2a 2026-07-05] lower the iframe height floor on DESKTOP only (>=768: 520) so the short login card hugs its content; mobile keeps the 720 floor untouched. Register reports its true taller height and overrides the floor. */ if(f&&hgt&&!isNaN(hgt)){ f.style.height=Math.max((window.innerWidth>=768?180:720),hgt)+'px'; } /* [B1-2a->2c 2026-07-05] desktop floor 520->460 to match #regFrame min-height:460 (C1); mobile 720 untouched */ }catch(err){} } });
   /* [SPA-PAGES F1] free navigation REMOVED: next/prev onclick + arrow-key nav deleted so pages
      switch ONLY through showPage/pageNext/pageBack (auth+role gated). slides/go/gotoTitle kept
      for the hidden annotation tool. */
