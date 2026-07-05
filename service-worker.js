@@ -2,11 +2,18 @@
  * Caches NOTHING: the app and the dashboards always load fresh from the network,
  * so there is never stale content, and live Apps Script data is never blocked.
  * This worker exists only to keep the app installable (Add to Home Screen). */
-const SW_VERSION = 'wrsvp-passthrough-v22-sharefill-20260706';
+const SW_VERSION = 'wrsvp-passthrough-v23-sharefill-20260706';
 
-self.addEventListener('install', function () {
-  // take over as soon as possible
-  self.skipWaiting();
+/* [SMART-UPDATE 2026-07-06] Do NOT skipWaiting automatically on install. A freshly
+   installed worker WAITS until the open page explicitly tells it to activate (via a
+   {type:'SKIP_WAITING'} message). That lets the client decide: update silently when the
+   app is backgrounded, or show a polite toast when the organiser is actively using it -
+   so a deploy never yanks the page or loses data. (First-ever install has no active
+   worker to wait behind, so new visitors still activate immediately.) */
+self.addEventListener('install', function () { /* wait for the page's SKIP_WAITING */ });
+
+self.addEventListener('message', function (event) {
+  if (event.data && event.data.type === 'SKIP_WAITING') { self.skipWaiting(); }
 });
 
 self.addEventListener('activate', function (event) {
