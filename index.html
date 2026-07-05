@@ -424,13 +424,24 @@ html:fullscreen #portalDashIframe,html:fullscreen #portalCombinedIframe{height:8
   #page-login{justify-content:flex-start;padding-top:0;padding-bottom:0;}
   #page-login>.page-inner{margin-top:auto;margin-bottom:auto;}
 }
-/* [B1-5 2026-07-05] DESKTOP/TABLET ONLY: dashboards open to (near) full screen width. Only the SPA
-   wrapper .page-inner{max-width:1000px} caps the dashboard iframes on desktop (dashboard.html itself is
-   already full-width). Lift the cap for the two dashboard pages ONLY (personal/primary/combined all render
-   in these two iframes; table + cards views both benefit). Owner default: bound at 1400px (not 100%) so
-   ultra-wide table rows stay comfortable to scan. Mobile <768px unaffected. */
+/* [B1-2c 2026-07-05] DESKTOP/TABLET ONLY: the REAL remaining dead-space source was the INLINE
+   min-height:720px on #regFrame (line ~627) - f.style.height set by the [B1-2a] listener can never
+   render SHORTER than an inline min-height, so the short LOGIN card was still forced to 720px.
+   Override that floor here (id selector + !important beats the inline min-height) and set a snug
+   460px floor that matches the login card and prevents any pre-first-message collapse flash.
+   REGISTER mode reports its true taller height via postMessage, so f.style.height still grows past
+   this floor. Mobile <768px keeps the inline min-height:720px untouched. */
 @media (min-width:768px){
-  #page-dash>.page-inner,#page-combined>.page-inner{max-width:1400px;}
+  #regFrame{min-height:460px !important;}
+}
+/* [B1-5 2026-07-05 / REV2] DESKTOP/TABLET ONLY: dashboards open to FULL screen width. The only real
+   cap was this SPA wrapper (.page-inner{max-width:1000px} globally); dashboard.html's content (#dashboard-content)
+   is already width:100% of its iframe, so the 1400px cap from REV1 was itself the reason it still looked narrow.
+   max-width:none = the iframe fills the whole page width (minus the body's own gutter). Covers personal, primary/side
+   and combined (all three render in these two iframes; table + cards both benefit). Mobile <768px is never reached
+   by this media query, so the mobile layout is byte-for-byte unchanged. */
+@media (min-width:768px){
+  #page-dash>.page-inner,#page-combined>.page-inner{max-width:none;width:100%;}
 }
 </style>
 <style id="demo-sim-css">
@@ -471,7 +482,7 @@ html:fullscreen #portalDashIframe,html:fullscreen #portalCombinedIframe{height:8
    card width (hi-res 2000x1414 source, so it sharpens rather than blurs); zoom cursor hints click-to-enlarge.
    Mobile <768px keeps width:min(430px,90%). */
 @media (min-width:768px){
-  #demoSection>.lnk{max-width:560px;margin-left:auto;margin-right:auto;}
+  #demoSection>.lnk{max-width:1000px;margin-left:auto;margin-right:auto;}
   #demoSection .dsim-invite{width:100%;max-width:100%;box-sizing:border-box;cursor:zoom-in;}
   #demoSection #dsim-form{box-sizing:border-box;}
 }
@@ -486,15 +497,32 @@ html[data-auth="in"] #page-share{padding-top:10px;}
 .share-tab.active{background:linear-gradient(180deg,var(--olive),var(--olive-d));color:#fff;border-color:var(--olive-d);box-shadow:0 8px 18px -6px rgba(75,100,64,.5);cursor:default;}
 #portalBanner .share{flex-direction:column;flex-wrap:nowrap;gap:12px;}
 #portalBanner .share button{width:100%;flex:none;min-height:60px;font-size:1.15em;}
-/* [B1-3 2026-07-05] DESKTOP/TABLET ONLY: stretch the 'שיתוף הזמנה' tab to the bottom of the screen.
-   The .slide is a flex column; grow its inner + active share pane + card, and pin the page-nav to the
-   bottom. Scoped to #page-share tab-1 only (demo pane #shareTabPane2 keeps natural height).
-   Owner override: the stretched share card VERTICALLY CENTERS its content (flex column, justify-content:center). */
+/* [B1-3 v2 2026-07-05] DESKTOP/TABLET ONLY (>=768px): center the share CARD vertically in the
+   viewport (NOT stretched), reorder so the 3 share buttons sit ABOVE both text boxes, bump the
+   link+warning font, and pin the green nav button to the bottom. Mobile <768px is 100% untouched.
+   Mechanism: .page-inner becomes a full-height flex column; the ACTIVE share pane grows and centers
+   its natural-height card; .page-nav is pushed to the bottom via margin-top:auto. The demo pane
+   (#shareTabPane2) is display:none while tab-1 is active, so growth never affects it; when tab-2 is
+   active #shareTabPane1 is display:none so its grow rule is inert and the long demo scrolls naturally. */
 @media (min-width:768px){
+  /* full-height column so we can pin the nav to the bottom */
   #page-share>.page-inner{flex:1 1 auto;display:flex;flex-direction:column;min-height:0;}
-  #page-share #shareTabPane1{flex:1 1 auto;display:flex;flex-direction:column;min-height:0;}
-  #page-share #shareTabPane1>#portalBanner{flex:1 1 auto;display:flex;flex-direction:column;justify-content:center;}
+  /* the active share pane grows and vertically-centers the card (equal top/bottom) */
+  #page-share #shareTabPane1{flex:1 1 auto;display:flex;flex-direction:column;justify-content:center;min-height:0;}
+  /* the card itself stays its NATURAL height (no stretch) */
+  #page-share #shareTabPane1>#portalBanner{flex:0 0 auto;margin-bottom:0;}
+  /* pin the green 'לרשימת המוזמנים שלי' button to the bottom of the viewport */
   #page-share>.page-inner>.page-nav{margin-top:auto;}
+  /* --- reorder inside the card: [3 buttons] [link box] [warning] top->bottom --- */
+  #page-share #portalBanner>.lnk{display:flex;flex-direction:column;}
+  #page-share #portalBanner>.lnk>.t{order:1;}
+  #page-share #portalBanner>.lnk>.share{order:2;margin-top:0;margin-bottom:12px;}
+  #page-share #portalBanner>.lnk>.wa-text{order:3;}
+  #page-share #portalBanner>.lnk>#portalDispLink{order:4;}
+  #page-share #portalBanner>.lnk>.share-warning{order:5;margin-bottom:0;}
+  /* (d) larger, readable link + warning text on desktop */
+  #page-share #portalBanner .wa-text{font-size:1.02em;line-height:1.6;}
+  #page-share #portalBanner .share-warning{font-size:1.08em;line-height:1.8;}
 }
 </style>
 <style id="b1-lightbox-css">
@@ -1532,7 +1560,7 @@ window.DASH_DATA = {};
   window.addEventListener('message',function(e){ if(e&&e.data&&e.data.type==='wedding-reg-done'){ try{ if(e.data.sid&&typeof window._deckRegister==='function'){ window._deckRegister(e.data.name||'מארגן חדש', e.data.side||'groom', e.data.sid, e.data.distributionLink||'', e.data.dashboardLink||'', e.data.token||'', e.data.phone||'', e.data.isPrimary===true); } }catch(err){} try{ if(typeof window.bootPages==='function'){window.bootPages();} }catch(err2){} } });
   // SPA SEAMLESS HEIGHT: the register iframe (2B) posts its content height so we can grow the
   // frame and kill the internal scrollbar (critical for elderly users). 720px stays as the floor.
-  window.addEventListener('message',function(e){ if(e&&e.data&&e.data.type==='wedding-reg-height'){ try{ var f=document.getElementById('regFrame'); var hgt=parseInt(e.data.height,10); /* [B1-2a 2026-07-05] lower the iframe height floor on DESKTOP only (>=768: 520) so the short login card hugs its content; mobile keeps the 720 floor untouched. Register reports its true taller height and overrides the floor. */ if(f&&hgt&&!isNaN(hgt)){ f.style.height=Math.max((window.innerWidth>=768?520:720),hgt)+'px'; } }catch(err){} } });
+  window.addEventListener('message',function(e){ if(e&&e.data&&e.data.type==='wedding-reg-height'){ try{ var f=document.getElementById('regFrame'); var hgt=parseInt(e.data.height,10); /* [B1-2a 2026-07-05] lower the iframe height floor on DESKTOP only (>=768: 520) so the short login card hugs its content; mobile keeps the 720 floor untouched. Register reports its true taller height and overrides the floor. */ if(f&&hgt&&!isNaN(hgt)){ f.style.height=Math.max((window.innerWidth>=768?460:720),hgt)+'px'; } /* [B1-2a->2c 2026-07-05] desktop floor 520->460 to match #regFrame min-height:460 (C1); mobile 720 untouched */ }catch(err){} } });
   /* [SPA-PAGES F1] free navigation REMOVED: next/prev onclick + arrow-key nav deleted so pages
      switch ONLY through showPage/pageNext/pageBack (auth+role gated). slides/go/gotoTitle kept
      for the hidden annotation tool. */
@@ -1764,7 +1792,19 @@ window.DASH_DATA = {};
   /* [G5] bridge: the GAS dashboard action row posts to navigate the SPA (goto-share) or request fullscreen (goto-fullscreen) */
   window.addEventListener('message',function(e){if(!e||!e.data)return;if(e.data.type==='wedding-goto-share'){try{window.showPage('page-share');if(window.shareTabSel)window.shareTabSel(1);}catch(err){}}if(e.data.type==='wedding-goto-fullscreen'){try{window.tryFullscreenLandscape();}catch(err){}}if(e.data.type==='wedding-exit-fullscreen'){try{window.tryExitFullscreenPortrait();}catch(err){}}});/* [FIX6] back-to-cards -> exit fullscreen + release orientation lock */
   /* boot-case: F1's bootPages() fired 'wrsvp:page' BEFORE this module existed, so cover the missed initial page */
-  (function(){var pg=(typeof window.currentPage==='function')?window.currentPage():'';if(pg==='page-dash'){loadDashIframe(false);}if(pg==='page-combined'){loadCombinedIframe(false);}})();
+  (function(){var pg=(typeof window.currentPage==='function')?window.currentPage():'';if(pg==='page-dash'){loadDashIframe(false);}if(pg==='page-combined'){loadCombinedIframe(false);}
+    /* [B3-PREWARM 2026-07-05] kill the ~10s first-entry stall: as soon as boot lands on an authenticated,
+       NON-dashboard page (normally page-share right after login), start loading the dashboard iframe(s) in the
+       BACKGROUND so the GAS cold-start round-trip finishes while the user is still on the share screen. When they
+       open the tab the board is already there (skeleton still covers it until onload, exactly as before). No data
+       or logic changes - just an earlier src set. loadDashIframe no-ops without a token; loadCombinedIframe is
+       self-gated to OWNER_SID, so this is safe for every role. Deferred so it never contends with first paint. */
+    try{var role=(typeof window.portalRole==='function')?window.portalRole():null;
+      if(role&&pg!=='page-dash'&&pg!=='page-combined'){
+        setTimeout(function(){try{loadDashIframe(false);}catch(e){} try{loadCombinedIframe(false);}catch(e){}},150);
+      }
+    }catch(e){}
+  })();
   /* ===== [SPA-PAGES F3] END ===== */
   /* ===== [SPA-PAGES F4] REALTIME POLLING + TOASTS + SETTINGS ===== */
   var PREFS_KEY='wrsvpNotifPrefs_v1'; var POLL_MS=5000; var _pollBusy=false; var _lastSig=null; /* [FIX8] additive sig: refresh dashboard on any add OR edit */
