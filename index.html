@@ -2630,8 +2630,10 @@ window.showInstallConcierge=function(){
   100%{ opacity:0; transform:translateY(-70vh) translateX(var(--wgi-dx,10px)) translateZ(0); }
 }
 
-/* ---- Reduced-motion: a calm, quick, dignified fade (no motion) ----------- */
-@media (prefers-reduced-motion: reduce){
+/* ---- Reduced-motion override [ANIM-ALWAYS 2026-07-06]: per owner request the wedding intro
+   ALWAYS plays the full animation, regardless of the OS "reduce motion" setting. This media query
+   is intentionally made NON-matching (min-width:100000px) so the calm no-motion fallback never applies. */
+@media (prefers-reduced-motion: reduce) and (min-width:100000px){
   #wgi-overlay{ animation:wgi-stage-out .5s ease .9s both; }
   #wgi-frame{  animation:wgi-rm-fade .7s ease .1s both; transform:translate(-50%,-50%) scale(1); }
   #wgi-photo{  animation:wgi-rm-photo .7s ease .1s both; filter:none; transform:none; }
@@ -2770,12 +2772,10 @@ window.showInstallConcierge=function(){
       }
     } catch (e) {}
 
-    // Respect reduced motion: shorter, calmer lifetime.
+    // [ANIM-ALWAYS 2026-07-06] Owner request: the intro ALWAYS plays the full animation,
+    // ignoring the OS "reduce motion" setting. Force reduce=false so the motion path always runs.
+    // (The separate iOS "did-not-paint" fallback below still guards genuine non-rendering cases.)
     var reduce = false;
-    try {
-      reduce = window.matchMedia &&
-               window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    } catch (e) {}
 
     // ---- GUARANTEED-VISIBILITY reveal floor (the core iOS fix) --------------
     // The rich effect makes the photo visible ONLY via CSS keyframes. If those
