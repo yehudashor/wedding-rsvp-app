@@ -514,10 +514,14 @@ html[data-auth="in"] #page-share{padding-top:10px;}
 @media (min-width:768px){
   #page-share>.page-inner{flex:1 1 auto;display:flex;flex-direction:column;min-height:0;}
   #page-share #shareTabPane1{flex:0 0 auto;margin-top:auto;display:flex;flex-direction:column;min-height:0;}
-  #page-share #shareTabPane1>#portalBanner{flex:0 0 auto;margin-bottom:0;padding-top:56px !important;padding-bottom:56px !important;}
+  /* [SHAREFIX2 2026-07-06] tall card whose INNER controls area (.lnk) fills it (spreads via space-between),
+     leaving only a small uniform margin (padding:16px) instead of bottom dead space. */
+  #page-share #shareTabPane1>#portalBanner{flex:0 0 auto;margin-bottom:0;padding:16px 20px !important;display:flex;flex-direction:column;min-height:56vh;}
+  #page-share #portalBanner>.lnk{flex:1 1 auto;display:flex;flex-direction:column;justify-content:space-between;}
   #page-share>.page-inner>.page-nav{margin-top:14px;margin-bottom:auto;}
-  #page-share #portalBanner .wa-text{font-size:1.18em;line-height:1.6;}
-  #page-share #portalBanner .share-warning{font-size:1.1em;line-height:1.8;}
+  /* link ('בשבח והודיה…') + warning font: !important to beat the inline font-size on #portalWaText/.share-warning */
+  #page-share #portalBanner .wa-text{font-size:1.18rem !important;line-height:1.6;}
+  #page-share #portalBanner .share-warning{font-size:1.08rem !important;line-height:1.8;}
 }
 </style>
 <style id="b1-lightbox-css">
