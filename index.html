@@ -355,6 +355,17 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
 @media (prefers-reduced-motion: reduce){
   *,*::before,*::after{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.001ms !important;}
   .g-send::after,.reg-go::after{display:none;}
+  /* [ANIM-ALWAYS 2026-07-06b] Owner request: the wedding intro must play the FULL animation even
+     under the OS "reduce motion" setting. The universal rule above collapses every animation to
+     .001ms; here we re-assert the intro elements' real timings. ID selectors (0,1,0) outrank the
+     universal * (0,0,0), so with !important on both these win for the intro subtree ONLY - the rest
+     of the UI still honours reduce-motion, so accessibility is preserved everywhere else. */
+  #wgi-overlay{animation:wgi-stage-out .62s cubic-bezier(.4,0,.2,1) 2.28s both !important;}
+  #wgi-frame{animation:wgi-frame-in .9s cubic-bezier(.22,1,.36,1) .22s both,wgi-frame-rise 1.5s cubic-bezier(.4,0,.2,1) 1.02s both !important;}
+  #wgi-photo{animation:wgi-develop 1.5s cubic-bezier(.19,1,.22,1) .34s both !important;}
+  #wgi-bloom{animation:wgi-bloom 1.35s cubic-bezier(.16,.84,.3,1) 0s both !important;}
+  #wgi-gleam{animation:wgi-gleam 1.05s cubic-bezier(.5,0,.3,1) 1.16s both !important;}
+  #wgi-skip{animation:wgi-skiphint .5s ease 1.6s both !important;}
 }
 @media (max-width:760px){
   html{font-size:17px;}
@@ -2207,6 +2218,9 @@ window.DASH_DATA = {};
           if (sw.state === 'installed' && navigator.serviceWorker.controller) onWaiting(reg); // update now waiting
         });
       });
+      /* [ITEM1 2026-07-06] force an update check every load so a fresh deploy is picked up promptly
+         (helps Brave / aggressive caches notice the new SW without a manual clear-site-data). */
+      try { reg.update(); } catch (e) {}
     }).catch(function (err) { console.warn('wrsvpPwa: SW registration failed', err); });
   });
 })();
@@ -2276,81 +2290,154 @@ window.DASH_DATA = {};
 
 <script>
 (function(){
-  var DISMISS_KEY='wrsvpInstallDismiss_v2'; /* [FIX5] legacy PERMANENT localStorage flag - cleared below when not installed so a returning uninstalled user is not blocked forever */
-  var DISMISS_SKEY='wrsvpInstallDismissSession_v1'; /* [FIX5] per-SESSION dismiss (sessionStorage) - avoids spam this visit but reappears on a fresh visit when still not installed */
+  /* [INSTALL-REWORK 2026-07-06] Owner spec:
+     - Our "התקן אפליקציה" button => the REAL browser install dialog (native beforeinstallprompt),
+       offered on EVERY visit/refresh until the app is actually installed; after install, never again.
+     - Trigger points: (a) a few seconds after load while not installed, and (b) again right after the
+       organiser logs in / registers (data-auth flips to "in") - the gesture path the owner described.
+     - "אולי מאוחר יותר" is IN-MEMORY only, so a refresh re-offers install (until installed).
+     - When the app IS installed but opened in a plain browser tab => show "המשך באפליקציה" (item 5).
+     HONEST platform limits (documented for the owner - NOT faked):
+       * A PWA cannot be installed silently; the browser always shows its own confirm dialog.
+       * beforeinstallprompt does NOT fire in Incognito, is OFF by default in Brave, never on iOS Safari.
+       * There is NO web API to auto-launch an installed PWA from a foreign browser tab, so the
+         "continue in app" button can only GUIDE - it cannot force-open the standalone window. */
+  var INSTALLED_KEY='wrsvpInstalled_v1';
   var overlay=document.getElementById('wrsvpImOverlay');
   var bodyEl=document.getElementById('wrsvpImBody');
+  var titleEl=document.getElementById('wrsvpImTitle');
   var primaryEl=document.getElementById('wrsvpImPrimary');
   var laterEl=document.getElementById('wrsvpImLater');
-  var mode='native'; /* 'native' = real browser install prompt; 'manual' = iOS / unsupported fallback */
+  var mode='native';
+  var view='install';
+  var dismissedThisView=false;
+  var relatedInstalled=false;
 
-  /* -- captured install prompt, exposed for A3/QA as window._wrsvpDeferredPrompt -- */
+  function isIos(){
+    var ua=window.navigator.userAgent||'';
+    return /iP(hone|ad|od)/.test(ua)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  }
+
+  /* -- captured install prompt, exposed for QA as window._wrsvpDeferredPrompt -- */
   window._wrsvpDeferredPrompt=null;
   window.addEventListener('beforeinstallprompt',function(e){
     e.preventDefault();
     window._wrsvpDeferredPrompt=e;
+    /* if the offer is already on screen in a manual fallback (event fired late), upgrade to native */
+    if(overlay.classList.contains('wrsvpIm-show') && view==='install' && !isIos()){
+      mode='native';
+      titleEl.textContent='אפליקציית החתונה';
+      bodyEl.textContent='לנוחות מקסימלית, התקינו את אפליקציית החתונה על המכשיר שלכם.';
+      primaryEl.textContent='התקן אפליקציה';
+    }
   });
 
   function standalone(){
     return (window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches)||
+           (window.matchMedia&&window.matchMedia('(display-mode: minimal-ui)').matches)||
            window.navigator.standalone===true;
   }
-  function isIos(){
-    var ua=window.navigator.userAgent||'';
-    return /iP(hone|ad|od)/.test(ua)||
-           (navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
-  }
-  function loggedOut(){ /* State A: login page showing (same signal the page router uses) */
-    try{return document.documentElement.getAttribute('data-auth')==='out';}catch(e){return false;}
-  }
-  function dismissed(){ try{return sessionStorage.getItem(DISMISS_SKEY)==='1';}catch(e){return false;} } /* [FIX5] session-scoped, not permanent */
-  function setDismissed(){ try{sessionStorage.setItem(DISMISS_SKEY,'1');}catch(e){} }
+  function markInstalled(){ try{localStorage.setItem(INSTALLED_KEY,'1');}catch(e){} }
+  function everInstalled(){ try{return localStorage.getItem(INSTALLED_KEY)==='1';}catch(e){return false;} }
+  function installedNow(){ return standalone()||everInstalled()||relatedInstalled; }
   function hide(){ overlay.classList.remove('wrsvpIm-show'); }
-  function concierge(){ /* A3 defines window.showInstallConcierge(); never throw if missing */
-    try{ if(typeof window.showInstallConcierge==='function') window.showInstallConcierge(); }catch(e){}
-  }
-  function toManual(text){
-    mode='manual';
-    bodyEl.textContent=text;
-    primaryEl.textContent='הבנתי, סיימתי להתקין';
+  function concierge(){ try{ if(typeof window.showInstallConcierge==='function') window.showInstallConcierge(); }catch(e){} }
+  function toManual(text){ mode='manual'; bodyEl.textContent=text; primaryEl.textContent='הבנתי, סגור'; }
+
+  /* Best-effort cross-browser install detection (Chromium; needs manifest related_applications). */
+  function probeInstalled(cb){
+    try{
+      if(navigator.getInstalledRelatedApps){
+        navigator.getInstalledRelatedApps().then(function(list){ relatedInstalled=!!(list&&list.length); cb(); }).catch(function(){ cb(); });
+        return;
+      }
+    }catch(e){}
+    cb();
   }
 
-  function maybeShow(){
-    /* [FIX5] if the app is NOT installed (not standalone), the prompt must be eligible again on a fresh visit: clear any legacy PERMANENT dismiss flag so an uninstalled/returning user is not blocked forever. Login is permanent (everyone is logged in), so we no longer gate on loggedOut() - a not-installed user still gets the prompt. */
-    if(!standalone()){ try{localStorage.removeItem(DISMISS_KEY);}catch(e){} }
-    if(standalone()||dismissed()) return;
+  /* ITEM 5: installed, but opened in a browser tab => offer to continue in the app. */
+  function showContinue(){
+    view='continue';
+    titleEl.textContent='אפליקציית החתונה מותקנת';
+    bodyEl.textContent='כבר התקנתם את האפליקציה. פתחו אותה מהאייקון של "מגיעים" שנוסף למסך הבית / לשולחן העבודה - שם הכול נטען מהר יותר.';
+    primaryEl.textContent='המשך באפליקציה';
+    laterEl.textContent='אני נשאר/ת פה באתר';
+    overlay.classList.add('wrsvpIm-show');
+  }
+
+  /* ITEM 4/6: not installed => offer the real install. */
+  function showInstall(){
+    view='install'; mode='native';
+    titleEl.textContent='אפליקציית החתונה';
+    bodyEl.textContent='לנוחות מקסימלית, התקינו את אפליקציית החתונה על המכשיר שלכם.';
+    primaryEl.textContent='התקן אפליקציה';
+    laterEl.textContent='אולי מאוחר יותר';
     if(isIos()){
       toManual("באייפון: לחצו על כפתור השיתוף בתחתית המסך ➔ ואז 'הוסף למסך הבית' ⊞");
+    }else if(!window._wrsvpDeferredPrompt){
+      toManual("להתקנה: פתחו את תפריט הדפדפן (⋮) ובחרו 'התקנת אפליקציה' / 'הוסף למסך הבית' ⊞");
     }
     overlay.classList.add('wrsvpIm-show');
   }
 
+  function maybeShow(){
+    if(dismissedThisView) return;
+    if(standalone()) return;               /* running as the installed app => nothing to offer */
+    probeInstalled(function(){
+      if(installedNow()){ showContinue(); } /* ITEM 5 */
+      else { showInstall(); }               /* ITEM 4/6 */
+    });
+  }
+
   primaryEl.addEventListener('click',function(){
+    if(view==='continue'){
+      /* HONEST: a PWA cannot be force-launched from a foreign tab - guide, never fake. */
+      bodyEl.textContent='פתחו את האפליקציה מהאייקון של "מגיעים" במסך הבית / בשולחן העבודה. (הדפדפן אינו מאפשר לאתר לפתוח עבורכם את האפליקציה המותקנת באופן אוטומטי.)';
+      primaryEl.textContent='הבנתי';
+      view='continue-ack';
+      return;
+    }
+    if(view==='continue-ack'){ hide(); dismissedThisView=true; return; }
     if(mode==='manual'){
-      hide(); setDismissed(); concierge();
+      /* we cannot verify a manual install => do NOT claim "installed"; just close + re-check next visit */
+      hide(); dismissedThisView=true;
       return;
     }
     var dp=window._wrsvpDeferredPrompt;
     if(dp){
-      dp.prompt();
+      dp.prompt();                          /* the REAL browser install dialog (item 4) */
       var choice=dp.userChoice;
       window._wrsvpDeferredPrompt=null;
-      if(choice&&choice.finally){ choice.finally(hide); } else { hide(); }
-      /* on "accepted" the browser fires appinstalled -> A3's concierge takes over */
+      hide();
+      if(choice&&choice.then){ choice.then(function(res){ if(res&&res.outcome==='accepted'){ markInstalled(); } }); }
+      /* on "accepted" the browser also fires appinstalled -> concierge + markInstalled */
     }else{
-      /* unsupported browser (no captured prompt): iOS-style manual fallback text */
-      toManual("להתקנה ידנית: פתחו את תפריט הדפדפן ➔ ובחרו 'הוסף למסך הבית' או 'התקנת אפליקציה' ⊞");
+      toManual("להתקנה: פתחו את תפריט הדפדפן (⋮) ובחרו 'התקנת אפליקציה' / 'הוסף למסך הבית' ⊞");
     }
   });
 
-  laterEl.addEventListener('click',function(){ setDismissed(); hide(); });
+  laterEl.addEventListener('click',function(){ dismissedThisView=true; hide(); });
 
-  /* appinstalled: MINIMAL by contract - hide modal + hand off to A3's concierge */
-  window.addEventListener('appinstalled',function(){ hide(); setDismissed(); concierge(); });
+  /* appinstalled: a REAL install happened => remember it, stop offering, run the "find the icon" concierge. */
+  window.addEventListener('appinstalled',function(){ markInstalled(); hide(); concierge(); });
 
-  function schedule(){ setTimeout(maybeShow,4000); }
-  if(document.readyState==='complete'){ schedule(); }
-  else{ window.addEventListener('load',schedule); }
+  /* ITEM 6 trigger (a): a few seconds after load, while not installed. */
+  function schedule(){ setTimeout(maybeShow,3500); }
+  if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded',schedule); }
+  else{ schedule(); }
+
+  /* ITEM 6 trigger (b): right after the organiser logs in / registers (data-auth out->in),
+     re-offer install on that gesture-driven transition (the flow the owner described). */
+  try{
+    var _root=document.documentElement;
+    var _obs=new MutationObserver(function(){
+      if(_root.getAttribute('data-auth')==='in'){
+        dismissedThisView=false;            /* a fresh login gesture => allow the offer again */
+        setTimeout(maybeShow,600);          /* let the two-tab app settle, then offer */
+      }
+    });
+    _obs.observe(_root,{attributes:true,attributeFilter:['data-auth']});
+  }catch(e){}
 })();
 </script>
 <!-- ============================ WRSVP-INSTALL-MODAL END ============================ -->
@@ -2835,8 +2922,8 @@ window.showInstallConcierge=function(){
           m.style.width = size + 'px';
           m.style.height = size + 'px';
           m.style.setProperty('--wgi-dx', dx);
-          m.style.animationDuration = dur + 's';
-          m.style.animationDelay = delay + 's';
+          m.style.setProperty('animation-duration', dur + 's', 'important');
+          m.style.setProperty('animation-delay', delay + 's', 'important');
           dust.appendChild(m);
         }
       } catch (e) {}
