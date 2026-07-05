@@ -581,16 +581,23 @@ html[data-auth="in"] #page-share{padding-top:10px;}
       <button type="button" class="share-tab" id="shareTabBtn2" role="tab" aria-selected="false" onclick="shareTabSel(2)">&#128064; הדגמת אורח</button>
     </div>
     <div id="shareTabPane1" role="tabpanel">
+    <!-- [GK-UI 2026-07-05] Portal header cleanup: the “🌟 הפורטל האישי שלך” title,
+         the organiser name/side line (#portalName) and the “משתף בתור” line
+         (#portalShareAs) were REMOVED per the CTO spec. Their JS writers in
+         renderPortal are null-guarded (if(nameEl)/if(saEl)), so removal is safe.
+         The share-card title is now the FIRST element of the banner, and the old
+         3-step share explainer was replaced by the forward-warning block below. -->
     <div id="portalBanner" style="display:none;background:linear-gradient(135deg,#f5f0e8,#fffdf7);border:2px solid var(--gold);border-radius:16px;padding:18px 20px;margin-bottom:16px;font-family:'Frank Ruhl Libre',serif;">
-      <div style="font-size:1.15em;font-weight:700;color:var(--olive-d);margin-bottom:10px;text-align:center;">&#127775; הפורטל האישי שלך</div>
-      <div id="portalName" style="text-align:center;font-size:1em;color:var(--ink);margin-bottom:12px;"></div>
-      <!-- MULTI-ACCOUNT: shows whose link is about to be sent -->
-      <div id="portalShareAs" style="text-align:center;font-size:.95em;font-weight:700;color:var(--olive-d);margin-bottom:10px;"></div>
       <div class="lnk" style="margin-bottom:12px;">
         <div class="t" style="white-space:nowrap;text-align:center;">&#128228; קישור-הפצה - לשלוח לאורחים</div>
         <div id="portalWaText" class="wa-text" style="white-space:pre-wrap;overflow-wrap:anywhere;font-size:.9em;color:var(--ink);background:#fff;border:1px dashed var(--line);border-radius:8px;padding:8px;margin:6px 0;"></div>
         <span id="portalDispLink" class="u" style="display:none;word-break:break-all;overflow-wrap:anywhere;margin-top:4px;"></span>
-        <div class="share-steps" style="font-size:1em;font-weight:700;color:var(--olive-d);margin:8px 0 6px;line-height:1.7;">1. להעתיק את ההודעה &nbsp; 2. לשלוח בוואטסאפ &nbsp; 3. לשלוח במייל</div>
+        <div class="share-warning" dir="rtl" style="background:#fff3cd;border:2px solid #e0a800;border-radius:12px;padding:14px 16px;margin:10px 0 12px;color:#5c4400;font-size:1em;line-height:1.75;text-align:right;font-family:'Assistant',sans-serif;">
+          🛑 <b>שימו לב: כל אורח חייב לקבל קישור נפרד!</b><br>
+          אין לעשות העברה (Forward) בוואטסאפ או במייל של קישור מאורח לאורח!<br>
+          (הדבר יחסום את האורחים האחרים מלהיכנס לטופס ויגרום להם לתקלות הרשמה).<br>
+          <b>תמיד צרו ושלחו קישור חדש לכל אורח בנפרד בעזרת הכפתורים שלמטה.</b>
+        </div>
         <div class="share">
           <button class="cp" id="cpPortalDisp" onclick="startShareCapture('copy')" style="white-space:nowrap;">העתקה</button>
           <button class="wa-btn" id="cpPortalWa" onclick="startShareCapture('wa')">שיתוף בוואטסאפ</button>
