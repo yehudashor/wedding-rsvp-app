@@ -2,7 +2,7 @@
  * Caches NOTHING: the app and the dashboards always load fresh from the network,
  * so there is never stale content, and live Apps Script data is never blocked.
  * This worker exists only to keep the app installable (Add to Home Screen). */
-const SW_VERSION = 'wrsvp-passthrough-v17-gatekeeper-20260705';
+const SW_VERSION = 'wrsvp-passthrough-v18-uxperf-20260705';
 
 self.addEventListener('install', function () {
   // take over as soon as possible
