@@ -1033,8 +1033,21 @@ window.DASH_DATA = {};
       .then(function(b){ return new File([b],'invitation.jpg',{type:'image/jpeg'}); });
     return window._inviteFilePromise;
   }
-  /* Share the real image file + text (mobile). Fall back to the text-only channel (desktop), where the
-     /g/ link's OG tags supply the preview card. Never double-open on user-cancel (AbortError). */
+  /* [SHARE-DEVICE 2026-07-06] Only phones/tablets ride the navigator.share FILE path (the real invitation
+     image travels with the message). DESKTOP (mouse) uses the mailto/wa.me TEXT path instead: it carries the
+     mail SUBJECT and the preview-card link, and it never tries to attach the invitation file - desktop Outlook
+     was rejecting that file as an empty "no_name" attachment. Fixes: missing subject (#3), broken/empty image
+     attach (#4), reversed order (#5). Owner decision "שניהם בפשרה": on desktop, subject + preview card. */
+  function _isTouchShareDevice(){
+    try{
+      var coarse=(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
+      var touch=((navigator.maxTouchPoints||0)>0);
+      var uaMobile=/Android|iPhone|iPad|iPod|Mobile|Tablet|Silk|Kindle/i.test(navigator.userAgent||'');
+      return (coarse && touch) || uaMobile;
+    }catch(e){ return false; }
+  }
+  /* Share the real image file + text (phones/tablets). Fall back to the text channel (desktop), where the
+     preview link's OG tags supply the invitation card + the mail subject. Never double-open on cancel. */
   function shareInviteViaChannel(waText, mode){
     function fallback(){
       if(mode==='wa'){
@@ -1046,10 +1059,11 @@ window.DASH_DATA = {};
         a.style.display='none';document.body.appendChild(a);a.click();a.remove();
       }
     }
-    var canFiles=(typeof navigator!=='undefined' && navigator.share && navigator.canShare);
+    /* DESKTOP (not a touch device) -> text path (subject + preview card). Only phones/tablets ride the FILE. */
+    var canFiles=(_isTouchShareDevice() && typeof navigator!=='undefined' && navigator.share && navigator.canShare);
     if(!canFiles){ fallback(); return; }
     _loadInviteFile().then(function(file){
-      if(!(file && navigator.canShare({files:[file]}))){ fallback(); return; }
+      if(!(file && file.size>0 && navigator.canShare({files:[file]}))){ fallback(); return; }   /* empty/0-byte file -> text path, never attach an empty "no_name" */
       navigator.share({files:[file], text:waText, title:'הזמנה לחתונת אבי חוקת ומיכל שור'})
         .catch(function(err){ if(err && err.name==='AbortError') return; fallback(); });
     }).catch(function(){ fallback(); });
