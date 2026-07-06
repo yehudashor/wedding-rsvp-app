@@ -2285,6 +2285,7 @@ window.DASH_DATA = {};
     <div class="wrsvpIm-body" id="wrsvpImBody">לנוחות מקסימלית, התקינו את אפליקציית החתונה על המכשיר שלכם.</div>
     <button type="button" class="wrsvpIm-primary" id="wrsvpImPrimary">התקן אפליקציה</button>
     <button type="button" class="wrsvpIm-later" id="wrsvpImLater">אולי מאוחר יותר</button>
+      <button type="button" class="wrsvpIm-later" id="wrsvpImDone" style="min-height:auto;padding:8px 10px;font-size:.9em;opacity:.72;display:none;">כבר התקנתי - אל תציגו שוב</button>
   </div>
 </div>
 
@@ -2308,6 +2309,7 @@ window.DASH_DATA = {};
   var titleEl=document.getElementById('wrsvpImTitle');
   var primaryEl=document.getElementById('wrsvpImPrimary');
   var laterEl=document.getElementById('wrsvpImLater');
+  var doneEl=document.getElementById('wrsvpImDone');
   var mode='native';
   var view='install';
   var dismissedThisView=false;
@@ -2349,18 +2351,23 @@ window.DASH_DATA = {};
      and correctly reappear after an uninstall. (1) standalone = installed; (2) getInstalledRelatedApps()
      is the live OS truth on Chromium - trusted BOTH ways, clearing the stale marker when it reports
      not-installed (fixes post-uninstall); (3) older browsers fall back to the persistent marker. */
+  /* [INSTALL-FIX4 2026-07-06] Desktop truth: from a browser tab you CANNOT detect an installed PWA -
+     getInstalledRelatedApps() returns [] on desktop Chrome (verified live). So the ONLY reliable signal
+     is the persistent marker WE write at install time (appinstalled / accepted prompt / ever-standalone /
+     the manual "כבר התקנתי" button). Never clear it from an empty API result (that was the v27 bug that
+     re-showed install forever). The API is used POSITIVELY only (it does work on Android Chrome). */
   function resolveInstalled(cb){
     if(standalone()){ markInstalled(); return cb(true); }
+    if(everInstalled()){ return cb(true); }
     try{
       if(navigator.getInstalledRelatedApps){
         navigator.getInstalledRelatedApps().then(function(list){
-          if(list && list.length){ markInstalled(); cb(true); }
-          else { clearInstalled(); cb(false); }
-        }).catch(function(){ cb(everInstalled()); });
+          if(list && list.length){ markInstalled(); cb(true); } else { cb(false); }
+        }).catch(function(){ cb(false); });
         return;
       }
     }catch(e){}
-    cb(everInstalled());
+    cb(false);
   }
 
   /* ITEM 5: installed, but opened in a browser tab => offer to continue in the app. */
@@ -2370,6 +2377,7 @@ window.DASH_DATA = {};
     bodyEl.textContent='כבר התקנתם את האפליקציה. פתחו אותה מהאייקון של "מגיעים" שנוסף למסך הבית / לשולחן העבודה - שם הכול נטען מהר יותר.';
     primaryEl.textContent='המשך באפליקציה';
     laterEl.textContent='אני נשאר/ת פה באתר';
+    if(doneEl){ doneEl.style.display='none'; }
     overlay.classList.add('wrsvpIm-show');
   }
 
@@ -2380,6 +2388,7 @@ window.DASH_DATA = {};
     bodyEl.textContent='לנוחות מקסימלית, התקינו את אפליקציית החתונה על המכשיר שלכם.';
     primaryEl.textContent='התקן אפליקציה';
     laterEl.textContent='אולי מאוחר יותר';
+    if(doneEl){ doneEl.style.display=''; }
     if(isIos()){
       toManual("באייפון: לחצו על כפתור השיתוף בתחתית המסך ➔ ואז 'הוסף למסך הבית' ⊞");
     }
@@ -2426,6 +2435,7 @@ window.DASH_DATA = {};
   });
 
   laterEl.addEventListener('click',function(){ dismissedThisView=true; hide(); });
+  if(doneEl){ doneEl.addEventListener('click',function(){ markInstalled(); dismissedThisView=true; hide(); }); }
 
   /* appinstalled: a REAL install happened => remember it, stop offering, run the "find the icon" concierge. */
   window.addEventListener('appinstalled',function(){ markInstalled(); hide(); concierge(); });
