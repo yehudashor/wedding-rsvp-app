@@ -403,7 +403,7 @@ html[data-auth="in"] .slide{inset:64px 0 0 0;}
 #hdrSettingsBtn{background:#efe7d8;color:var(--ink);font-size:1.25em;}
 #hdrLogoutBtn{background:linear-gradient(180deg,#c0392b,#96281b);color:#fff;}
 html[data-auth="in"] #page-login{display:none !important;}
-html[data-auth="out"] #page-share,html[data-auth="out"] #page-dash,html[data-auth="out"] #page-combined,html[data-auth="out"] #page-organisers{display:none !important;}
+html[data-auth="out"] #page-share,html[data-auth="out"] #page-dash,html[data-auth="out"] #page-combined{display:none !important;}
 .page-nav{display:flex;gap:14px;justify-content:center;align-items:stretch;width:100%;max-width:1000px;margin:26px auto 8px;}
 .page-nav button{flex:1;min-height:68px;font-size:1.3em;font-weight:800;border:none;border-radius:16px;cursor:pointer;font-family:inherit;}
 .page-nav .pn-next{background:linear-gradient(180deg,var(--olive),var(--olive-d));color:#fff;box-shadow:0 10px 24px -8px rgba(75,100,64,.55);}
@@ -411,24 +411,6 @@ html[data-auth="out"] #page-share,html[data-auth="out"] #page-dash,html[data-aut
 /* [G5] compact mini nav for dash / combined pages */
 .page-nav-mini{display:flex;justify-content:center;gap:10px;width:100%;max-width:1000px;margin:0 auto 10px;}
 .pn-mini{flex:1;min-height:44px;padding:6px 16px;border:none;border-radius:10px;background:#efe7d8;color:var(--ink);font-weight:700;font-size:1em;cursor:pointer;font-family:inherit;}
-/* [ORG-PANEL] super-only organiser panel: elderly-friendly big RTL buttons + status card */
-.org-group{margin:6px auto 14px;}
-.org-group>.org-group-h{font-family:'Frank Ruhl Libre',serif;color:var(--olive);font-size:1.3em;font-weight:800;text-align:center;margin:10px 0 8px;}
-.org-btns{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;}
-.org-btn{flex:1 1 46%;min-height:60px;min-width:150px;border:2px solid var(--line);border-radius:14px;background:var(--card);color:var(--ink);font-family:inherit;font-size:1.15em;font-weight:800;cursor:pointer;padding:10px 14px;box-shadow:0 6px 16px -8px rgba(120,90,40,.35);}
-.org-btn.sel{border-color:var(--gold);box-shadow:0 0 0 4px rgba(169,128,47,.28);}
-.org-btn .org-btn-sub{display:block;font-size:.72em;font-weight:600;color:var(--muted);margin-top:2px;}
-.org-card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px 20px;box-shadow:0 16px 44px rgba(120,90,40,.16);margin-top:8px;}
-.org-card h3{font-family:'Frank Ruhl Libre',serif;color:var(--olive);font-size:1.5em;text-align:center;margin:.1em 0 .5em;}
-.org-status{text-align:center;font-size:1.15em;font-weight:800;padding:8px 14px;border-radius:12px;margin:0 auto 16px;max-width:520px;}
-.org-status.ok{background:#e7f2ea;color:var(--green);}
-.org-status.warn{background:#fbeee0;color:#a9802f;}
-.org-metrics{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-.org-metric{background:#fbf7ee;border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;text-align:center;}
-.org-metric .om-k{display:block;font-size:.9em;color:var(--muted);font-weight:700;margin-bottom:4px;}
-.org-metric .om-v{display:block;font-size:1.6em;font-weight:900;color:var(--ink);}
-.org-metric .om-v.om-na{font-size:1.15em;color:#a9802f;}
-@media(max-width:520px){.org-metrics{grid-template-columns:1fr;}.org-btn{flex-basis:100%;}}
 /* [UIPOLISH2 2026-07-04] pull nav + content tight (~0.25cm) under the header on dash/combined */
 /* [UIPOLISH3 2026-07-04 - part א] trim the big bottom padding so the dashboard card
    can reach (nearly) the bottom of the viewport instead of stopping ~2cm short. */
@@ -644,9 +626,6 @@ html[data-auth="in"] #page-share{padding-top:10px;}
       <button type="button" id="inviteNameConfirmBtn">שליחה</button>
       <button type="button" id="inviteNameCancelBtn">ביטול</button>
     </div>
-    <!-- [GHOST-LINK 2026-07-06] share without typing a name; the guest's name is captured when they fill the form -->
-    <button type="button" id="inviteGhostBtn" onclick="_doShareGhost()" style="width:100%;margin-top:12px;min-height:52px;border:2px dashed var(--gold-soft);border-radius:12px;background:#fbf7ef;color:var(--olive);font-weight:800;font-size:1.05em;cursor:pointer;font-family:inherit;">👻 צור קישור רפאים (בלי שם)</button>
-    <div style="font-size:.9em;color:#6b5d45;margin-top:6px;line-height:1.5;text-align:right;">הקישור יעבוד לכל דבר - נדע מי נכנס ומי אישר; השם ייקלט אוטומטית כשהאורח ימלא את הטופס.</div>
   </div>
 </div>
 <!-- ANNOTATE TOGGLE: flip ANNOTATE_ENABLED to true (one line) to restore the note feature -->
@@ -801,23 +780,6 @@ html[data-auth="in"] #page-share{padding-top:10px;}
     <!-- [G5] compact combined nav: back to dashboard -->
     <div class="page-nav-mini"><button type="button" class="pn-mini" onclick="showPage('page-dash')">⬅️ חזור ללוח הבקרה</button></div>
     <div id="combinedPageBody" style="margin-top:0;"><div id="portalCombinedSkel" class="dash-skel" style="height:68vh;height:calc(100dvh - 150px);min-height:480px;"><div class="dash-skel-inner"><div class="sk-bar sk-title"></div><div class="sk-bar sk-banner"></div><div class="sk-bar sk-btns"></div><div class="sk-bar sk-row"></div><div class="sk-bar sk-row"></div><div class="sk-bar sk-row"></div><div class="sk-bar sk-row"></div><div class="sk-note">טוען את הלוח המשולב…</div></div></div><iframe id="portalCombinedIframe" src="about:blank" onload="if(this.src&&this.src!=='about:blank'){var s=document.getElementById('portalCombinedSkel');if(s)s.style.display='none';this.style.visibility='visible';}" style="width:100%;height:68vh;height:calc(100dvh - 150px);min-height:480px;border:1px solid var(--line);border-radius:10px;background:#fff;visibility:hidden;" title="דשבורד משולב"></iframe></div>
-  </div>
-</section>
-
-<!-- PHASE2 PAGE 4: organiser panel (super only) [ORG-PANEL] -->
-<section class="slide" id="page-organisers" data-title="פאנל המארגנים">
-  <div class="page-inner">
-    <div class="page-nav-mini">
-      <button type="button" class="pn-mini" onclick="showPage('page-combined')">⬅️ חזור ללוח המשולב</button>
-      <button type="button" class="pn-mini" id="orgReloadBtn" onclick="loadOrganiserPanel(true)">🔄 רענן</button>
-    </div>
-    <div id="orgPanelBody" dir="rtl" style="margin-top:0;max-width:1000px;margin-inline:auto;">
-      <div id="orgPanelSkel" class="dash-skel" style="height:40vh;min-height:280px;"><div class="dash-skel-inner"><div class="sk-bar sk-title"></div><div class="sk-bar sk-btns"></div><div class="sk-bar sk-row"></div><div class="sk-bar sk-row"></div><div class="sk-note">טוען את פאנל המארגנים…</div></div></div>
-      <div id="orgPanelErr" style="display:none;text-align:center;color:#b23b3b;font-weight:700;padding:24px;"></div>
-      <div id="orgGroupGroom" class="org-group" style="display:none;"></div>
-      <div id="orgGroupBride" class="org-group" style="display:none;"></div>
-      <div id="orgCard" class="org-card" style="display:none;"></div>
-    </div>
   </div>
 </section>
 
@@ -1084,47 +1046,6 @@ window.DASH_DATA = {};
       return (coarse && touch) || uaMobile;
     }catch(e){ return false; }
   }
-  /* [GILI-EMAIL 2026-07-06] DESKTOP email that carries the real invitation image. mailto is text-only
-     (no embed, no attach) and desktop Web-Share to Outlook fails ("no_name" empty file), so the reliable
-     way to get the image INTO a desktop email is the clipboard: copy the high-res invitation, open the
-     mail (subject + body already filled), and the organiser pastes it (Ctrl+V) at the top of the body.
-     The clipboard write MUST run inside a user gesture, and the mint is async, so we do the copy on the
-     popup's OWN button click (a fresh gesture) - then open the mail. */
-  function _plainMailto(waText){
-    var a=document.createElement('a');
-    a.href='mailto:?subject='+encodeURIComponent('אישור הגעה לחתונת אבי חוקת ומיכל שור')+'&body='+encodeURIComponent(waText);
-    a.style.display='none';document.body.appendChild(a);a.click();a.remove();
-  }
-  function _invitePngBlob(){
-    return _loadInviteFile().then(function(file){
-      return new Promise(function(resolve,reject){
-        var url=URL.createObjectURL(file);var img=new Image();
-        img.onload=function(){try{var c=document.createElement('canvas');c.width=img.naturalWidth;c.height=img.naturalHeight;c.getContext('2d').drawImage(img,0,0);URL.revokeObjectURL(url);c.toBlob(function(b){b?resolve(b):reject(new Error('blob'));},'image/png');}catch(e){reject(e);}};
-        img.onerror=function(){URL.revokeObjectURL(url);reject(new Error('img'));};
-        img.src=url;
-      });
-    });
-  }
-  function _emailWithImage(waText){
-    var ov=document.createElement('div');ov.setAttribute('dir','rtl');
-    ov.style.cssText='position:fixed;inset:0;z-index:2147483000;background:rgba(30,24,12,.55);display:flex;align-items:center;justify-content:center;padding:20px;';
-    ov.innerHTML='<div style="background:#fff;border-radius:18px;max-width:460px;width:100%;padding:26px 22px;box-shadow:0 24px 60px rgba(0,0,0,.4);text-align:center;">'
-      +'<div style="font-size:2.2em;margin-bottom:6px;">📧</div>'
-      +'<div style="font-size:1.12em;line-height:1.75;color:#3a2f1a;font-weight:600;">כשתלחצי על הכפתור, המייל ייפתח עם הכותרת והטקסט מוכנים.<br><b>ברגע שהמייל נפתח, לחצי <span dir="ltr">Ctrl+V</span></b> — ותמונת-ההזמנה תיכנס בראש ההודעה, מעל הטקסט והקישור.</div>'
-      +'<button type="button" id="_emOpenBtn" style="width:100%;margin-top:20px;min-height:56px;border:none;border-radius:12px;background:var(--olive);color:#fff;font-weight:800;font-size:1.15em;cursor:pointer;font-family:inherit;">📋 העתיקי את התמונה ופתחי את המייל</button>'
-      +'<button type="button" id="_emCancelBtn" style="width:100%;margin-top:10px;min-height:44px;border:none;border-radius:10px;background:#f0ece3;color:#6b5d45;font-weight:700;font-size:1em;cursor:pointer;font-family:inherit;">ביטול</button>'
-      +'</div>';
-    document.body.appendChild(ov);
-    function close(){if(ov.parentNode)ov.parentNode.removeChild(ov);}
-    ov.querySelector('#_emOpenBtn').onclick=function(){
-      /* fresh user gesture: copy the image to the clipboard (promise value satisfies the gesture rule), then open the mail */
-      try{ if(navigator.clipboard && window.ClipboardItem){ navigator.clipboard.write([new ClipboardItem({'image/png':_invitePngBlob()})]); } }catch(e){}
-      close();
-      _plainMailto(waText);
-    };
-    ov.querySelector('#_emCancelBtn').onclick=close;
-    ov.addEventListener('click',function(e){if(e.target===ov)close();});
-  }
   /* Share the real image file + text (phones/tablets). Fall back to the text channel (desktop), where the
      preview link's OG tags supply the invitation card + the mail subject. Never double-open on cancel. */
   function shareInviteViaChannel(waText, mode){
@@ -1132,8 +1053,10 @@ window.DASH_DATA = {};
       if(mode==='wa'){
         window.open('https://wa.me/?text='+encodeURIComponent(waText),'_blank');
       }else{
-        if(_isTouchShareDevice()){ _plainMailto(waText); }   /* mobile fallback: plain mail (real image already tried via navigator.share) */
-        else{ _emailWithImage(waText); }                     /* [GILI-EMAIL] desktop: copy image + paste popup + mail with subject */
+        var subjEnc=encodeURIComponent('אישור הגעה לחתונת אבי חוקת ומיכל שור');
+        var a=document.createElement('a');
+        a.href='mailto:?subject='+subjEnc+'&body='+encodeURIComponent(waText);
+        a.style.display='none';document.body.appendChild(a);a.click();a.remove();
       }
     }
     /* DESKTOP (not a touch device) -> text path (subject + preview card). Only phones/tablets ride the FILE. */
@@ -1219,62 +1142,6 @@ window.DASH_DATA = {};
   }
   window.startShareCapture=startShareCapture;
 
-  /* [GHOST-LINK 2026-07-06] shared mint+share core. name may be '' for a GHOST link: the backend
-     mints a ghost invite (empty invitee_name) and captures the guest's real name when they fill the
-     form. The shared text never contains the invitee name, so a ghost link's text == a named link's. */
-  function _mintAndShare(rec,mode,channel,name){
-    var body={action:'mintInvite',token:rec.token,invitee_name:name,channel:channel};
-    _inviteBusy(true);
-    _inviteMsg('');
-    /* text/plain avoids a CORS preflight against Apps Script (mirrors the push-subscribe call) */
-    fetch(EXEC_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body)})
-      .then(function(r){return r.json();})
-      .then(function(res){
-        if(!res||res.ok!==true||!res.g){
-          _inviteBusy(false);
-          _inviteMsg('לא הצלחנו להכין קישור. נא לנסות שוב.');
-          return;
-        }
-        var g=res.g;
-        var base=(rec.distributionLink||'').replace(/([?&])ch=[^&]*/,'$1ch='+channel);
-        if(base.indexOf('ch=')<0){base+=(base.indexOf('?')>=0?'&':'?')+'ch='+channel;}
-        var uniqueLink=base+(base.indexOf('?')>=0?'&':'?')+'g='+encodeURIComponent(g);
-        var shareLink=toShareLink(uniqueLink);   /* [SHARE-IMG] isolated invite-preview domain */
-        var waText=buildWaMessageTextPortal(rec.name, shareLink);
-        if(mode==='wa'||mode==='em'){ shareInviteViaChannel(waText, mode); }
-        else{ doCopy('cpPortalDisp', waText); }
-        closeShareCapture();
-      })
-      .catch(function(){
-        _inviteBusy(false);
-        _inviteMsg('בעיית תקשורת. נא לנסות שוב.');
-      });
-  }
-  /* [GHOST-LINK 2026-07-06] mint+share WITHOUT typing a name (name captured at fill-time). */
-  function _doShareGhost(){
-    if(_shareCaptureBusy)return;
-    var rec=(typeof portalLoad==='function')?portalLoad():null;
-    if(!rec||!rec.token){_inviteMsg('שגיאה - נא לרענן ולנסות שוב');return;}
-    var mode=_shareCaptureMode||'copy';
-    var channel=(mode==='em')?'email':'wa';
-    /* Dev/Ghost-Mode preview stays a no-op mint even for a ghost link. */
-    if(window._isDevMode===true){
-      var _gg='DEVGHOST'+Date.now().toString(36);
-      var gbase=(rec.distributionLink||'').replace(/([?&])ch=[^&]*/,'$1ch='+channel);
-      if(gbase.indexOf('ch=')<0){gbase+=(gbase.indexOf('?')>=0?'&':'?')+'ch='+channel;}
-      var gUnique=gbase+(gbase.indexOf('?')>=0?'&':'?')+'g='+encodeURIComponent(_gg);
-      var gShare=toShareLink(gUnique);
-      var gWa=buildWaMessageTextPortal(rec.name, gShare);
-      if(mode==='wa'||mode==='em'){ shareInviteViaChannel(gWa, mode); }
-      else{ doCopy('cpPortalDisp', gWa); }
-      closeShareCapture();
-      try{if(typeof window._ghostActionToast==='function')window._ghostActionToast();}catch(e){}
-      return;
-    }
-    _mintAndShare(rec,mode,channel,'');   /* '' => backend mints a GHOST invite */
-  }
-  window._doShareGhost=_doShareGhost;
-
   function _doShareCaptureConfirm(){
     if(_shareCaptureBusy)return;
     var inp=document.getElementById('inviteNameInput');
@@ -1303,7 +1170,35 @@ window.DASH_DATA = {};
       try{if(typeof window._ghostActionToast==='function')window._ghostActionToast();}catch(e){}
       return;   /* NEVER reach the mintInvite fetch below */
     }
-    _mintAndShare(rec,mode,channel,name);   /* [GHOST-LINK] named path -> shared core */
+    var body={action:'mintInvite',token:rec.token,invitee_name:name,channel:channel};
+    _inviteBusy(true);
+    _inviteMsg('');
+    /* text/plain avoids a CORS preflight against Apps Script (mirrors the push-subscribe call) */
+    fetch(EXEC_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body)})
+      .then(function(r){return r.json();})
+      .then(function(res){
+        if(!res||res.ok!==true||!res.g){
+          _inviteBusy(false);
+          _inviteMsg('לא הצלחנו להכין קישור. נא לנסות שוב.');
+          return;
+        }
+        var g=res.g;
+        var base=(rec.distributionLink||'').replace(/([?&])ch=[^&]*/,'$1ch='+channel);
+        if(base.indexOf('ch=')<0){base+=(base.indexOf('?')>=0?'&':'?')+'ch='+channel;}
+        var uniqueLink=base+(base.indexOf('?')>=0?'&':'?')+'g='+encodeURIComponent(g);
+        var shareLink=toShareLink(uniqueLink);   /* [SHARE-IMG] isolated invite-preview domain (no organiser-app exposure) */
+        var waText=buildWaMessageTextPortal(rec.name, shareLink);
+        if(mode==='wa'||mode==='em'){
+          shareInviteViaChannel(waText, mode);   /* mobile: image FILE + text; desktop: text + OG preview */
+        }else{
+          doCopy('cpPortalDisp', waText);        /* copy: link text only */
+        }
+        closeShareCapture();
+      })
+      .catch(function(){
+        _inviteBusy(false);
+        _inviteMsg('בעיית תקשורת. נא לנסות שוב.');
+      });
   }
 
   (function _wireShareCapture(){
@@ -1837,7 +1732,7 @@ window.DASH_DATA = {};
   refreshNoteUI();
   /* ===== [SPA-PAGES F1] ROUTER + AUTH BOOT ===== */
   window.portalRole=function(rec){rec=rec||portalLoad();if(!rec||!rec.sid||!rec.token)return null;if(rec.sid===OWNER_SID)return 'super';return rec.isPrimary===true?'admin':'regular';};
-  function pageSeq(){var role=window.portalRole();if(!role)return [];var seq=[{id:'page-share',title:'מסך שיתוף והדגמה'},{id:'page-dash',title:(role==='regular')?'לוח בקרה':'דשבורד הצד שלי'}];if(role==='super'){seq.push({id:'page-combined',title:'דשבורד משולב'});seq.push({id:'page-organisers',title:'פאנל המארגנים'});}return seq;}/* [ORG-PANEL] super-only panel appended LAST */
+  function pageSeq(){var role=window.portalRole();if(!role)return [];var seq=[{id:'page-share',title:'מסך שיתוף והדגמה'},{id:'page-dash',title:(role==='regular')?'לוח בקרה':'דשבורד הצד שלי'}];if(role==='super'){seq.push({id:'page-combined',title:'דשבורד משולב'});}return seq;}
   var _curPage='page-login';
   var _navigatingFromPop=false; /* [FIX9] set true while a popstate-driven showPage runs so it does not push again */
   /* [INJECT-FS] seamless fullscreen + landscape on user gesture; orientation.lock only AFTER fullscreen resolves (Android requirement); every path silent-fails (iOS/Safari) so navigation proceeds normally */
@@ -1848,11 +1743,10 @@ window.DASH_DATA = {};
   var PAGE_NAV_LABELS={
     'page-share':{next:'לרשימת המוזמנים שלי'},
     'page-dash':{back:'חזור: למסך השיתוף וההדגמה',next:'הבא: למעבר ללוח המשולב של שני הצדדים'},
-    'page-combined':{back:'חזור: לרשימת המוזמנים שלי',next:'הבא: לפאנל המארגנים'},/* [ORG-PANEL] */
-    'page-organisers':{back:'חזור: ללוח המשולב'}/* [ORG-PANEL] */
+    'page-combined':{back:'חזור: לרשימת המוזמנים שלי'}
   };
   function renderPageNav(){
-    var seq=pageSeq();var map={'page-share':1,'page-dash':2,'page-combined':3,'page-organisers':4};/* [ORG-PANEL] slot 4 */
+    var seq=pageSeq();var map={'page-share':1,'page-dash':2,'page-combined':3};
     Object.keys(map).forEach(function(pid){
       var n=map[pid];var back=document.getElementById('pnBack'+n);var next=document.getElementById('pnNext'+n);
       if(!back||!next)return;
@@ -1869,8 +1763,8 @@ window.DASH_DATA = {};
     var ok=(id==='page-login')||seq.some(function(p){return p.id===id;});
     if(!ok){id=seq.length?seq[0].id:'page-login';}
     _curPage=id;
-    document.documentElement.classList.toggle('on-dash-page',id==='page-dash'||id==='page-combined'||id==='page-organisers');/* [UXFIX-A2-F4] [ORG-PANEL] */
-    ['page-login','page-share','page-dash','page-combined','page-organisers'].forEach(function(pid){var el=document.getElementById(pid);if(el)el.classList.toggle('active',pid===id);});/* [ORG-PANEL] */
+    document.documentElement.classList.toggle('on-dash-page',id==='page-dash'||id==='page-combined');/* [UXFIX-A2-F4] */
+    ['page-login','page-share','page-dash','page-combined'].forEach(function(pid){var el=document.getElementById(pid);if(el)el.classList.toggle('active',pid===id);});
     try{sessionStorage.setItem('wrsvpLastPage',id);}catch(e){}
     var pe=document.getElementById(id);if(pe)pe.scrollTop=0;
     renderPageNav();
@@ -2019,12 +1913,7 @@ window.DASH_DATA = {};
      non-blank value; after 12s it force-reveals the iframe (visibility:visible) and hides the skeleton
      (display:none) IF still hidden. Idempotent per element (mirrors the WGI hardKill safety net). */
   function _b3ArmRevealFailsafe(f,skelId){try{if(!f||f._b3Armed)return;f._b3Armed=true;setTimeout(function(){try{if(f.style.visibility==='hidden'){f.style.visibility='visible';var s=document.getElementById(skelId);if(s)s.style.display='none';}}catch(_e){}},12000);}catch(e){}}
-  /* [#6 ADMIN-SCOPE 2026-07-06] A primary organiser (admin, e.g. Michal/Gili) sees the WHOLE side -
-     every organiser on the side + per-organiser breakdown - via server mode='side'. A regular organiser
-     stays on 'dashboard' (personal, own guests only). Super sees everything through the combined view, so
-     its personal page-dash stays 'dashboard'. The server 'side' route already enforces is_primary. */
-  function _dashModeForRole(){var role=(typeof window.portalRole==='function')?window.portalRole():null;return (role==='admin')?'side':'dashboard';}
-  function loadDashIframe(force){var f=document.getElementById('portalDashIframe');if(!f)return;var u=dashUrl(_dashModeForRole());if(!u)return;if(force||f.getAttribute('src')!==u){f.src=u;_b3ArmRevealFailsafe(f,'portalDashSkel');}}
+  function loadDashIframe(force){var f=document.getElementById('portalDashIframe');if(!f)return;var u=dashUrl('dashboard');if(!u)return;if(force||f.getAttribute('src')!==u){f.src=u;_b3ArmRevealFailsafe(f,'portalDashSkel');}}
   function loadCombinedIframe(force){var rec=portalLoad();if(!rec||rec.sid!==OWNER_SID)return;/* GILI + admins never load combined */var f=document.getElementById('portalCombinedIframe');if(!f)return;var u=dashUrl('combined');if(!u)return;if(force||f.getAttribute('src')!==u){f.src=u;_b3ArmRevealFailsafe(f,'portalCombinedSkel');}}
   window._reloadDashIframes=function(){loadDashIframe(true);loadCombinedIframe(true);};
   /* [G2] change-triggered refresh: reload BOTH the personal and (owner-only) combined iframes. The old personal path posted {type:'wedding-refresh'} into the iframe, but the GAS double-iframe swallows parent->child postMessage (the target contentWindow is the script.google.com wrapper frame, not the inner googleusercontent doc where dashboard.html listens), so the personal board only refreshed on exit+re-entry. A full loadDashIframe(true) reload mirrors the proven combined path and updates live. */
@@ -2033,7 +1922,6 @@ window.DASH_DATA = {};
     var pg=ev&&ev.detail&&ev.detail.page;
     if(pg==='page-dash'){loadDashIframe(false);}
     if(pg==='page-combined'){loadCombinedIframe(false);}
-    if(pg==='page-organisers'){loadOrganiserPanel(false);}/* [ORG-PANEL] */
     if(pg==='page-dash'||pg==='page-combined'){try{setTimeout(function(){try{pollOnce();}catch(_e){}},1200);}catch(e){}} /* [B3-PERF] defer catch-up poll ~1.2s so it does not contend with the dashboard iframe's own GAS round-trip */
   });
   /* [G5] bridge: the GAS dashboard action row posts to navigate the SPA (goto-share) or request fullscreen (goto-fullscreen) */
@@ -2052,88 +1940,6 @@ window.DASH_DATA = {};
       }
     }catch(e){}
   })();
-  /* ===== [ORG-PANEL 2026-07-06] super-only organiser panel: fetch + render ===== */
-  var _orgData=null;      /* cached panel payload */
-  var _orgSelSid=null;    /* currently opened organiser */
-  /* status text derived purely CLIENT-side from real metrics; never invents a number */
-  function _orgStatus(o){
-    var confirmed=Number(o.confirmed||0), declined=Number(o.declined||0);
-    var sent=Number(o.linksSent||0), opened=Number(o.linksOpened||0);
-    if(sent>0&&opened===0)  return {cls:'warn',txt:'שלח הזמנות אך אף אחת עדיין לא נפתחה'};
-    if(confirmed+declined===0) return {cls:'warn',txt:'עדיין אין תגובות מהאורחים'};
-    return {cls:'ok',txt:'פעיל · '+confirmed+' אישרו, '+declined+' לא מגיעים'};
-  }
-  /* a metric that was NOT measured arrives as null/undefined -> "לא נמדד", NEVER a fake 0 */
-  function _orgMetric(label,val){
-    var measured=(val!==null&&typeof val!=='undefined'&&val!=='');
-    var vhtml=measured?'<span class="om-v">'+esc(String(val))+'</span>':'<span class="om-v om-na">⚠️ לא נמדד</span>';
-    return '<div class="org-metric"><span class="om-k">'+esc(label)+'</span>'+vhtml+'</div>';
-  }
-  function _orgFmtLogin(v){
-    if(v===null||typeof v==='undefined'||v==='')return null;
-    var d=new Date(v);if(isNaN(d.getTime()))return String(v);
-    function p(n){return(n<10?'0':'')+n;}
-    return p(d.getDate())+'/'+p(d.getMonth()+1)+' '+p(d.getHours())+':'+p(d.getMinutes());
-  }
-  function renderOrgCard(o){
-    var card=document.getElementById('orgCard');if(!card)return;
-    var st=_orgStatus(o);
-    var h='<h3>'+esc(o.name||'מארגן')+(o.is_primary?' <span style="font-size:.6em;color:#a9802f;">(ראשי)</span>':'')+'</h3>';
-    h+='<div class="org-status '+st.cls+'">'+esc(st.txt)+'</div>';
-    h+='<div class="org-metrics">';
-    h+=_orgMetric('אישרו הגעה', o.confirmed);
-    h+=_orgMetric('לא מגיעים', o.declined);
-    h+=_orgMetric('הזמנות שנשלחו', o.linksSent);
-    h+=_orgMetric('הזמנות שנפתחו', o.linksOpened);
-    h+=_orgMetric('כניסה אחרונה', _orgFmtLogin(o.lastLogin));
-    var online=(o.flags&&typeof o.flags.onlineNow!=='undefined')?o.flags.onlineNow:null;
-    h+=_orgMetric('מחובר/ת עכשיו', online===null?null:(online?'כן':'לא'));
-    h+='</div>';
-    card.innerHTML=h;card.style.display='';
-    try{card.scrollIntoView({behavior:'smooth',block:'nearest'});}catch(e){}
-  }
-  function _orgSelect(sid){
-    _orgSelSid=sid;
-    var list=(_orgData&&_orgData.organisers)||[];
-    var o=null;for(var i=0;i<list.length;i++){if(list[i].sid===sid){o=list[i];break;}}
-    document.querySelectorAll('#orgPanelBody .org-btn').forEach(function(b){b.classList.toggle('sel',b.getAttribute('data-sid')===sid);});
-    if(o)renderOrgCard(o);
-  }
-  window._orgSelect=_orgSelect;
-  function _orgRenderGroup(side,elId,title){
-    var el=document.getElementById(elId);if(!el)return;
-    var list=((_orgData&&_orgData.organisers)||[]).filter(function(o){return o.side===side;});
-    list.sort(function(a,b){return String(a.name||'').localeCompare(String(b.name||''),'he');});
-    if(!list.length){el.style.display='none';return;}
-    var h='<div class="org-group-h">'+esc(title)+'</div><div class="org-btns">';
-    for(var i=0;i<list.length;i++){var o=list[i];
-      h+='<button type="button" class="org-btn" data-sid="'+esc(o.sid)+'" onclick="_orgSelect(\''+esc(o.sid)+'\')">'+esc(o.name||'מארגן')+
-         (o.is_primary?'<span class="org-btn-sub">מארגן/ת ראשי/ת</span>':'')+'</button>';
-    }
-    h+='</div>';el.innerHTML=h;el.style.display='';
-  }
-  function renderOrgPanel(){
-    _orgRenderGroup('groom','orgGroupGroom','צד החתן');
-    _orgRenderGroup('bride','orgGroupBride','צד הכלה');
-    if(_orgSelSid){_orgSelect(_orgSelSid);}
-  }
-  window.loadOrganiserPanel=function(force){
-    var rec=portalLoad();if(!rec||rec.sid!==OWNER_SID)return;/* CLIENT super-gate: admin/regular never fetch */
-    if(_orgData&&!force){renderOrgPanel();return;}
-    var skel=document.getElementById('orgPanelSkel'),err=document.getElementById('orgPanelErr');
-    if(skel)skel.style.display='';if(err)err.style.display='none';
-    var url=EXEC_URL+'?mode=organiser_panel&token='+encodeURIComponent(rec.token)+'&phone='+encodeURIComponent(rec.phone||'')+'&_='+Date.now();
-    fetch(url).then(function(r){return r.json();}).then(function(d){
-      if(skel)skel.style.display='none';
-      if(!d||!d.ok||!d.organisers){if(err){err.textContent='לא ניתן לטעון את פאנל המארגנים כרגע.';err.style.display='';}return;}
-      _orgData=d;renderOrgPanel();
-    }).catch(function(){
-      if(skel)skel.style.display='none';
-      if(err){err.textContent='שגיאת רשת בטעינת הפאנל. נסה/י לרענן.';err.style.display='';}
-    });
-  };
-  /* ===== [ORG-PANEL] END ===== */
-
   /* ===== [SPA-PAGES F3] END ===== */
   /* ===== [SPA-PAGES F4] REALTIME POLLING + TOASTS + SETTINGS ===== */
   var PREFS_KEY='wrsvpNotifPrefs_v1'; var POLL_MS=5000; var _pollBusy=false; var _lastSig=null; /* [FIX8] additive sig: refresh dashboard on any add OR edit */
