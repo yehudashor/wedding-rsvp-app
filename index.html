@@ -1006,6 +1006,50 @@ window.DASH_DATA = {};
       link;
   }
 
+  /* ===== [SHARE-IMG 2026-07-06] the invitation image rides along with every shared link ===== */
+  /* DESKTOP: route the shared link through the Cloudflare /g/ preview page (magiim.pages.dev/g/i?...),
+     whose Open Graph tags make WhatsApp/Facebook unfurl an invitation preview card; that page then
+     redirects to the real GAS guest form. MOBILE: navigator.share sends the actual image FILE + the
+     link text together in one message. COPY: text only (an image+text ClipboardItem pastes unreliably
+     into WhatsApp Web). The share TAB itself stays text-only - the image only appears on send/preview. */
+  var PWA_G_BASE='https://magiim.pages.dev';
+  function toShareLink(link){
+    if(!link) return link;
+    if(link.indexOf('/g/')>=0) return link;              /* already a /g/ preview link (idempotent) */
+    var qi=link.indexOf('?');
+    var qs=(qi>=0)?link.slice(qi):'';                     /* '?sid=..&ch=..&g=..' */
+    if(qs.indexOf('sid=')<0) return link;                 /* not a distribution link - leave untouched */
+    return PWA_G_BASE+'/g/i'+qs;
+  }
+  function _loadInviteFile(){
+    if(window._inviteFilePromise) return window._inviteFilePromise;
+    window._inviteFilePromise=fetch('invitation-demo.jpg')
+      .then(function(r){ if(!r.ok) throw new Error('img '+r.status); return r.blob(); })
+      .then(function(b){ return new File([b],'invitation.jpg',{type:'image/jpeg'}); });
+    return window._inviteFilePromise;
+  }
+  /* Share the real image file + text (mobile). Fall back to the text-only channel (desktop), where the
+     /g/ link's OG tags supply the preview card. Never double-open on user-cancel (AbortError). */
+  function shareInviteViaChannel(waText, mode){
+    function fallback(){
+      if(mode==='wa'){
+        window.open('https://wa.me/?text='+encodeURIComponent(waText),'_blank');
+      }else{
+        var subjEnc=encodeURIComponent('אישור הגעה לחתונת אבי חוקת ומיכל שור');
+        var a=document.createElement('a');
+        a.href='mailto:?subject='+subjEnc+'&body='+encodeURIComponent(waText);
+        a.style.display='none';document.body.appendChild(a);a.click();a.remove();
+      }
+    }
+    var canFiles=(typeof navigator!=='undefined' && navigator.share && navigator.canShare);
+    if(!canFiles){ fallback(); return; }
+    _loadInviteFile().then(function(file){
+      if(!(file && navigator.canShare({files:[file]}))){ fallback(); return; }
+      navigator.share({files:[file], text:waText, title:'הזמנה לחתונת אבי חוקת ומיכל שור'})
+        .catch(function(err){ if(err && err.name==='AbortError') return; fallback(); });
+    }).catch(function(){ fallback(); });
+  }
+
   function renderPortalBlock(rec){
     /* MULTI-ACCOUNT: always render the ACTIVE account so the board + share link stay in sync.
        Fall back to the passed rec only if there is no active record yet. */
@@ -1015,11 +1059,12 @@ window.DASH_DATA = {};
     var iframeSection=document.getElementById('regIframeSection');
     if(!banner||!rec)return;
     var sideLabel=rec.side==='groom'?'צד החתן':'צד הכלה';
-    var waText=buildWaMessageTextPortal(rec.name, rec.distributionLink);
+    var dispLink=toShareLink(rec.distributionLink);   /* [SHARE-IMG] show/send the /g/ preview link */
+    var waText=buildWaMessageTextPortal(rec.name, dispLink);
     var encoded=encodeURIComponent(waText);
     var subjEnc=encodeURIComponent('אישור הגעה לחתונת אבי חוקת ומיכל שור');
     var bodyEnc=encodeURIComponent(waText);
-    window._portalDisp=rec.distributionLink||'';
+    window._portalDisp=dispLink||'';
     window._portalWaText=waText; /* PHASE3: העתקה copies the full WA message, not the raw link */
     window._portalWaUrl='https://wa.me/?text='+encoded;
     window._portalEmUrl='mailto:?subject='+subjEnc+'&body='+bodyEnc;
@@ -1030,7 +1075,7 @@ window.DASH_DATA = {};
     var hu=document.getElementById('hdrUser');if(hu)hu.textContent='מחובר/ת כ: '+rec.name+' · '+sideLabel;
     var saEl=document.getElementById('portalShareAs');if(saEl)saEl.textContent='משתף בתור: '+rec.name;
     if(wtEl)wtEl.textContent=waText;
-    if(dlEl)dlEl.textContent=rec.distributionLink||'';
+    if(dlEl)dlEl.textContent=dispLink||'';
     if(typeof renderAccountSwitcher==='function'){try{renderAccountSwitcher();}catch(e){}}
     /* PHASE2 (F3): dashboard iframes are lazy-loaded per page by loadDashIframe/loadCombinedIframe */
     banner.style.display='block';
@@ -1066,6 +1111,7 @@ window.DASH_DATA = {};
 
   function startShareCapture(mode){
     _shareCaptureMode=(mode==='wa'||mode==='em')?mode:'copy';
+    if(_shareCaptureMode!=='copy'){try{_loadInviteFile();}catch(e){}}  /* [SHARE-IMG] pre-warm image so navigator.share keeps user-activation */
     var ov=document.getElementById('inviteNameOverlay');
     var inp=document.getElementById('inviteNameInput');
     if(!ov||!inp)return;
@@ -1102,16 +1148,12 @@ window.DASH_DATA = {};
         var base=(rec.distributionLink||'').replace(/([?&])ch=[^&]*/,'$1ch='+channel);
         if(base.indexOf('ch=')<0){base+=(base.indexOf('?')>=0?'&':'?')+'ch='+channel;}
         var uniqueLink=base+(base.indexOf('?')>=0?'&':'?')+'g='+encodeURIComponent(g);
-        var waText=buildWaMessageTextPortal(rec.name, uniqueLink);
-        if(mode==='wa'){
-          window.open('https://wa.me/?text='+encodeURIComponent(waText),'_blank');
-        }else if(mode==='em'){
-          var subjEnc=encodeURIComponent('אישור הגעה לחתונת אבי חוקת ומיכל שור');
-          var bodyEnc=encodeURIComponent(waText);
-          var url='mailto:?subject='+subjEnc+'&body='+bodyEnc;
-          var a=document.createElement('a');a.href=url;a.style.display='none';document.body.appendChild(a);a.click();a.remove();
+        var shareLink=toShareLink(uniqueLink);   /* [SHARE-IMG] Cloudflare /g/ preview link */
+        var waText=buildWaMessageTextPortal(rec.name, shareLink);
+        if(mode==='wa'||mode==='em'){
+          shareInviteViaChannel(waText, mode);   /* mobile: image FILE + text; desktop: text + OG preview */
         }else{
-          doCopy('cpPortalDisp', waText);
+          doCopy('cpPortalDisp', waText);        /* copy: link text only */
         }
         closeShareCapture();
       })
