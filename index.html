@@ -1137,6 +1137,25 @@ window.DASH_DATA = {};
     if(!rec||!rec.token){_inviteMsg('שגיאה - נא לרענן ולנסות שוב');return;}
     var mode=_shareCaptureMode||'copy';
     var channel=(mode==='em')?'email':'wa';
+    /* [GHOST-MODE 2026-07-06] Lead-Developer preview: when Dev/Ghost mode is ON, run the FULL visual
+       share (navigator.share image FILE + text on mobile/tablet, or copy) with a LOCAL ghost token and
+       SKIP the mintInvite server call entirely - so there is NO Invites row, NO invite_share audit, NO
+       "sent"/opened/gatekeeper side-effect on real guests. Standard users (isDevMode off) hit the
+       unchanged path below. The ghost token is never minted server-side, so even opening the ghost link
+       finds no Invites row and is a harmless no-op. */
+    if(window._isDevMode===true){
+      var _gg='DEVGHOST'+Date.now().toString(36);
+      var gbase=(rec.distributionLink||'').replace(/([?&])ch=[^&]*/,'$1ch='+channel);
+      if(gbase.indexOf('ch=')<0){gbase+=(gbase.indexOf('?')>=0?'&':'?')+'ch='+channel;}
+      var gUnique=gbase+(gbase.indexOf('?')>=0?'&':'?')+'g='+encodeURIComponent(_gg);
+      var gShare=toShareLink(gUnique);
+      var gWa=buildWaMessageTextPortal(rec.name, gShare);
+      if(mode==='wa'||mode==='em'){ shareInviteViaChannel(gWa, mode); }   /* mobile: real image FILE + text; desktop: text + OG */
+      else{ doCopy('cpPortalDisp', gWa); }
+      closeShareCapture();
+      try{if(typeof window._ghostActionToast==='function')window._ghostActionToast();}catch(e){}
+      return;   /* NEVER reach the mintInvite fetch below */
+    }
     var body={action:'mintInvite',token:rec.token,invitee_name:name,channel:channel};
     _inviteBusy(true);
     _inviteMsg('');
@@ -1187,6 +1206,51 @@ window.DASH_DATA = {};
     else{wire();}
   })();
   /* ===== [INVITE-CAPTURE] END ===== */
+
+  /* ===== [GHOST-MODE 2026-07-06] Lead-Developer preview mode ===== */
+  /* WHY: the lead developer must be able to see exactly how the shared invitation image looks on real
+     phones/tablets (WhatsApp/email/copy) against PRODUCTION data, WITHOUT minting invite rows, writing
+     Audit_Log entries, flipping "sent", stamping opens, or arming the Gatekeeper on real guests.
+     TRIGGER: 5 fast taps (within 2s) on the app header toggle the mode. WHILE ON: the share buttons run
+     the full visual share but skip the mintInvite server call (see _isDevMode check in _doShareCaptureConfirm).
+     Standard users never trigger this and are 100% unaffected (additive listener, no preventDefault). */
+  window._isDevMode=false;
+  function _ghostToast(msg,bg,ms){
+    var wrap=document.getElementById('toastWrap');if(!wrap)return;
+    var t=document.createElement('div');t.className='wrsvp-toast';
+    t.textContent=msg;
+    if(bg){t.style.background=bg;}
+    t.onclick=function(){if(t.parentNode)t.parentNode.removeChild(t);};
+    wrap.appendChild(t);
+    setTimeout(function(){if(t.parentNode)t.parentNode.removeChild(t);},ms||4000);
+  }
+  window._ghostActionToast=function(){
+    _ghostToast('מצב מפתח: הפעולה בוצעה מקומית, לא נשלח עדכון לשרת','#b45309',4000);
+  };
+  (function _wireGhostMode(){
+    function wire(){
+      var hdr=document.getElementById('appHeader');
+      if(!hdr)return;
+      var taps=[];
+      hdr.addEventListener('click',function(){
+        var now=Date.now();
+        taps.push(now);
+        taps=taps.filter(function(t){return now-t<=2000;});   /* keep only taps inside the 2s window */
+        if(taps.length>=5){
+          taps=[];
+          window._isDevMode=!window._isDevMode;
+          if(window._isDevMode){
+            _ghostToast('🛠️ מצב מפתח מופעל! עדכוני שרת חסומים','#c2410c',6000);
+          }else{
+            _ghostToast('מצב מפתח כובה — חזרה לפעולה רגילה','#1a6e3c',4000);
+          }
+        }
+      });
+    }
+    if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',wire);}
+    else{wire();}
+  })();
+  /* ===== [GHOST-MODE] END ===== */
 
   /* MULTI-ACCOUNT: build the header switcher. Shows only when >1 account is stored.
      Choosing an account sets it active and re-loads BOTH the dashboard iframe and the
