@@ -2374,9 +2374,10 @@ window.DASH_DATA = {};
     laterEl.textContent='אולי מאוחר יותר';
     if(isIos()){
       toManual("באייפון: לחצו על כפתור השיתוף בתחתית המסך ➔ ואז 'הוסף למסך הבית' ⊞");
-    }else if(!window._wrsvpDeferredPrompt){
-      toManual("להתקנה: פתחו את תפריט הדפדפן (⋮) ובחרו 'התקנת אפליקציה' / 'הוסף למסך הבית' ⊞");
     }
+    /* [INSTALL-FIX2 2026-07-06] non-iOS ALWAYS shows the native "התקן אפליקציה" button (no early
+       manual switch on a timer). beforeinstallprompt often fires a moment after load, so by click-time
+       dp is usually ready => a REAL browser install dialog. Manual is used ONLY if dp is still null at click. */
     overlay.classList.add('wrsvpIm-show');
   }
 
@@ -2412,7 +2413,7 @@ window.DASH_DATA = {};
       if(choice&&choice.then){ choice.then(function(res){ if(res&&res.outcome==='accepted'){ markInstalled(); } }); }
       /* on "accepted" the browser also fires appinstalled -> concierge + markInstalled */
     }else{
-      toManual("להתקנה: פתחו את תפריט הדפדפן (⋮) ובחרו 'התקנת אפליקציה' / 'הוסף למסך הבית' ⊞");
+      toManual("הדפדפן לא פתח חלון-התקנה אוטומטי. אם אתם ב'מצב אורח' או בגלישה-בסתר — פתחו בחלון רגיל. אחרת: תפריט הדפדפן (⋮) ← 'התקנת אפליקציה' / 'הוסף למסך הבית' ⊞");
     }
   });
 
