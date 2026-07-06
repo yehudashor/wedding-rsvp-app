@@ -1007,19 +1007,23 @@ window.DASH_DATA = {};
   }
 
   /* ===== [SHARE-IMG 2026-07-06] the invitation image rides along with every shared link ===== */
-  /* DESKTOP: route the shared link through the Cloudflare /g/ preview page (magiim.pages.dev/g/i?...),
-     whose Open Graph tags make WhatsApp/Facebook unfurl an invitation preview card; that page then
-     redirects to the real GAS guest form. MOBILE: navigator.share sends the actual image FILE + the
-     link text together in one message. COPY: text only (an image+text ClipboardItem pastes unreliably
-     into WhatsApp Web). The share TAB itself stays text-only - the image only appears on send/preview. */
-  var PWA_G_BASE='https://magiim.pages.dev';
+  /* MOBILE: navigator.share sends the actual image FILE + the link text together in one message.
+     COPY: text only (an image+text ClipboardItem pastes unreliably into WhatsApp Web). The share TAB
+     itself stays text-only - the image only appears on send. */
+  /* [SECURITY-REVERT 2026-07-06] The /g/ Cloudflare preview reroute was REMOVED: it exposed the
+     organiser-app domain (magiim.pages.dev) to every guest, who could strip the path and reach the
+     organiser app/registration. Guests must ONLY ever see the direct GAS guest-form link. toShareLink
+     now NORMALISES any link (incl. an already-stored /g/ link) back to the direct GAS guest link, so
+     no guest ever sees magiim.pages.dev. Desktop loses the OG preview card (it required that domain);
+     mobile keeps the full image via navigator.share. Already-sent /g/ links still redirect (page kept). */
   function toShareLink(link){
     if(!link) return link;
-    if(link.indexOf('/g/')>=0) return link;              /* already a /g/ preview link (idempotent) */
-    var qi=link.indexOf('?');
-    var qs=(qi>=0)?link.slice(qi):'';                     /* '?sid=..&ch=..&g=..' */
-    if(qs.indexOf('sid=')<0) return link;                 /* not a distribution link - leave untouched */
-    return PWA_G_BASE+'/g/i'+qs;
+    var gi=link.indexOf('/g/');
+    if(gi>=0){                                            /* /g/ preview link -> rebuild direct guest link */
+      var qi=link.indexOf('?');
+      return EXEC_URL + ((qi>=0)?link.slice(qi):'');
+    }
+    return link;                                          /* already the direct GAS guest-form link */
   }
   function _loadInviteFile(){
     if(window._inviteFilePromise) return window._inviteFilePromise;
@@ -1059,7 +1063,7 @@ window.DASH_DATA = {};
     var iframeSection=document.getElementById('regIframeSection');
     if(!banner||!rec)return;
     var sideLabel=rec.side==='groom'?'צד החתן':'צד הכלה';
-    var dispLink=toShareLink(rec.distributionLink);   /* [SHARE-IMG] show/send the /g/ preview link */
+    var dispLink=toShareLink(rec.distributionLink);   /* [SECURITY-REVERT] normalise to the direct guest-form link */
     var waText=buildWaMessageTextPortal(rec.name, dispLink);
     var encoded=encodeURIComponent(waText);
     var subjEnc=encodeURIComponent('אישור הגעה לחתונת אבי חוקת ומיכל שור');
@@ -1148,7 +1152,7 @@ window.DASH_DATA = {};
         var base=(rec.distributionLink||'').replace(/([?&])ch=[^&]*/,'$1ch='+channel);
         if(base.indexOf('ch=')<0){base+=(base.indexOf('?')>=0?'&':'?')+'ch='+channel;}
         var uniqueLink=base+(base.indexOf('?')>=0?'&':'?')+'g='+encodeURIComponent(g);
-        var shareLink=toShareLink(uniqueLink);   /* [SHARE-IMG] Cloudflare /g/ preview link */
+        var shareLink=toShareLink(uniqueLink);   /* [SECURITY-REVERT] direct guest-form link only (no organiser-app domain) */
         var waText=buildWaMessageTextPortal(rec.name, shareLink);
         if(mode==='wa'||mode==='em'){
           shareInviteViaChannel(waText, mode);   /* mobile: image FILE + text; desktop: text + OG preview */
