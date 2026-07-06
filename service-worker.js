@@ -2,7 +2,7 @@
  * Caches NOTHING: the app and the dashboards always load fresh from the network,
  * so there is never stale content, and live Apps Script data is never blocked.
  * This worker exists only to keep the app installable (Add to Home Screen). */
-const SW_VERSION = 'wrsvp-passthrough-v33-sharefix-20260706';
+const SW_VERSION = 'wrsvp-passthrough-v34-featbatch-20260707';
 
 /* [SMART-UPDATE 2026-07-06] Do NOT skipWaiting automatically on install. A freshly
    installed worker WAITS until the open page explicitly tells it to activate (via a
