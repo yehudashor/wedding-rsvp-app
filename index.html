@@ -797,8 +797,8 @@ html[data-auth="in"] #page-share{padding-top:10px;}
 <!-- PHASE2 PAGE 3: combined (super only) -->
 <section class="slide" id="page-combined" data-title="דשבורד משולב">
   <div class="page-inner">
-    <!-- [G5] compact combined nav: back to dashboard -->
-    <div class="page-nav-mini"><button type="button" class="pn-mini" onclick="showPage('page-dash')">⬅️ חזור ללוח הבקרה</button></div>
+    <!-- [G5] compact combined nav: back to dashboard + super-only forward to organiser panel -->
+    <div class="page-nav-mini"><button type="button" class="pn-mini" onclick="showPage('page-dash')">⬅️ חזור ללוח הבקרה</button><button type="button" class="pn-mini" id="pnCombinedToOrg" onclick="showPage('page-organisers')" style="display:none">לפאנל המארגנים ➡️</button></div>
     <div id="combinedPageBody" style="margin-top:0;"><div id="portalCombinedSkel" class="dash-skel" style="height:68vh;height:calc(100dvh - 150px);min-height:480px;"><div class="dash-skel-inner"><div class="sk-bar sk-title"></div><div class="sk-bar sk-banner"></div><div class="sk-bar sk-btns"></div><div class="sk-bar sk-row"></div><div class="sk-bar sk-row"></div><div class="sk-bar sk-row"></div><div class="sk-bar sk-row"></div><div class="sk-note">טוען את הלוח המשולב…</div></div></div><iframe id="portalCombinedIframe" src="about:blank" onload="if(this.src&&this.src!=='about:blank'){var s=document.getElementById('portalCombinedSkel');if(s)s.style.display='none';this.style.visibility='visible';}" style="width:100%;height:68vh;height:calc(100dvh - 150px);min-height:480px;border:1px solid var(--line);border-radius:10px;background:#fff;visibility:hidden;" title="דשבורד משולב"></iframe></div>
     <!-- [B1 #2 2026-07-07] SUPER-ONLY linkage card: typed name <-> details actually filled. Bottom of combined. -->
     <div id="linkageCard" dir="rtl" style="margin-top:16px;max-width:1000px;margin-inline:auto;">
@@ -1883,6 +1883,7 @@ window.DASH_DATA = {};
     });
     var cg=document.getElementById('pnCombinedGo');if(cg){cg.style.display=(window.portalRole()==='super')?'':'none';}/* [G5] super-only route to page-combined */
     var _r=window.portalRole();
+    var ctog=document.getElementById('pnCombinedToOrg');if(ctog){ctog.style.display=(_r==='super')?'':'none';}/* [NAV-FIX 2026-07-07] super-only forward from combined -> org panel (was missing; broke the whole super nav chain) */
     var fg=document.getElementById('pnFollowupGo');if(fg){fg.style.display=(_r==='regular'||_r==='admin')?'':'none';}/* [B2] regular/admin reach follow-up from their board (super reaches it from the org panel) */
     var fo=document.getElementById('followupToOrg');if(fo){fo.style.display=(_r==='super')?'':'none';}/* [B2] super-only redirect from follow-up to the organiser panel */
   }
