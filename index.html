@@ -1123,6 +1123,19 @@ window.DASH_DATA = {};
     a.href='mailto:?subject='+encodeURIComponent('אישור הגעה לחתונת אבי חוקת ומיכל שור')+'&body='+encodeURIComponent(waText);
     a.style.display='none';document.body.appendChild(a);a.click();a.remove();
   }
+  /* [GMAIL-COMPOSE 2026-07-07] DESKTOP email opens Gmail WEB compose in the browser - reliably, like
+     wa.me for WhatsApp - so it never depends on a configured OS mailto handler (Brave/Chrome desktop
+     often has none, so the old mailto silently did nothing). Subject + body are prefilled; the guest
+     picks the recipient. On mobile the Gmail URL offers the Gmail app. If the popup is blocked we fall
+     back to the OS default mail client via mailto. */
+  function _gmailCompose(waText){
+    var su=encodeURIComponent('אישור הגעה לחתונת אבי חוקת ומיכל שור');
+    var body=encodeURIComponent(waText);
+    var gmail='https://mail.google.com/mail/?view=cm&fs=1&tf=1&su='+su+'&body='+body;
+    var w=null;
+    try{ w=window.open(gmail,'_blank'); }catch(e){}
+    if(!w){ _plainMailto(waText); }   /* popup blocked / no window -> OS default mail client */
+  }
   function _invitePngBlob(){
     return _loadInviteFile().then(function(file){
       return new Promise(function(resolve,reject){
@@ -1138,8 +1151,8 @@ window.DASH_DATA = {};
     ov.style.cssText='position:fixed;inset:0;z-index:2147483000;background:rgba(30,24,12,.55);display:flex;align-items:center;justify-content:center;padding:20px;';
     ov.innerHTML='<div style="background:#fff;border-radius:18px;max-width:460px;width:100%;padding:26px 22px;box-shadow:0 24px 60px rgba(0,0,0,.4);text-align:center;">'
       +'<div style="font-size:2.2em;margin-bottom:6px;">📧</div>'
-      +'<div style="font-size:1.12em;line-height:1.75;color:#3a2f1a;font-weight:600;">כשתלחצי על הכפתור, המייל ייפתח עם הכותרת והטקסט מוכנים.<br><b>ברגע שהמייל נפתח, לחצי <span dir="ltr">Ctrl+V</span></b> — ותמונת-ההזמנה תיכנס בראש ההודעה, מעל הטקסט והקישור.</div>'
-      +'<button type="button" id="_emOpenBtn" style="width:100%;margin-top:20px;min-height:56px;border:none;border-radius:12px;background:var(--olive);color:#fff;font-weight:800;font-size:1.15em;cursor:pointer;font-family:inherit;">📋 העתיקי את התמונה ופתחי את המייל</button>'
+      +'<div style="font-size:1.12em;line-height:1.75;color:#3a2f1a;font-weight:600;">כשתלחצי על הכפתור, ייפתח <b>Gmail</b> בדפדפן עם הכותרת והטקסט כבר מוכנים.<br><b>ברגע ש-Gmail נפתח, לחצי <span dir="ltr">Ctrl+V</span></b> — ותמונת-ההזמנה תיכנס בראש ההודעה, מעל הטקסט והקישור.</div>'
+      +'<button type="button" id="_emOpenBtn" style="width:100%;margin-top:20px;min-height:56px;border:none;border-radius:12px;background:var(--olive);color:#fff;font-weight:800;font-size:1.15em;cursor:pointer;font-family:inherit;">📋 העתיקי את התמונה ופתחי את Gmail</button>'
       +'<button type="button" id="_emCancelBtn" style="width:100%;margin-top:10px;min-height:44px;border:none;border-radius:10px;background:#f0ece3;color:#6b5d45;font-weight:700;font-size:1em;cursor:pointer;font-family:inherit;">ביטול</button>'
       +'</div>';
     document.body.appendChild(ov);
@@ -1148,7 +1161,7 @@ window.DASH_DATA = {};
       /* fresh user gesture: copy the image to the clipboard (promise value satisfies the gesture rule), then open the mail */
       try{ if(navigator.clipboard && window.ClipboardItem){ navigator.clipboard.write([new ClipboardItem({'image/png':_invitePngBlob()})]); } }catch(e){}
       close();
-      _plainMailto(waText);
+      _gmailCompose(waText);   /* [GMAIL-COMPOSE 2026-07-07] open Gmail web compose (reliable), not mailto */
     };
     ov.querySelector('#_emCancelBtn').onclick=close;
     ov.addEventListener('click',function(e){if(e.target===ov)close();});
