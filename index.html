@@ -428,6 +428,11 @@ html[data-auth="out"] #page-share,html[data-auth="out"] #page-dash,html[data-aut
 .org-metric .om-k{display:block;font-size:.9em;color:var(--muted);font-weight:700;margin-bottom:4px;}
 .org-metric .om-v{display:block;font-size:1.6em;font-weight:900;color:var(--ink);}
 .org-metric .om-v.om-na{font-size:1.15em;color:#a9802f;}
+/* [CATBATCH R2] recent-logins list: spans both metric columns, scrollable if long */
+.org-metric.org-logins{grid-column:1 / -1;text-align:right;}
+.org-metric.org-logins .om-login-list{list-style:none;margin:6px 0 0;padding:0;max-height:220px;overflow-y:auto;}
+.org-metric.org-logins .om-login{font-size:.95em;font-weight:600;color:var(--ink);padding:4px 2px;border-top:1px solid var(--line);}
+.org-metric.org-logins .om-login:first-child{border-top:none;}
 @media(max-width:520px){.org-metrics{grid-template-columns:1fr;}.org-btn{flex-basis:100%;}}
 /* [UIPOLISH2 2026-07-04] pull nav + content tight (~0.25cm) under the header on dash/combined */
 /* [UIPOLISH3 2026-07-04 - part א] trim the big bottom padding so the dashboard card
@@ -885,7 +890,21 @@ window.DASH_DATA = {};
   function fmt(s){if(!s)return '';var d=new Date(s);if(isNaN(d.getTime()))return esc(String(s).slice(0,10));function p(n){return(n<10?'0':'')+n;}return p(d.getDate())+'/'+p(d.getMonth()+1)+' '+p(d.getHours())+':'+p(d.getMinutes());}
   function line(s){s=s||{};return 'אישרו '+(s.total||0)+' איש: '+(s.men||0)+' גברים, '+(s.women||0)+' נשים; '+(s.notComing||0)+' לא יגיעו.';}
   function banner(s,pre){s=s||{};return '<div class="sum-banner">'+(pre?pre+' ':'')+'אישרו <b>'+(s.total||0)+'</b> איש: '+(s.men||0)+' גברים, '+(s.women||0)+' נשים; '+(s.notComing||0)+' לא יגיעו.</div>';}
-  function tbl(rows){rows=rows||[];if(!rows.length)return '<p class="empty">אין רשומות עדיין.</p>';
+  /* [CATBATCH R5 §0.2] client-side global sort: byte-identical to the server comparator
+     `_sortGuestsNewestFirst` (03_dashboard.js). Primary key = active-row TIMESTAMP descending
+     (newest first); tie-break = response_id STRING descending (stable). A blank/NaN timestamp
+     coerces to 0 so undated rows sink to the bottom but never disappear. Sort a COPY so we never
+     mutate a shared array. Applied at every SPA-rendered guest list (tbl / tbl5). */
+  function _guestTs(g){var v=g&&g.timestamp;if(v===null||typeof v==='undefined'||v==='')return 0;var t=(v&&v.getTime)?v.getTime():new Date(v).getTime();return isNaN(t)?0:t;}
+  function _sortGuestsNewestFirst(rows){
+    return (rows||[]).slice().sort(function(a,b){
+      var d=_guestTs(b)-_guestTs(a);
+      if(d)return d>0?1:-1;
+      var ra=String((a&&a.response_id)||''), rb=String((b&&b.response_id)||'');
+      return rb<ra?-1:(rb>ra?1:0); /* response_id string desc */
+    });
+  }
+  function tbl(rows){rows=_sortGuestsNewestFirst(rows);if(!rows.length)return '<p class="empty">אין רשומות עדיין.</p>';
     var h='<table class="dt"><thead><tr><th>שם</th><th>מגיע?</th><th>גברים</th><th>נשים</th><th>טלפון</th><th>בקשות מיוחדות</th><th>ברכה</th><th>מתי אישר</th></tr></thead><tbody>';
     for(var i=0;i<rows.length;i++){var g=rows[i];
       h+='<tr><td class="nm">'+esc(g.guest_name)+'</td><td>'+att(g.attending)+'</td><td>'+(g.men_count||0)+'</td><td>'+(g.women_count||0)+'</td><td dir="ltr">'+esc(g.phone||'')+'</td><td class="sr">'+esc(g.special_requests||'')+'</td><td class="bl">'+esc(g.blessing||'')+'</td><td dir="ltr">'+fmt(g.timestamp||'')+'</td></tr>';}
@@ -1761,7 +1780,7 @@ window.DASH_DATA = {};
 
   /* tbl5: editable table for slide 5 */
   function tbl5(rows, mgrIdx){
-    rows=rows||[];
+    rows=_sortGuestsNewestFirst(rows); /* [CATBATCH R5 §0.2] same comparator as tbl / server */
     if(!rows.length)return '<p class="empty">אין רשומות עדיין.</p>';
     var h='<table class="dt"><thead><tr><th>שם</th><th>מגיע?</th><th>גברים</th><th>נשים</th><th>טלפון</th><th>בקשות מיוחדות</th><th>ברכה</th><th>מתי אישר</th></tr></thead><tbody>';
     for(var i=0;i<rows.length;i++){
@@ -2036,6 +2055,9 @@ window.DASH_DATA = {};
   }
   /* ===== [SPA-PAGES F2] END ===== */
   /* ===== [SPA-PAGES F3] DASHBOARD PAGES (lazy GAS iframes + rotate overlay + goto-share) ===== */
+  /* [CATBATCH A3a] act-as is owned ENTIRELY by the in-iframe picker in dashboard.html
+     (self-fetch via google.script.run, sets CAT_OWNER + re-fetches board). The SPA shell no
+     longer forwards an owner_sid param - the dead relay + _actAsOwnerSid plumbing were removed. */
   function dashUrl(mode){var rec=portalLoad();if(!rec||!rec.token)return '';return EXEC_URL+'?mode='+mode+'&token='+encodeURIComponent(rec.token)+'&phone='+encodeURIComponent(rec.phone||'');}
   /* [B3-FAILSAFE 2026-07-05] ~12s reveal-failsafe: if a rare GAS error never fires the iframe onload,
      the iframe would stay visibility:hidden behind its skeleton forever. Armed the moment src is set to a
@@ -2048,7 +2070,7 @@ window.DASH_DATA = {};
      its personal page-dash stays 'dashboard'. The server 'side' route already enforces is_primary. */
   function _dashModeForRole(){var role=(typeof window.portalRole==='function')?window.portalRole():null;return (role==='admin')?'side':'dashboard';}
   function loadDashIframe(force){var f=document.getElementById('portalDashIframe');if(!f)return;var u=dashUrl(_dashModeForRole());if(!u)return;if(force||f.getAttribute('src')!==u){f.src=u;_b3ArmRevealFailsafe(f,'portalDashSkel');}}
-  function loadCombinedIframe(force){var rec=portalLoad();if(!rec||rec.sid!==OWNER_SID)return;/* GILI + admins never load combined */var f=document.getElementById('portalCombinedIframe');if(!f)return;var u=dashUrl('combined');if(!u)return;if(force||f.getAttribute('src')!==u){f.src=u;_b3ArmRevealFailsafe(f,'portalCombinedSkel');}}
+  function loadCombinedIframe(force){var rec=portalLoad();if(!rec||rec.sid!==OWNER_SID)return;/* GILI + admins never load combined - gate on the REAL logged-in sid */var f=document.getElementById('portalCombinedIframe');if(!f)return;var u=dashUrl('combined');if(!u)return;if(force||f.getAttribute('src')!==u){f.src=u;_b3ArmRevealFailsafe(f,'portalCombinedSkel');}}
   window._reloadDashIframes=function(){loadDashIframe(true);loadCombinedIframe(true);};
   /* [G2] change-triggered refresh: reload BOTH the personal and (owner-only) combined iframes. The old personal path posted {type:'wedding-refresh'} into the iframe, but the GAS double-iframe swallows parent->child postMessage (the target contentWindow is the script.google.com wrapper frame, not the inner googleusercontent doc where dashboard.html listens), so the personal board only refreshed on exit+re-entry. A full loadDashIframe(true) reload mirrors the proven combined path and updates live. */
   function _notifyIframesOfChange(){try{loadDashIframe(true);}catch(e){} try{loadCombinedIframe(true);}catch(e){}}
@@ -2099,6 +2121,38 @@ window.DASH_DATA = {};
     function p(n){return(n<10?'0':'')+n;}
     return p(d.getDate())+'/'+p(d.getMonth()+1)+' '+p(d.getHours())+':'+p(d.getMinutes());
   }
+  /* [CATBATCH R2 §0.6] render the recentLogins[] LIST (≤20, newest-first) as a multi-row block.
+     Each entry is {ts, phone?, role?}. Gracefully handles older payloads that lack recentLogins:
+     when the array is missing/empty we fall back to the single lastLogin via the honest
+     _orgMetric path (which itself shows "⚠️ לא נמדד" if lastLogin is also absent). */
+  var _ORG_ROLE_HEB={super:'ראשי-ראשי',admin:'ראשי',regular:'מארגן',primary:'ראשי'};
+  function _orgFmtLoginEntry(e){
+    /* accept either a bare ISO string or an object {ts,phone,role} */
+    var ts=(e&&typeof e==='object')?(e.ts||e.time||e.at):e;
+    var when=_orgFmtLogin(ts); if(when===null)return null;
+    var extra=[];
+    if(e&&typeof e==='object'){
+      if(e.role){extra.push(_ORG_ROLE_HEB[e.role]||e.role);}
+      if(e.phone){extra.push(String(e.phone));}
+    }
+    return when+(extra.length?(' · '+extra.join(' · ')):'');
+  }
+  function _orgLoginsHtml(o){
+    var arr=(o&&o.recentLogins&&o.recentLogins.length)?o.recentLogins:null;
+    if(!arr){ /* back-compat: no list -> single lastLogin via the standard honest metric */
+      return _orgMetric('כניסה אחרונה', _orgFmtLogin(o.lastLogin));
+    }
+    var items=[];
+    for(var i=0;i<arr.length&&items.length<20;i++){
+      var line=_orgFmtLoginEntry(arr[i]);
+      if(line!==null){items.push('<li class="om-login">'+esc(line)+'</li>');}
+    }
+    if(!items.length){ /* array present but all entries unparseable -> honest fallback */
+      return _orgMetric('כניסות אחרונות', _orgFmtLogin(o.lastLogin));
+    }
+    return '<div class="org-metric org-logins"><span class="om-k">כניסות אחרונות ('+items.length+')</span>'+
+           '<ul class="om-login-list">'+items.join('')+'</ul></div>';
+  }
   function renderOrgCard(o){
     var card=document.getElementById('orgCard');if(!card)return;
     var st=_orgStatus(o);
@@ -2109,9 +2163,9 @@ window.DASH_DATA = {};
     h+=_orgMetric('לא מגיעים', o.declined);
     h+=_orgMetric('הזמנות שנשלחו', o.linksSent);
     h+=_orgMetric('הזמנות שנפתחו', o.linksOpened);
-    h+=_orgMetric('כניסה אחרונה', _orgFmtLogin(o.lastLogin));
-    var online=(o.flags&&typeof o.flags.onlineNow!=='undefined')?o.flags.onlineNow:null;
-    h+=_orgMetric('מחובר/ת עכשיו', online===null?null:(online?'כן':'לא'));
+    h+=_orgLoginsHtml(o); /* [CATBATCH R2] recentLogins[] list (fallback: single lastLogin) */
+    var online=(typeof o.onlineNow!=='undefined')?o.onlineNow:null; /* [CATBATCH M3] read BOOLEAN o.onlineNow (server: true|false|null); flags.onlineNow string kept for back-compat but must NOT drive the text */
+    h+=_orgMetric('מחובר/ת עכשיו', (online===null||typeof online==='undefined')?null:(online?'כן':'לא'));
     h+='</div>';
     card.innerHTML=h;card.style.display='';
     try{card.scrollIntoView({behavior:'smooth',block:'nearest'});}catch(e){}
@@ -2568,6 +2622,48 @@ window.DASH_DATA = {};
   }
   setInterval(pollOnce,POLL_MS);
   document.addEventListener('visibilitychange',function(){if(!document.hidden)pollOnce();}); /* [G2] instant catch-up when the app returns to foreground */
+
+  /* ===== [CATBATCH R1 §0.5/§0.7] PRESENCE PING - fully separate from the notification poll =====
+     A lightweight "מחובר עכשיו" heartbeat on its OWN ~20s interval with its OWN in-flight guard.
+     It NEVER touches pollOnce / _pollBusy / POLL_MS. Fires only when logged-in AND the tab is
+     visible, so a backgrounded/closed app naturally lets presence expire (the server TTL ~40s
+     then reads the organiser as offline). GET mode=presence with {token,phone,sid}; auth is
+     cached server-side (§0.7) so repeated pings don't reload the guest-confirm /exec latency. */
+  var PRESENCE_MS=20000; var _presenceBusy=false;
+  function presencePing(){
+    if(_presenceBusy)return;                                   /* own in-flight guard (NOT _pollBusy) */
+    if(document.hidden)return;                                 /* only count a visible, active session */
+    var rec=portalLoad();
+    if(!rec||!rec.token||!rec.sid)return;                      /* logged-in organiser only */
+    _presenceBusy=true;
+    var url=EXEC_URL+'?mode=presence&token='+encodeURIComponent(rec.token)+'&phone='+encodeURIComponent(rec.phone||'')+'&sid='+encodeURIComponent(rec.sid)+'&_='+Date.now();
+    fetch(url).then(function(r){return r.json();}).then(function(){_presenceBusy=false;}).catch(function(){_presenceBusy=false;});
+  }
+  setInterval(presencePing,PRESENCE_MS);                       /* own interval, independent of POLL_MS */
+  document.addEventListener('visibilitychange',function(){if(!document.hidden)presencePing();}); /* immediate beat on return to foreground */
+  try{setTimeout(presencePing,600);}catch(e){}                /* first beat shortly after boot (defer so it never contends with first paint) */
+
+  /* ===== [CATBATCH R2/§0.1] action=pwaLogin BOOT CALL - re-opens count as logins =====
+     A returning organiser opening the installed PWA with a cached portal does NOT re-hit
+     registerOrganiser, so the recentLogins[] list would never advance on app-open. Fire the
+     throttled pwaLogin POST once per authenticated boot; the SERVER throttles to ≤1 per sid per
+     ~30min (§0.1) so the list stays meaningful. Client-side we also guard to one call per app
+     session per sid to avoid a redundant POST. Additive only - separate from every existing flow. */
+  var _pwaLoginSentFor={};
+  function pwaLoginBoot(){
+    var rec=portalLoad();
+    if(!rec||!rec.token||!rec.sid)return;                      /* authenticated app-open only */
+    if(_pwaLoginSentFor[rec.sid])return;                       /* once per session per sid (server also throttles) */
+    _pwaLoginSentFor[rec.sid]=true;
+    try{
+      fetch(EXEC_URL,{
+        method:'POST',
+        headers:{'Content-Type':'text/plain;charset=utf-8'}, /* text/plain: avoid a CORS preflight against /exec, mirrors other doPost calls */
+        body:JSON.stringify({action:'pwaLogin',token:rec.token,phone:rec.phone||''})
+      }).catch(function(){});
+    }catch(e){}
+  }
+  try{setTimeout(pwaLoginBoot,1500);}catch(e){}               /* defer so it never contends with first paint / iframe warmup */
   /* ===== [SPA-PAGES F4] END ===== */
 })();
 </script>
