@@ -438,6 +438,13 @@ html[data-auth="out"] #page-share,html[data-auth="out"] #page-dash,html[data-aut
 /* [UIPOLISH3 2026-07-04 - part א] trim the big bottom padding so the dashboard card
    can reach (nearly) the bottom of the viewport instead of stopping ~2cm short. */
 #page-dash,#page-combined{padding-top:10px;padding-bottom:12px;}
+/* [ROUNDFIX2b #3] with the back button moved into the dashboard, the page-dash top nav collapses so the
+   iframe rises flush under the thin header bar. .pn-dash holds only the super-only pnCombinedGo; for a
+   regular/primary organiser it has no visible child → 0 height, 0 margin. The dashboard iframe reclaims
+   that space (150px→122px offset). page-combined is intentionally untouched. */
+#page-dash{padding-top:4px;}
+#page-dash .pn-dash{margin:0;min-height:0;gap:0;}
+#page-dash #portalDashIframe,#page-dash #portalDashSkel{height:calc(100dvh - 122px)!important;}
 html:fullscreen #portalDashIframe,html:fullscreen #portalCombinedIframe{height:86vh;}
 /* [B3-PERF] instant dashboard skeleton (perceived-latency kill while the GAS iframe loads) */
 .dash-skel{width:100%;border:1px solid var(--line);border-radius:10px;background:#fff;overflow:hidden;padding:16px;box-sizing:border-box;}
@@ -687,7 +694,7 @@ html[data-auth="in"] #page-share{padding-top:10px;}
     <div id="regIframeSection">
       <div class="reg-iframe-wrap">
         <h3>הרשמה / כניסה</h3>
-        <iframe id="regFrame" src="https://script.google.com/macros/s/AKfycbyMjAOKf5l_5hzeLy4DAEBanw9ZO3n3_S7TVXACYRrCQh_QeTNuuqqSUSm6bl59mRVM_A/exec?mode=register" style="border:none;width:100%;min-height:720px;display:block" title="הרשמת מארגן"></iframe>
+        <iframe id="regFrame" src="about:blank" data-reg="1" style="border:none;width:100%;min-height:720px;display:block" title="הרשמת מארגן"></iframe>
       </div>
       <div id="regres" style="display:none;margin-top:16px;"></div>
     </div>
@@ -789,7 +796,14 @@ html[data-auth="in"] #page-share{padding-top:10px;}
 <section class="slide" id="page-dash" data-title="לוח בקרה">
   <div class="page-inner">
     <!-- [G5] compact dash nav: back-to-share + super-only route to page-combined -->
-    <div class="page-nav-mini"><button type="button" class="pn-mini" onclick="showPage('page-share')">⬅️ חזור למסך השיתוף</button><button type="button" class="pn-mini" id="pnCombinedGo" onclick="showPage('page-combined')" style="display:none">ללוח המשולב ➡️</button><button type="button" class="pn-mini" id="pnFollowupGo" onclick="showPage('page-followup')" style="display:none">מי עדיין לא אישר ➡️</button></div>
+    <!-- [ROUNDFIX2 #4] the “מי עדיין לא אישר ➡️” button was REMOVED from the regular/primary dashboard
+         nav: that follow-up data now opens in-dashboard via the “מי לא אישר עדיין” button (GAS unconf view).
+         The super still reaches page-followup from the organiser panel (page-organisers nav). -->
+    <!-- [ROUNDFIX2b #2/#3] the “⬅️ חזור למסך השיתוף” button MOVED into the dashboard button row (styled
+         like the six, posts wedding-goto-share which this SPA already handles). Only the super-only
+         pnCombinedGo remains here; the wrapper collapses to ~0 height for regular/primary so the dashboard
+         iframe rises flush under the header (item #3). -->
+    <div class="page-nav-mini pn-dash"><button type="button" class="pn-mini" id="pnCombinedGo" onclick="showPage('page-combined')" style="display:none">ללוח המשולב ➡️</button></div>
     <div id="portalPersonalDash" style="margin-top:0;">
       <!-- [UIPOLISH3 2026-07-04 - part א] dynamic fill-to-bottom. The 68vh is kept FIRST as a
            fallback for browsers without dvh support; modern browsers take the calc() override
@@ -881,7 +895,18 @@ window.DASH_DATA = {};
 (function(){
   'use strict';
 
-  var EXEC_URL='https://script.google.com/macros/s/AKfycbyMjAOKf5l_5hzeLy4DAEBanw9ZO3n3_S7TVXACYRrCQh_QeTNuuqqSUSm6bl59mRVM_A/exec';
+  /* [STAGING-ROUTING 2026-07-08] Production is an EXACT-MATCH host allowlist; every OTHER host
+     (magiim-staging.pages.dev, other *.pages.dev previews, localhost) falls through to STAGING.
+     Fail-safe: an unknown host resolves to STAGING, NEVER prod. We deliberately do NOT test
+     endsWith('pages.dev') because the prod host magiim.pages.dev ends in it too. */
+  var PROD_HOSTS   = ['magiim.pages.dev','yehudashor.github.io'];
+  var EXEC_PROD    = 'https://script.google.com/macros/s/AKfycbyMjAOKf5l_5hzeLy4DAEBanw9ZO3n3_S7TVXACYRrCQh_QeTNuuqqSUSm6bl59mRVM_A/exec';
+  var EXEC_STAGING = 'https://script.google.com/macros/s/AKfycbwcRaHKG158wzYgva_9O5EDkJdRUiMd3XOG7AlEnCjjh3XUtQp4-9vL_FZzVNBC2CM-0w/exec';
+  var IS_PROD  = PROD_HOSTS.indexOf(location.hostname) !== -1;
+  var EXEC_URL = IS_PROD ? EXEC_PROD : EXEC_STAGING;
+  /* [STAGING-ROUTING] point the register/login iframe at the SAME environment as EXEC_URL
+     (its HTML src is about:blank so no prod request fires before this runs). */
+  try { var _rf0 = document.getElementById('regFrame'); if (_rf0) { _rf0.src = EXEC_URL + '?mode=register'; } } catch(_e){}
 
   /* ===== UTILITY ===== */
   var D = window.DASH_DATA || {};
@@ -1875,7 +1900,7 @@ window.DASH_DATA = {};
   refreshNoteUI();
   /* ===== [SPA-PAGES F1] ROUTER + AUTH BOOT ===== */
   window.portalRole=function(rec){rec=rec||portalLoad();if(!rec||!rec.sid||!rec.token)return null;if(rec.sid===OWNER_SID)return 'super';return rec.isPrimary===true?'admin':'regular';};
-  function pageSeq(){var role=window.portalRole();if(!role)return [];var seq=[{id:'page-share',title:'מסך שיתוף והדגמה'},{id:'page-dash',title:(role==='regular')?'לוח בקרה':'דשבורד הצד שלי'}];if(role==='super'){seq.push({id:'page-combined',title:'דשבורד משולב'});seq.push({id:'page-organisers',title:'פאנל המארגנים'});}seq.push({id:'page-followup',title:'מי עדיין לא אישר'});return seq;}/* [ORG-PANEL] super panels; [B2] follow-up board LAST for every role */
+  function pageSeq(){var role=window.portalRole();if(!role)return [];var seq=[{id:'page-share',title:'מסך שיתוף והדגמה'},{id:'page-dash',title:(role==='regular')?'לוח בקרה':'דשבורד הצד שלי'}];if(role==='super'){seq.push({id:'page-combined',title:'דשבורד משולב'});seq.push({id:'page-organisers',title:'פאנל המארגנים'});seq.push({id:'page-followup',title:'מי עדיין לא אישר'});}return seq;}/* [ROUNDFIX2 #4] page-followup is now super-only in the swipe sequence; regular/primary use the in-dashboard "מי לא אישר עדיין" button *//* [ORG-PANEL] super panels; [B2] follow-up board LAST for every role */
   var _curPage='page-login';
   var _navigatingFromPop=false; /* [FIX9] set true while a popstate-driven showPage runs so it does not push again */
   /* [INJECT-FS] seamless fullscreen + landscape on user gesture; orientation.lock only AFTER fullscreen resolves (Android requirement); every path silent-fails (iOS/Safari) so navigation proceeds normally */
@@ -1923,6 +1948,48 @@ window.DASH_DATA = {};
   window.currentPage=function(){return _curPage;};
   window.pageNext=function(){var seq=pageSeq();for(var k=0;k<seq.length;k++){if(seq[k].id===_curPage&&k<seq.length-1){window.showPage(seq[k+1].id);return;}}};
   window.pageBack=function(){var seq=pageSeq();for(var k=0;k<seq.length;k++){if(seq[k].id===_curPage&&k>0){window.showPage(seq[k-1].id);return;}}};
+  /* [ROUNDFIX2e] NARROW, SCOPED swipe (replaces the broad ROUNDFIX2d handler that fired app-wide and
+     leaked from the login screen). EXACTLY two moves, nowhere else:
+       • swipe the SHARE screen (#page-share, the window holding the two share tabs) LEFT  -> open dashboard.
+       • swipe the DASHBOARD page (#page-dash) RIGHT -> back to the share screen.
+     There is NO document-wide navigation: each listener only acts when the touch STARTS inside its own
+     element AND moves in its ONE allowed direction, so the login/register screen and every other page are
+     completely untouched, and the behaviour is identical for every organiser (a fixed share<->dash pair,
+     never role-dependent). Same anti-accidental thresholds; it can never slide on its own. */
+  (function(){
+    var MIN_DX=70,MAX_T=700,MIN_T=50,HDOM=2.2,busy=false;
+    function _skip(t){ if(!t)return false;
+      if(t.closest&&t.closest('input,textarea,select,[contenteditable="true"]'))return true;
+      var el=t;while(el&&el!==document.body){try{if(el.scrollWidth>el.clientWidth+4){var ov=getComputedStyle(el).overflowX;if(ov==='auto'||ov==='scroll')return true;}}catch(e){}el=el.parentElement;}
+      return false; }
+    function attach(getEl, wantDir, go){
+      var sx=0,sy=0,st=0,track=false;
+      document.addEventListener('touchstart',function(e){
+        track=false;
+        if(busy)return;
+        if(e.touches&&e.touches.length>1)return;                 /* multi-touch -> not a swipe */
+        var el=getEl(); if(!el||!el.contains(e.target))return;    /* gesture must START inside this element */
+        if(_skip(e.target))return;
+        var t=(e.touches&&e.touches[0])||e; sx=t.clientX;sy=t.clientY;st=Date.now();track=true;
+      },{passive:true});
+      document.addEventListener('touchend',function(e){
+        if(!track)return;track=false;
+        var t=(e.changedTouches&&e.changedTouches[0])||e;
+        var dx=t.clientX-sx,dy=t.clientY-sy,dt=Date.now()-st;
+        if(dt<MIN_T||dt>MAX_T)return;                             /* jitter or slow drag/scroll */
+        if(Math.abs(dx)<MIN_DX)return;                            /* too short */
+        if(Math.abs(dx)<HDOM*Math.abs(dy))return;                /* vertical-dominant -> a scroll */
+        var dir=(dx<0)?'left':'right';
+        if(dir!==wantDir)return;                                  /* ONLY the one allowed direction */
+        busy=true;setTimeout(function(){busy=false;},450);       /* debounce */
+        go();
+      },{passive:true});
+    }
+    /* [ROUNDFIX2f] directions FLIPPED per the user's real-device correction (previous mapping felt reversed):
+       the OPEN gesture on the share window and the BACK gesture on the dashboard are swapped. */
+    attach(function(){return document.getElementById('page-share');},'right', function(){ if(_curPage==='page-share'){window.showPage('page-dash');} });
+    attach(function(){return document.getElementById('page-dash');}, 'left', function(){ if(_curPage==='page-dash'){window.showPage('page-share');} });
+  })();
   window.bootPages=function(){
     var role=window.portalRole();
     if(!role){document.documentElement.setAttribute('data-auth','out');
@@ -2083,7 +2150,7 @@ window.DASH_DATA = {};
     if(pg==='page-dash'||pg==='page-combined'){try{setTimeout(function(){try{pollOnce();}catch(_e){}},1200);}catch(e){}} /* [B3-PERF] defer catch-up poll ~1.2s so it does not contend with the dashboard iframe's own GAS round-trip */
   });
   /* [G5] bridge: the GAS dashboard action row posts to navigate the SPA (goto-share) or request fullscreen (goto-fullscreen) */
-  window.addEventListener('message',function(e){if(!e||!e.data)return;if(e.data.type==='wedding-goto-share'){try{window.showPage('page-share');if(window.shareTabSel)window.shareTabSel(1);}catch(err){}}if(e.data.type==='wedding-goto-fullscreen'){try{window.tryFullscreenLandscape();}catch(err){}}if(e.data.type==='wedding-exit-fullscreen'){try{window.tryExitFullscreenPortrait();}catch(err){}}});/* [FIX6] back-to-cards -> exit fullscreen + release orientation lock */
+  window.addEventListener('message',function(e){if(!e||!e.data)return;if(e.data.type==='wedding-goto-share'){try{window.showPage('page-share');if(window.shareTabSel)window.shareTabSel(1);}catch(err){}}if(e.data.type==='wedding-goto-organisers'){try{window.showPage('page-organisers');}catch(err){}}/* [ROUNDFIX2c #4] Yehuda-only dashboard button → organiser-details view */if(e.data.type==='wedding-goto-fullscreen'){try{window.tryFullscreenLandscape();}catch(err){}}if(e.data.type==='wedding-exit-fullscreen'){try{window.tryExitFullscreenPortrait();}catch(err){}}});/* [FIX6] back-to-cards -> exit fullscreen + release orientation lock */
   /* boot-case: F1's bootPages() fired 'wrsvp:page' BEFORE this module existed, so cover the missed initial page */
   (function(){var pg=(typeof window.currentPage==='function')?window.currentPage():'';if(pg==='page-dash'){loadDashIframe(false);}if(pg==='page-combined'){loadCombinedIframe(false);}
     /* [B3-PREWARM 2026-07-05] kill the ~10s first-entry stall: as soon as boot lands on an authenticated,
