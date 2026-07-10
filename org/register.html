@@ -1,0 +1,1411 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head><meta name="deck-origin-session" content="0033b821-c86a-4ae4-9da6-86394b765860"><!-- deck-origin-session: 0033b821-c86a-4ae4-9da6-86394b765860 | 2026-06-22T19:10:17 -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- [B2-FIX2 2026-07-05] server-injected auth routing via META tags. GAS hex-escapes '=' and quotes
+       inside an inline <script> (that broke the earlier window.__WRSVP_AUTH assignment); META content
+       attributes are HTML-escaped safely and read back DECODED. doGet forwards params.auth/ph as
+       authMode/prefillPhone; the boot IIFE (~line 990) reads these metas, falls back to location.search. -->
+  <meta name="wrsvp-auth" content="">
+  <meta name="wrsvp-ph" content="">
+  <title>הרשמת מארגן</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700&family=Frank+Ruhl+Libre:wght@500;700;900&display=swap" rel="stylesheet">
+  <style>
+    /* ── Brand variables (from pwa/index.html festive design) ── */
+    :root {
+      --ivory: #fbf6ec;
+      --parch: #f1e7d3;
+      --gold: #a9802f;
+      --gold-soft: #c9a44c;
+      --gold-d: #7d5a14;
+      --gold-deep: #6a4d12;
+      --ink: #43372a;
+      --muted: #7c6c54;
+      --card: #fffdf8;
+      --line: #e6d8bd;
+      --olive: #5f7a4e;
+      --olive-d: #4b6440;
+      --stone-d: #8d7d66;
+      --green: #1a6e3c;
+      --navy: #33414f;
+      --rose: #c98a86;
+      --blush: #f7e9e4;
+      --cream: #fffdf7;
+      --shadow-warm: 0 18px 48px -12px rgba(120,86,30,.28), 0 4px 14px -6px rgba(120,86,30,.16);
+      --shadow-soft: 0 10px 30px -10px rgba(120,86,30,.18);
+      --ring-gold: 0 0 0 3px rgba(169,128,47,.32);
+      --divider: linear-gradient(90deg, transparent, var(--gold-soft) 18%, var(--gold) 50%, var(--gold-soft) 82%, transparent);
+    }
+
+    /* ── Reset ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* ── Body & page background ── */
+    body {
+      font-family: 'Assistant', 'Segoe UI', Arial, sans-serif;
+      font-size: 18px;
+      line-height: 1.6;
+      color: var(--ink);
+      /* Festive warm radial gradient matching the pwa deck */
+      background:
+        radial-gradient(38% 30% at 12% 0%, rgba(201,164,76,.10), transparent 60%),
+        radial-gradient(40% 32% at 88% 2%, rgba(249,230,180,.14), transparent 62%),
+        radial-gradient(120% 100% at 50% -6%, #fffefb 0%, var(--ivory) 45%, var(--parch) 100%) fixed;
+      min-height: 100vh;
+      direction: rtl;
+    }
+
+    /* ── Page container ── */
+    .page {
+      max-width: 520px;
+      margin: 0 auto;
+      padding: 32px 18px 56px;
+    }
+
+    /* ── Page heading ── */
+    h1 {
+      font-family: 'Frank Ruhl Libre', serif;
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--olive-d);
+      margin-bottom: 4px;
+      letter-spacing: .2px;
+      text-shadow: 0 1px 0 rgba(255,255,255,.6);
+    }
+    /* Decorative gold rule under heading */
+    h1::after {
+      content: "";
+      display: block;
+      width: 120px;
+      height: 12px;
+      margin: 10px 0 2px;
+      background:
+        radial-gradient(circle at 50% 50%, var(--gold) 0 3px, transparent 4px) center/12px 12px no-repeat,
+        var(--divider);
+      background-position: center, 0 50%;
+      background-repeat: no-repeat;
+      background-size: 12px 12px, 100% 1.5px;
+    }
+    .subtitle {
+      font-size: 1.02rem;
+      color: var(--gold);
+      font-weight: 700;
+      margin-bottom: 26px;
+      letter-spacing: .4px;
+    }
+
+    /* ── Card ── */
+    .card {
+      background: var(--card);
+      border-radius: 20px;
+      padding: 28px 22px;
+      box-shadow: var(--shadow-warm);
+      border: 1px solid var(--line);
+      /* subtle inner glow */
+      box-shadow: var(--shadow-warm), inset 0 0 0 1px rgba(169,128,47,.10);
+      position: relative;
+      overflow: hidden;
+    }
+    /* Gold corner accent on cards */
+    .card::before {
+      content: "";
+      position: absolute;
+      top: 0; inset-inline-end: 0;
+      width: 64px; height: 64px;
+      background: radial-gradient(circle at 0 0, rgba(201,164,76,.28), transparent 70%);
+      pointer-events: none;
+    }
+
+    /* ── Labels & inputs ── */
+    label {
+      display: block;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: var(--ink);
+      font-family: 'Frank Ruhl Libre', serif;
+      font-size: 1.04rem;
+    }
+    input[type="text"],
+    input[type="email"],
+    input[type="tel"] {
+      width: 100%;
+      border: 1.5px solid var(--line);
+      border-radius: 12px;
+      padding: 13px 15px;
+      font-size: 1rem;
+      font-family: 'Assistant', 'Segoe UI', Arial, sans-serif;
+      transition: border-color .2s, box-shadow .2s;
+      background: #fffbf2;
+      direction: rtl;
+      color: var(--ink);
+    }
+    input[type="text"]:focus,
+    input[type="email"]:focus,
+    input[type="tel"]:focus {
+      border-color: var(--gold);
+      outline: none;
+      background: #fff;
+      box-shadow: var(--ring-gold);
+    }
+
+    .field { margin-bottom: 22px; }
+
+    .hint {
+      font-size: .85rem;
+      color: var(--muted);
+      margin-top: 5px;
+    }
+
+    /* ── WRSVP-AUTH-TOGGLE (FIX 1): big elderly-friendly login/register switch ── */
+    .auth-toggle {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .auth-toggle-btn {
+      flex: 1 1 0;
+      min-height: 64px;
+      padding: 12px 10px;
+      border: 2px solid var(--line);
+      border-radius: 14px;
+      background: #fff;
+      color: var(--muted);
+      font-family: 'Frank Ruhl Libre', serif;
+      font-size: 1.08rem;
+      font-weight: 700;
+      line-height: 1.35;
+      cursor: pointer;
+      transition: all .18s;
+    }
+    .auth-toggle-btn:hover:not(.active) {
+      background: var(--ivory);
+      border-color: var(--gold-soft);
+      color: var(--gold-d);
+    }
+    .auth-toggle-btn.active {
+      background: linear-gradient(180deg, var(--olive), var(--olive-d));
+      border-color: var(--olive-d);
+      color: #fff;
+      box-shadow: 0 8px 18px -6px rgba(75,100,64,.5), inset 0 1px 0 rgba(255,255,255,.18);
+      cursor: default;
+    }
+
+    /* ── WRSVP-AUTH-NEEDREG: friendly inline "not registered yet" bridge message ── */
+    .need-reg-msg {
+      display: none;
+      background: #fdf8ec;
+      border: 1.5px solid var(--gold-soft);
+      border-radius: 10px;
+      padding: 14px;
+      color: var(--gold-deep);
+      font-size: .97rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    /* ── Side buttons (vertically stacked) ── */
+    .side-buttons {
+      display: flex;
+      flex-direction: column; /* VERTICAL - acceptance criterion */
+      gap: 14px;
+      margin-bottom: 4px;
+    }
+
+    .side-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      min-height: 64px;
+      border: 2px solid var(--line);
+      border-radius: 14px;
+      font-family: 'Frank Ruhl Libre', serif;
+      font-size: 1.15rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all .18s;
+      padding: 14px 18px;
+      background: #fff;
+      color: var(--ink);
+      width: 100%;
+    }
+    .side-btn:hover {
+      background: var(--ivory);
+      border-color: var(--gold-soft);
+    }
+
+    /* Groom - festive champagne/gold */
+    .side-btn[data-side="groom"] {
+      background: #fdf8ec;
+      border-color: var(--gold-soft);
+      color: var(--gold-deep);
+    }
+    .side-btn[data-side="groom"]:hover {
+      background: #faefd1;
+      border-color: var(--gold);
+    }
+    .side-btn[data-side="groom"].selected {
+      background: linear-gradient(180deg, var(--gold-soft), var(--gold));
+      border-color: var(--gold);
+      color: #fff;
+      box-shadow: 0 0 0 3px rgba(169,128,47,.25), 0 8px 18px -6px rgba(169,128,47,.4);
+    }
+
+    /* Bride - festive blush/rose */
+    .side-btn[data-side="bride"] {
+      background: #fdf2f1;
+      border-color: var(--rose);
+      color: #7a3a37;
+    }
+    .side-btn[data-side="bride"]:hover {
+      background: #fce6e5;
+      border-color: #b57472;
+    }
+    .side-btn[data-side="bride"].selected {
+      background: linear-gradient(180deg, #c98a86, #a05a56);
+      border-color: #a05a56;
+      color: #fff;
+      box-shadow: 0 0 0 3px rgba(201,138,134,.28), 0 8px 18px -6px rgba(160,90,86,.4);
+    }
+
+    /* ── Primary action button ── */
+    .btn-primary {
+      display: block;
+      width: 100%;
+      padding: 14px 20px;
+      background: linear-gradient(180deg, var(--olive), var(--olive-d));
+      color: #fff;
+      border: none;
+      border-radius: 14px;
+      font-family: 'Frank Ruhl Libre', serif;
+      font-size: 1.12rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity .18s, box-shadow .18s;
+      min-height: 52px;
+      letter-spacing: .3px;
+      box-shadow: 0 10px 24px -8px rgba(75,100,64,.55), inset 0 1px 0 rgba(255,255,255,.18);
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-primary::after {
+      content: "";
+      position: absolute;
+      top: 0; bottom: 0;
+      width: 40%; left: -60%;
+      background: linear-gradient(100deg, transparent, rgba(255,255,255,.28), transparent);
+      transform: skewX(-18deg);
+      animation: sheen 5.5s ease-in-out infinite;
+    }
+    @keyframes sheen { 0%, 72% { left: -60%; } 88% { left: 130%; } 100% { left: 130%; } }
+    .btn-primary:hover:not(:disabled) { opacity: .9; box-shadow: 0 14px 28px -8px rgba(75,100,64,.6); }
+    .btn-primary:disabled {
+      opacity: .5;
+      cursor: not-allowed;
+    }
+
+    /* ── Secondary / outline button ── */
+    .btn-secondary {
+      display: block;
+      width: 100%;
+      padding: 12px 18px;
+      background: transparent;
+      color: var(--olive-d);
+      border: 2px solid var(--line);
+      border-radius: 14px;
+      font-family: 'Frank Ruhl Libre', serif;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all .18s;
+      min-height: 48px;
+      letter-spacing: .2px;
+    }
+    .btn-secondary:hover {
+      background: var(--ivory);
+      border-color: var(--gold-soft);
+      color: var(--gold-d);
+    }
+
+    /* ── Share buttons (WhatsApp / Email) ── */
+    .btn-wa {
+      display: block;
+      width: 100%;
+      padding: 14px 18px;
+      background: linear-gradient(180deg, #2aa342, #1f8434);
+      color: #fff;
+      border: none;
+      border-radius: 14px;
+      font-family: 'Frank Ruhl Libre', serif;
+      font-size: 1.08rem;
+      font-weight: 700;
+      cursor: pointer;
+      min-height: 52px;
+      text-align: center;
+      text-decoration: none;
+      transition: opacity .18s;
+      box-shadow: 0 8px 18px -7px rgba(31,132,52,.5);
+      letter-spacing: .2px;
+    }
+    .btn-wa:hover { opacity: .88; }
+
+    .btn-email {
+      display: block;
+      width: 100%;
+      padding: 14px 18px;
+      background: linear-gradient(180deg, var(--gold-soft), var(--gold));
+      color: #fff;
+      border: none;
+      border-radius: 14px;
+      font-family: 'Frank Ruhl Libre', serif;
+      font-size: 1.08rem;
+      font-weight: 700;
+      cursor: pointer;
+      min-height: 52px;
+      text-align: center;
+      text-decoration: none;
+      transition: opacity .18s;
+      box-shadow: 0 8px 18px -7px rgba(169,128,47,.45);
+      letter-spacing: .2px;
+    }
+    .btn-email:hover { opacity: .88; }
+
+    /* ── Dashboard link (private / secondary) ── */
+    .dashboard-block {
+      margin-top: 22px;
+      padding: 16px;
+      background: var(--ivory);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+    }
+    .dashboard-block .private-warning {
+      font-size: .88rem;
+      color: #c0392b;
+      font-weight: 700;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .dashboard-link-btn {
+      display: block;
+      width: 100%;
+      padding: 11px 16px;
+      background: var(--ivory);
+      color: var(--ink);
+      border: 2px solid var(--line);
+      border-radius: 10px;
+      font-family: 'Frank Ruhl Libre', serif;
+      font-size: .98rem;
+      font-weight: 700;
+      text-align: center;
+      text-decoration: none;
+      cursor: pointer;
+      transition: background .18s, border-color .18s;
+      letter-spacing: .2px;
+    }
+    .dashboard-link-btn:hover {
+      background: var(--parch);
+      border-color: var(--gold-soft);
+    }
+
+    /* ── Results stacked layout (single vertical flow) ── */
+    .results-cards {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      margin-bottom: 6px;
+    }
+    .result-card {
+      width: 100%;
+      min-width: 0;
+      background: var(--card);
+      border-radius: 0;
+      padding: 18px 16px;
+      border: none;
+      border-top: 1.5px solid var(--line);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      box-shadow: none;
+    }
+    .result-card:first-child {
+      border-top: none;
+      border-radius: 14px 14px 0 0;
+    }
+    .result-card:last-child {
+      border-radius: 0 0 14px 14px;
+    }
+    .result-card.guest-card {
+      background: #fffcf3;
+    }
+    .result-card.private-card {
+      background: #fdf7f6;
+    }
+    .result-card h3 {
+      font-family: 'Frank Ruhl Libre', serif;
+      font-size: 1.04rem;
+      font-weight: 800;
+      color: var(--olive-d);
+      margin-bottom: 2px;
+      line-height: 1.4;
+    }
+    .result-card .card-sub {
+      font-size: .86rem;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+    .link-box {
+      display: flex;
+      align-items: stretch;
+      gap: 8px;
+    }
+    .link-text {
+      flex: 1 1 0;
+      min-width: 0;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fffbf2;
+      padding: 9px 11px;
+      font-size: .82rem;
+      color: var(--ink);
+      direction: ltr;
+      text-align: left;
+      overflow-x: auto;
+      white-space: nowrap;
+      user-select: all;
+      -webkit-user-select: all;
+      line-height: 1.5;
+    }
+    .copy-btn {
+      flex: 0 0 auto;
+      border: 1.5px solid var(--gold-soft);
+      background: #fdf5e4;
+      color: var(--gold-d);
+      border-radius: 8px;
+      padding: 0 12px;
+      font-size: .9rem;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all .15s;
+      font-family: 'Assistant', 'Segoe UI', Arial, sans-serif;
+    }
+    .copy-btn:hover { background: var(--parch); border-color: var(--gold); }
+    .copy-btn.copied {
+      background: var(--olive-d);
+      border-color: var(--olive-d);
+      color: #fff;
+    }
+    .card-action-label {
+      font-size: .82rem;
+      color: var(--muted);
+      margin: 2px 0 -2px;
+    }
+    .private-red-warning {
+      font-size: .9rem;
+      font-weight: 700;
+      color: #8a2a27;
+      background: #fdf2f1;
+      border: 1px solid var(--rose);
+      border-radius: 8px;
+      padding: 9px 11px;
+    }
+    .result-card-checkbox {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin-top: 4px;
+      cursor: pointer;
+      font-size: .92rem;
+      font-weight: 600;
+      color: var(--ink);
+    }
+    .result-card-checkbox input[type="checkbox"] {
+      width: 22px;
+      height: 22px;
+      cursor: pointer;
+      accent-color: var(--olive);
+      flex: 0 0 auto;
+    }
+    .done-hint {
+      font-size: .86rem;
+      color: var(--stone-d);
+      text-align: center;
+      margin-top: 12px;
+    }
+    /* ── Full message blocks (additive) ── */
+    .full-msg-block {
+      margin-top: 14px;
+      max-width: 100%;
+    }
+    .full-msg-label {
+      font-size: .82rem;
+      font-weight: 700;
+      color: var(--olive-d);
+      margin-bottom: 6px;
+    }
+    .full-msg-text {
+      background: #fffbf2;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: .9rem;
+      line-height: 1.5;
+      color: var(--ink);
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+      user-select: all;
+      max-width: 100%;
+      max-height: 220px;
+      overflow-y: auto;
+    }
+    .copy-btn-wide {
+      display: block;
+      width: 100%;
+      margin-top: 8px;
+      text-align: center;
+    }
+
+    /* ── Done button ── */
+    .done-btn {
+      display: block;
+      width: 100%;
+      margin-top: 18px;
+      padding: 15px;
+      background: linear-gradient(180deg, var(--olive), var(--olive-d));
+      color: #fff;
+      border: none;
+      border-radius: 14px;
+      font-family: 'Frank Ruhl Libre', serif;
+      font-size: 1.12rem;
+      font-weight: 700;
+      cursor: pointer;
+      min-height: 54px;
+      transition: opacity .18s, box-shadow .18s;
+      letter-spacing: .3px;
+      box-shadow: 0 10px 24px -8px rgba(75,100,64,.55), inset 0 1px 0 rgba(255,255,255,.18);
+      position: relative;
+      overflow: hidden;
+    }
+    .done-btn::after {
+      content: "";
+      position: absolute;
+      top: 0; bottom: 0;
+      width: 40%; left: -60%;
+      background: linear-gradient(100deg, transparent, rgba(255,255,255,.28), transparent);
+      transform: skewX(-18deg);
+      animation: sheen 5.5s ease-in-out infinite;
+    }
+    .done-btn:hover:not(:disabled) { opacity: .9; }
+    .done-btn:disabled { opacity: .4; cursor: not-allowed; }
+
+    /* ── Readback ── */
+    .readback-box {
+      background: var(--ivory);
+      border: 1.5px solid var(--gold-soft);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      font-size: 1.05rem;
+      line-height: 1.7;
+      color: var(--ink);
+    }
+    .readback-name { font-weight: 700; font-size: 1.15rem; color: var(--olive-d); }
+    .readback-side { font-weight: 700; color: var(--gold-d); }
+
+    /* ── Results share section ── */
+    .share-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    /* ── Recovery ── */
+    .recovery-section {
+      margin-top: 28px;
+      border-top: 1.5px solid var(--line);
+      padding-top: 18px;
+    }
+    .recovery-section summary {
+      cursor: pointer;
+      color: var(--gold-d);
+      font-size: .97rem;
+      font-weight: 700;
+      user-select: none;
+      font-family: 'Frank Ruhl Libre', serif;
+    }
+    .recovery-section summary:hover { text-decoration: underline; color: var(--gold); }
+    .recovery-form { margin-top: 14px; }
+
+    /* ── Spinner ── */
+    .spinner {
+      display: inline-block;
+      width: 22px;
+      height: 22px;
+      border: 3px solid rgba(255,255,255,.4);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      vertical-align: middle;
+      margin-left: 8px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Error ── */
+    .error-box {
+      background: #fdf2f1;
+      border: 1.5px solid var(--rose);
+      border-radius: 10px;
+      padding: 14px;
+      color: #7a1a1a;
+      font-size: .97rem;
+      margin-top: 14px;
+    }
+
+    /* ── Success notice ── */
+    .success-notice {
+      background: #f0faf4;
+      border: 1.5px solid #8ecfaa;
+      border-radius: 10px;
+      padding: 14px;
+      color: #1a5e36;
+      font-size: .97rem;
+      margin-top: 14px;
+    }
+
+    /* ── State panels ── */
+    .state-panel { display: none; }
+    .state-panel.active { display: block; }
+
+    /* ── Divider ── */
+    .divider {
+      height: 1px;
+      background: var(--line);
+      margin: 20px 0;
+    }
+
+    /* ── Small text ── */
+    .small { font-size: .85rem; color: var(--muted); }
+
+    /* Inside the SPA iframe the host shows the card title - hide the duplicate page header */
+    html[data-embedded="1"] h1, html[data-embedded="1"] .subtitle { display: none; }
+    /* [B1-2b 2026-07-05] embedded-only: drop the 100vh floor + big bottom padding so postHeight()
+       reports the TRUE content height and the iframe hugs the login card (kills the bottom dead space).
+       Standalone /register keeps its full-viewport background (these rules are html[data-embedded=1] scoped). */
+    html[data-embedded="1"] body { min-height: 0; }
+    html[data-embedded="1"] .page { padding-bottom: 16px; }
+  </style>
+</head>
+<body>
+
+<div class="page">
+
+  <h1>🎊 הרשמת מארגן</h1>
+  <p class="subtitle">חתונת אבי חוקת ✕ מיכל שור · <bdi>3.8.2026</bdi></p>
+
+  <!-- ══════════════════════════════════════
+       STATE 1 - Registration form
+       ══════════════════════════════════════ -->
+  <div id="state-form" class="state-panel active">
+    <div class="card">
+      <!-- WRSVP-AUTH-TOGGLE (FIX 1): login/register mode switch, REGISTER is default -->
+      <div class="auth-toggle" id="auth-toggle">
+        <button type="button" class="auth-toggle-btn active" id="auth-tab-register"
+                onclick="setAuthMode('register')" aria-pressed="true">משתמש חדש?<br>הרשמו</button>
+        <button type="button" class="auth-toggle-btn" id="auth-tab-login"
+                onclick="setAuthMode('login')" aria-pressed="false">משתמש קיים?<br>התחברו</button>
+      </div>
+
+      <!-- WRSVP-AUTH-NEEDREG: friendly inline bridge shown when a LOGIN phone is not registered -->
+      <div class="need-reg-msg" id="need-reg-msg">המספר עדיין לא רשום במערכת - נעביר אתכם להרשמה קצרה</div>
+
+      <!-- WRSVP-AUTH-REGFIELDS: name+side shown only in REGISTER mode; #inp-phone stays a single shared element -->
+      <div id="register-only-fields">
+        <div class="field">
+          <label for="inp-name">שם מלא <span style="color:#c00">*</span></label>
+          <input type="text" id="inp-name" placeholder="השם שלך" autocomplete="name">
+        </div>
+
+        <div class="field">
+          <label>בחר/י צד <span style="color:#c00">*</span></label>
+          <!-- VERTICAL stack - display:flex; flex-direction:column -->
+          <div class="side-buttons" id="side-buttons">
+            <button type="button" class="side-btn" data-side="groom"
+                    onclick="selectSide('groom')" aria-pressed="false">
+              🤵 צד החתן
+            </button>
+            <button type="button" class="side-btn" data-side="bride"
+                    onclick="selectSide('bride')" aria-pressed="false">
+              👰 צד הכלה
+            </button>
+          </div>
+          <p class="hint" id="side-error" style="color:#c00;display:none">יש לבחור צד</p>
+        </div>
+      </div><!-- /register-only-fields -->
+
+      <div class="field">
+        <label for="inp-phone">טלפון נייד (חובה) <span style="color:#c00">*</span></label>
+        <input type="tel" id="inp-phone" inputmode="numeric" placeholder="050-1234567" autocomplete="tel" dir="ltr" required>
+      </div>
+
+      <div id="form-error" class="error-box" style="display:none"></div>
+
+      <button class="btn-primary" id="btn-register" onclick="authSubmit()">הרשמה</button>
+    </div>
+  </div><!-- /state-form -->
+
+  <!-- ══════════════════════════════════════
+       STATE 2 - Read-back / confirmation
+       ══════════════════════════════════════ -->
+  <div id="state-readback" class="state-panel">
+    <div class="card">
+      <p style="font-size:1rem;margin-bottom:14px;color:#555">בדוק/י שהפרטים נכונים לפני הרשמה:</p>
+      <div class="readback-box" id="readback-content">
+        <!-- Filled by JS -->
+      </div>
+
+      <div style="display:flex;gap:12px;flex-direction:column">
+        <button class="btn-primary" id="btn-confirm" onclick="submitRegistration()">
+          ✓ כן, הרשם/י אותי
+        </button>
+        <button class="btn-secondary" onclick="backToForm()">✏️ שנה פרטים</button>
+      </div>
+
+      <div id="readback-error" class="error-box" style="display:none"></div>
+    </div>
+  </div><!-- /state-readback -->
+
+  <!-- ══════════════════════════════════════
+       STATE 3 - Results
+       ══════════════════════════════════════ -->
+  <div id="state-results" class="state-panel">
+    <div class="card">
+      <div class="success-notice" style="margin-bottom:18px">
+        ✅ <strong>נרשמת בהצלחה!</strong> שמור/י את הקישורים שלהלן.
+      </div>
+
+      <!-- ══ TWO CARDS: guest (share) + private (dashboard) ══ -->
+      <div class="results-cards">
+
+        <!-- GUEST CARD - the link you SEND -->
+        <div class="result-card guest-card">
+          <h3>📤 הקישור לאורחים - זה מה ששולחים</h3>
+          <p class="card-sub">שלח/י את הקישור הזה לכל המוזמנים. דרכו הם מאשרים הגעה.</p>
+
+          <p class="card-action-label">📝 ההודעה המלאה שתישלח לאורחים - אפשר להעתיק ולשלוח ידנית:</p>
+
+          <div class="full-msg-block">
+            <div class="full-msg-label">💬 הודעת וואטסאפ מלאה</div>
+            <div class="full-msg-text" id="guest-wa-fulltext" dir="rtl"></div>
+            <button type="button" class="copy-btn copy-btn-wide" id="copy-guest-wa-msg-btn"
+                    onclick="window.regCopyText('guest-wa-fulltext', this)">📋 העתק הודעה לוואטסאפ</button>
+          </div>
+
+          <div class="full-msg-block">
+            <div class="full-msg-label">📧 הודעת מייל מלאה</div>
+            <div class="full-msg-text" id="guest-email-fulltext" dir="rtl"></div>
+            <button type="button" class="copy-btn copy-btn-wide" id="copy-guest-email-msg-btn"
+                    onclick="window.regCopyText('guest-email-fulltext', this)">📋 העתק הודעה למייל</button>
+          </div>
+
+          <p class="card-action-label">📲 שיתוף בוואטסאפ - נפתחת הודעה מוכנה לשליחה:</p>
+          <a class="btn-wa" id="wa-share-btn" href="#" target="_blank" rel="noopener">
+            📲 שיתוף בוואטסאפ
+          </a>
+
+          <p class="card-action-label">📧 שיתוף במייל - נפתח חלון Gmail עם ההזמנה:</p>
+          <a class="btn-email" id="email-share-btn" href="#" target="_blank" rel="noopener">
+            📧 שיתוף במייל
+          </a>
+
+          <label class="result-card-checkbox" for="chk-guest-saved">
+            <input type="checkbox" id="chk-guest-saved" onchange="updateGate()">
+            <span>שמרתי את קישור-האורחים</span>
+          </label>
+        </div>
+
+        <!-- LINK CARD - just the short registration link, extracted from the guest card -->
+        <div class="result-card link-card">
+          <h3>🔗 הקישור להרשמה של האורחים</h3>
+          <p class="card-sub">זה בדיוק אותו קישור שכבר נמצא בתוך ההודעה המלאה שלמעלה - רק בלי כל הטקסט מסביב.</p>
+          <p class="card-sub">הקישור מוביל את האורח לטופס ההרשמה שלו, שבו הוא ממלא פרטים ומאשר הגעה.</p>
+          <p class="card-sub">אפשר פשוט לשלוח את ההודעה המלאה שלמעלה (מומלץ) - או להעתיק רק את הקישור הקצר הזה ולשלוח אותו לבד.</p>
+
+          <div class="link-box">
+            <span class="link-text" id="guest-link-text" dir="ltr">…</span>
+            <button type="button" class="copy-btn" id="copy-guest-btn"
+                    onclick="window.copyGuestLink()">📋 העתק</button>
+          </div>
+        </div>
+
+        <!-- PRIVATE CARD - the dashboard link, do NOT share -->
+        <div class="result-card private-card">
+          <h3>🔒 הקישור הפרטי שלי - לא להעביר!</h3>
+          <p class="card-sub">לוח הבקרה האישי שלך - לצפייה במי אישר הגעה דרכך.</p>
+
+          <div class="link-box">
+            <span class="link-text" id="priv-link-text" dir="ltr">…</span>
+            <button type="button" class="copy-btn" id="copy-priv-btn"
+                    onclick="window.copyDashLink()">📋 העתק</button>
+          </div>
+
+          <div class="private-red-warning">
+            ⚠️ קישור זה פרטי לחלוטין - אל תשלח/י אותו לאף אחד! מי שמקבל אותו רואה את כל הנתונים שלך.
+          </div>
+
+          <a class="dashboard-link-btn" id="dashboard-link-btn" href="#" target="_blank" rel="noopener">
+            📊 פתח את הלוח שלי
+          </a>
+
+          <label class="result-card-checkbox" for="chk-priv-saved">
+            <input type="checkbox" id="chk-priv-saved" onchange="updateGate()">
+            <span>שמרתי את הקישור הפרטי</span>
+          </label>
+        </div>
+
+      </div><!-- /results-cards -->
+
+      <p class="done-hint" id="done-hint">סמן/י את שתי התיבות שלמעלה כדי להמשיך.</p>
+
+      <!-- ONE shared DONE button - disabled until BOTH boxes checked -->
+      <button class="done-btn" id="done-btn" disabled
+              onclick="regDone()">
+        סיימתי - אפשר להתחיל להזמין 🎉
+      </button>
+    </div>
+  </div><!-- /state-results -->
+
+</div><!-- /page -->
+
+<script>
+/* [IRONFIX 2026-07-09] runScript bridge - replaces the GAS client RPC (google-script-run) for the
+   self-hosted organiser screens. POST text/plain (a CORS "simple request" - OPTIONS returns 405 on
+   /exec, so no preflight may ever be triggered), redirect:'follow' (GAS answers via googleusercontent
+   redirect). Host-based env routing identical to [STAGING-ROUTING] in index.html: unknown hosts
+   fail-safe to STAGING. Each BUILD entry maps the original positional signature to the matching
+   doPost action payload. then(success, failure) mirrors withSuccessHandler/withFailureHandler
+   exactly: failure fires only on network/server-level errors, never on success-handler exceptions. */
+(function () {
+  'use strict';
+  var PROD_HOSTS = ['magiim.pages.dev', 'yehudashor.github.io'];
+  var EXEC_PROD = 'https://script.google.com/macros/s/AKfycbyMjAOKf5l_5hzeLy4DAEBanw9ZO3n3_S7TVXACYRrCQh_QeTNuuqqSUSm6bl59mRVM_A/exec';
+  var EXEC_STAGING = 'https://script.google.com/macros/s/AKfycbwcRaHKG158wzYgva_9O5EDkJdRUiMd3XOG7AlEnCjjh3XUtQp4-9vL_FZzVNBC2CM-0w/exec';
+  var EXEC_URL = (PROD_HOSTS.indexOf(location.hostname) !== -1) ? EXEC_PROD : EXEC_STAGING;
+  var BUILD = {
+    getDashboardData:      function (a) { return { action: 'dashboardData',      token: a[0], mode: a[1], phone: a[2] || '', owner_sid: a[3] || '' }; },
+    getCategoriesData:     function (a) { return { action: 'categoriesData',     token: a[0], owner_sid: a[1] || '', phone: a[2] || '' }; },
+    getSideCategoriesData: function (a) { return { action: 'sideCategoriesData', token: a[0], phone: a[1] || '' }; },
+    getUnconfirmedInvites: function (a) { return { action: 'unconfirmedInvites', token: a[0], mode: a[1], phone: a[2] || '' }; },
+    categoryOp:            function (a) { var b = a[0] || {}, o = { action: 'categoryOp' }; for (var k in b) { if (Object.prototype.hasOwnProperty.call(b, k)) o[k] = b[k]; } return o; },
+    addManualGuest:        function (a) { var b = a[0] || {}, o = { action: 'addManual' };  for (var k in b) { if (Object.prototype.hasOwnProperty.call(b, k)) o[k] = b[k]; } return o; },
+    registerOrganiser:     function (a) { return { action: 'registerOrg', name: a[0], side: a[1], phone: a[2] || '' }; }
+  };
+  window.runScript = function (fn) {
+    var args = Array.prototype.slice.call(arguments, 1);
+    var build = BUILD[fn];
+    if (!build) { return Promise.reject(new Error('runScript: unknown fn ' + fn)); }
+    return fetch(EXEC_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(build(args)),
+      redirect: 'follow'
+    }).then(function (r) {
+      /* [verifier-2 F3] a GAS server-crash returns an HTML error page; surface it to failure handlers
+         as the same friendly communication-error text the register screen always used as its fallback,
+         instead of a raw JSON-parse exception string. */
+      return r.json().catch(function () { throw new Error('שגיאת תקשורת - נסו שוב'); });
+    });
+  };
+}());
+</script>
+<script>
+(function () {
+  'use strict';
+
+  try { if (window.top !== window.self) { document.documentElement.setAttribute('data-embedded', '1'); } } catch (e) { document.documentElement.setAttribute('data-embedded', '1'); }
+
+  /* ── State ── */
+  var _name = '';
+  var _side = '';         // 'groom' | 'bride'
+  var _phone = '';
+
+  /* Token/link data returned from server (contract fields) */
+  var _senderId = '';
+  var _token = '';                 // 64-hex dashboard_token from server
+  var _distributionLink = '';
+  var _dashboardLink = '';
+  var _isLogin = false;            // true when the server matched an existing phone (LOGIN)
+  var _isPrimary = false;          // PHASE 2 bridge: is_primary from the server (Senders IS_PRIMARY)
+
+  /* ────────────────────────────────────────────────────────────
+     IFRAME BRIDGE - height reporting for seamless embedding.
+     When this page is embedded as an iframe inside the pages.dev
+     deck, the parent cannot know our content height across origins.
+     We post {type:'wedding-reg-height', height:<px>} on load, on
+     every state change, on resize, and on any DOM mutation, so the
+     deck can size the iframe with no internal (double) scrollbar.
+     All guarded - a bridge failure must never break the page.
+     ──────────────────────────────────────────────────────────── */
+  var _lastPostedHeight = -1;
+  function postHeight() {
+    try {
+      var h = 0;
+      var de = document.documentElement;
+      var b  = document.body;
+      // [ITEM3-FIX 2026-07-06] Measure CONTENT height from <body> only. documentElement.scrollHeight
+      // gets pinned to the (already-grown) iframe viewport, so once the frame grew for the tall REGISTER
+      // form it could never shrink for the short LOGIN card -> ~300px dead space on a toggle. body.scrollHeight
+      // tracks the real content in BOTH modes (verified live: register 658, login 357).
+      if (b)  { h = Math.max(h, b.scrollHeight,  b.offsetHeight);  }
+      if (!h && de) { h = Math.max(h, de.scrollHeight, de.offsetHeight); } // fallback only if body missing
+      if (!h) { return; }
+      if (h === _lastPostedHeight) { return; } // de-dupe identical posts
+      _lastPostedHeight = h;
+      var msg = { type: 'wedding-reg-height', height: h };
+      try { if (window.parent && window.parent !== window) { window.parent.postMessage(msg, '*'); } } catch (e1) {}
+      try { if (window.top && window.top !== window) { window.top.postMessage(msg, '*'); } } catch (e2) {}
+    } catch (e) { /* non-fatal */ }
+  }
+  /* Post height a few times after a layout-changing event, because
+     fonts/images/reflow can settle a frame or two later. Lightweight. */
+  function postHeightSoon() {
+    postHeight();
+    try {
+      requestAnimationFrame(function () { postHeight(); });
+    } catch (e) {}
+    setTimeout(postHeight, 60);
+    setTimeout(postHeight, 250);
+  }
+  window.__regPostHeight = postHeight; // exposed for manual/debug use
+
+  /* ── Side selection (STATE 1) ── */
+  window.selectSide = function (side) {
+    _side = side;
+    document.querySelectorAll('#side-buttons .side-btn').forEach(function (btn) {
+      var active = btn.dataset.side === side;
+      btn.classList.toggle('selected', active);
+      btn.setAttribute('aria-pressed', String(active));
+    });
+    document.getElementById('side-error').style.display = 'none';
+  };
+
+  /* ── WRSVP-AUTH-TOGGLE (FIX 1, 2026-07-02): login/register mode split.
+     LOGIN (default) shows only the phone + "כניסה"; REGISTER shows name+side+phone
+     + "הרשמה". One shared #inp-phone so the value persists across toggles. ── */
+  var _authMode = 'register';   // 'login' | 'register'
+  function authBtnLabel() { return _authMode === 'register' ? 'הרשמה' : 'כניסה'; }
+  window.setAuthMode = function (mode) {
+    _authMode = (mode === 'register') ? 'register' : 'login';
+    var isReg = (_authMode === 'register');
+    var regFields = document.getElementById('register-only-fields');
+    if (regFields) { regFields.style.display = isReg ? '' : 'none'; }
+    var tabL = document.getElementById('auth-tab-login');
+    var tabR = document.getElementById('auth-tab-register');
+    if (tabL) { tabL.classList.toggle('active', !isReg); tabL.setAttribute('aria-pressed', String(!isReg)); }
+    if (tabR) { tabR.classList.toggle('active', isReg);  tabR.setAttribute('aria-pressed', String(isReg)); }
+    var btn = document.getElementById('btn-register');
+    if (btn && !btn.disabled) { btn.textContent = authBtnLabel(); }
+    var msg = document.getElementById('need-reg-msg');
+    if (msg) { msg.style.display = 'none'; }
+    var err = document.getElementById('form-error');
+    if (err) { err.style.display = 'none'; }
+    postHeightSoon(); /* fields shown/hidden -> content height changed */
+  };
+  /* WRSVP-AUTH-NEEDREG bridge: LOGIN phone not registered -> friendly inline
+     message + auto-switch to REGISTER (phone preserved) + focus on the name. */
+  function needRegBridge() {
+    window.setAuthMode('register');
+    var msg = document.getElementById('need-reg-msg');
+    if (msg) { msg.style.display = 'block'; }
+    var nameEl = document.getElementById('inp-name');
+    if (nameEl) { try { nameEl.focus(); } catch (e) {} }
+  }
+  /* [B2] Parent (magiim.pages.dev) appends &auth=login to this iframe's URL when a KNOWN
+     organiser has logged out, so a returning existing user opens on the LOGIN tab, not
+     REGISTER. Absent param => register stays the default (new users). Guarded; never throws. */
+  (function(){try{
+    /* [B2-FIX 2026-07-05] Prefer the SERVER-INJECTED values (window.__WRSVP_AUTH/__WRSVP_PH from doGet)
+       because inside the GAS googleusercontent sandbox location.search does NOT carry the outer /exec
+       ?auth/&ph params - that omission is why logout kept opening REGISTER. location.search stays as a
+       harmless fallback for the standalone /register?auth=login path. */
+    var _qs=new URLSearchParams(location.search||'');
+    var _m=function(n){var e=document.querySelector('meta[name="'+n+'"]');return e?(e.getAttribute('content')||''):'';};
+    var _auth=_m('wrsvp-auth')||(_qs.get('auth')||'');
+    var _ph  =_m('wrsvp-ph')||(_qs.get('ph')||'');
+    if(_auth==='login'){
+      if(typeof window.setAuthMode==='function'){window.setAuthMode('login');}
+      if(_ph){var _pe=document.getElementById('inp-phone');if(_pe&&!_pe.value){_pe.value=_ph;}}
+    }
+  }catch(e){}})();
+
+  /* Single dispatcher for the main button (#btn-register). */
+  window.authSubmit = function () {
+    if (_authMode === 'register') { window.goToReadback(); return; }
+    /* LOGIN mode: existing phone-only path */
+    _phone = document.getElementById('inp-phone').value.trim();
+    var err = document.getElementById('form-error');
+    err.style.display = 'none';
+    if (!_phone) {
+      err.textContent = "יש להזין טלפון נייד.";
+      err.style.display = 'block';
+      document.getElementById('inp-phone').focus();
+      return;
+    }
+    window.submitPhoneLogin();
+  };
+
+  /* ── PHONE-ONLY LOGIN (POLISH 2026-07-02): a returning organiser types ONLY the
+     phone. The server checks existence: found -> normal login (same success path,
+     same bridge); not found -> {needRegistration:true} -> inline bridge message +
+     auto-switch to REGISTER mode (WRSVP-AUTH-NEEDREG). ── */
+  window.submitPhoneLogin = function () {
+    var btn = document.getElementById('btn-register');
+    var err = document.getElementById('form-error');
+    setSpinner(btn, "מתחבר… ");
+    var restore = function () { btn.disabled = false; btn.textContent = authBtnLabel(); };
+    runScript('registerOrganiser', '', '', _phone)
+      .then(function (result) {
+        if (result && result.success) { onRegistered(result); return; }
+        restore();
+        if (result && result.needRegistration) {
+          needRegBridge();
+          return;
+        }
+        err.textContent = (result && result.error) ? result.error : "שגיאה לא ידועה";
+        err.style.display = 'block';
+      }, function (e) {
+        restore();
+        err.textContent = String((e && e.message) || e || "שגיאת תקשורת - נסו שוב");
+        err.style.display = 'block';
+      });
+  };
+
+  /* ── Validate & go to read-back ── */
+  window.goToReadback = function () {
+    _name  = document.getElementById('inp-name').value.trim();
+    _phone = document.getElementById('inp-phone').value.trim();
+
+    var err = document.getElementById('form-error');
+    err.style.display = 'none';
+
+    /* PHONE-ONLY LOGIN: no name AND no side typed -> try to log in by phone alone.
+       WRSVP-AUTH-TOGGLE: skipped in REGISTER mode, where the name is required. */
+    if (_authMode !== 'register' && !_name && !_side) {
+      if (!_phone) {
+        err.textContent = "יש להזין טלפון נייד.";
+        err.style.display = 'block';
+        document.getElementById('inp-phone').focus();
+        return;
+      }
+      submitPhoneLogin();
+      return;
+    }
+
+    if (!_name) {
+      err.textContent = "יש להזין שם.";
+      err.style.display = 'block';
+      document.getElementById('inp-name').focus();
+      return;
+    }
+    if (!_side) {
+      document.getElementById('side-error').style.display = 'block';
+      return;
+    }
+    if (!_phone) {
+      err.textContent = "יש להזין טלפון נייד.";
+      err.style.display = 'block';
+      document.getElementById('inp-phone').focus();
+      return;
+    }
+
+    /* PHASE 1 (2026-07-02): the read-back confirmation screen is BYPASSED - validated
+       details submit DIRECTLY. Spinner runs on the main button; errors return to the form. */
+    var btn = document.getElementById('btn-register');
+    setSpinner(btn, "נרשם… ");
+    runScript('registerOrganiser', _name, _side, _phone)
+      .then(onRegistered, onRegisterError);
+  };
+
+  /* ── Spinner helper (DOM-based, no HTML string literals) ── */
+  function setSpinner(btn, label) {
+    btn.disabled = true;
+    btn.textContent = label;
+    var sp = document.createElement('span');
+    sp.className = 'spinner';
+    btn.appendChild(sp);
+  }
+
+  /* ── Back to form ── */
+  window.backToForm = function () {
+    document.getElementById('readback-error').style.display = 'none';
+    showState('state-form');
+  };
+
+  /* ── Submit registration to server ── */
+  window.submitRegistration = function () {
+    var btn = document.getElementById('btn-confirm');
+    setSpinner(btn, "שולח… ");
+    document.getElementById('readback-error').style.display = 'none';
+
+    runScript('registerOrganiser', _name, _side, _phone)
+      .then(onRegistered, onRegisterError);
+  };
+
+  /* ── Server success handler ── */
+  function onRegistered(result) {
+    if (!result || !result.success) {
+      onRegisterError(result && result.error ? result.error : "שגיאה לא ידועה");
+      return;
+    }
+    try { localStorage.setItem('wrsvp_is_organiser', '1'); } catch (e) {} /* [INJECT-ORGBANNER marker] */
+
+    /* Store returned data (contract keys; fall back to legacy keys for safety) */
+    _senderId         = result.sid              || result.senderId       || '';
+    _token            = result.token            || result.dashboardToken || '';
+    _distributionLink = result.distributionLink || '';
+    _dashboardLink    = result.dashboardLink    || '';
+    _isLogin          = !!(result.isLogin || result.alreadyRegistered);
+    _isPrimary        = !!(result.is_primary);
+    /* The authoritative name/side/phone come from the SERVER response
+       (on LOGIN the submitted name/side are ignored server-side). */
+    if (result.name)  { _name  = result.name; }
+    if (result.side)  { _side  = result.side; }
+    if (result.phone) { _phone = result.phone; }
+
+    /* ── Bridge to host SPA/deck: post the contract payload on SUCCESS,
+       for BOTH login and registration. Values come from the server
+       response. Post to window.top AND window.parent (harmless dupes). ── */
+    postRegDone();
+
+    /* Build share links.
+       Distribution link for WhatsApp: embed ?ch=wa (already included by server)
+       Distribution link for Email:    swap &ch=wa → &ch=email
+       SECURITY: dashboardLink / dashboardToken are NEVER embedded in share buttons. */
+    var distLinkWa    = _distributionLink; /* server already appends &ch=wa */
+    var distLinkEmail = _distributionLink.replace(/&ch=wa$/, '&ch=email');
+
+    var waText =
+      "🙏 בשבח והודיה להשם יתברך 🙏\n\n" +
+      "💍 הוזמנתם לחתונה! 💍\n\n" +
+      "אבי חוקת ✕ מיכל שור\n" +
+      "בשעה טובה ומוצלחת · יום ב׳ · כ׳ במנחם-אב · 3.8.2026\n\n" +
+      "נשמח מאוד לחגוג יחד אתכם! ✨\n" +
+      "לחצו כאן לאישור הגעה - ולצפייה בהזמנה המלאה 💌\n" +
+      distLinkWa;
+
+    var emailSubject = "💍 הזמנה לחתונת אבי חוקת ✕ מיכל שור";
+    var emailBody =
+      "🙏 בשבח והודיה להשם יתברך 🙏\n\n" +
+      "שלום רב,\n\n" +
+      "שמחים להזמין אתכם לחתונת אבי חוקת ✕ מיכל שור 💍\n" +
+      "ביום ב׳ · כ׳ במנחם-אב · 3.8.2026\n\n" +
+      "לאישור הגעה ולצפייה בהזמנה המלאה, לחצו כאן:\n" +
+      distLinkEmail + "\n\nנתראה בשמחות! ✨";
+
+    /* WhatsApp share - distribution link only */
+    var waShareHref = 'https://wa.me/?text=' + encodeURIComponent(waText);
+    /* Email share - Gmail web-compose (works without a desktop mail client) */
+    var emailShareHref =
+      'https://mail.google.com/mail/?view=cm&fs=1&su=' + encodeURIComponent(emailSubject) +
+      '&body=' + encodeURIComponent(emailBody);
+
+    document.getElementById('wa-share-btn').href    = waShareHref;
+    document.getElementById('email-share-btn').href = emailShareHref;
+
+    /* Dashboard link - private element only */
+    document.getElementById('dashboard-link-btn').href = _dashboardLink;
+
+    /* Show the actual links as selectable text inside each card */
+    document.getElementById('guest-link-text').textContent = _distributionLink;
+    document.getElementById('priv-link-text').textContent  = _dashboardLink;
+
+    /* Show the FULL outgoing messages (additive) so the manager sees what gets sent */
+    document.getElementById('guest-wa-fulltext').textContent    = waText;
+    document.getElementById('guest-email-fulltext').textContent = emailSubject + '\n\n' + emailBody;
+
+    showState('state-results');
+  }
+
+  /* ── Server error handler ── */
+  function onRegisterError(err) {
+    var btn = document.getElementById('btn-register');
+    if (btn) { btn.disabled = false; btn.textContent = authBtnLabel(); }
+    var errBox = document.getElementById('form-error');
+    if (!errBox) { return; }
+    errBox.textContent = "שגיאה: " + (typeof err === 'string' ? err : ((err && err.message) || "אירעה תקלה, נסה שוב."));
+    errBox.style.display = 'block';
+  }
+
+  /* ── Forced-save gate ── */
+
+  /* Generic clipboard copy with execCommand fallback; flashes the button. */
+  window.regCopy = function (linkElId, btnEl) {
+    var el = document.getElementById(linkElId);
+    var text = el ? (el.textContent || el.innerText || '') : '';
+    function flash() {
+      if (!btnEl) { return; }
+      var orig = btnEl.getAttribute('data-orig');
+      if (orig === null) { btnEl.setAttribute('data-orig', btnEl.innerHTML); orig = btnEl.innerHTML; }
+      btnEl.innerHTML = '✓ הועתק';
+      btnEl.classList.add('copied');
+      setTimeout(function () { btnEl.innerHTML = orig; btnEl.classList.remove('copied'); }, 1600);
+    }
+    function fallback() {
+      try {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.setAttribute('readonly', '');
+        ta.style.position = 'fixed';
+        ta.style.top = '-1000px';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        flash();
+      } catch (e) {}
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(flash, fallback);
+    } else {
+      fallback();
+    }
+  };
+  window.copyGuestLink = function () { window.regCopy('guest-link-text', document.getElementById('copy-guest-btn')); };
+  window.copyDashLink  = function () { window.regCopy('priv-link-text',  document.getElementById('copy-priv-btn')); };
+
+  /* Copy the text/value of any element by id (textarea or div), with button flash. Reuses regCopy. */
+  window.regCopyText = function (elId, btnEl) { window.regCopy(elId, btnEl); };
+
+  /* Signal the host deck (iframe parent) to save the new manager + advance.
+     The token reaches the parent INSIDE dashboardLink (?mode=dashboard&token=<64hex>).
+     Post to BOTH window.top and window.parent (harmless; parent is the deck when
+     iframed). sid is the authoritative senderId returned by the server; a regex
+     over the distribution link is kept only as a fallback if _senderId is empty.
+     Only call window.close() when we are the TOP-LEVEL window (a standalone tab) -
+     inside an iframe window.close() would do nothing or misbehave. */
+  /* Build + post the contract bridge payload to BOTH window.top and
+     window.parent. Called on server SUCCESS (login OR registration) and
+     again from regDone (harmless idempotent re-post). All values come
+     from the server response stored above. sid falls back to a regex
+     over the distribution link only if _senderId is empty. */
+  function postRegDone() {
+    var _sid = _senderId || (_distributionLink.match(/[?&]sid=([^&]+)/) || [])[1] || '';
+    var _payload = {
+      type:             'wedding-reg-done',
+      name:             _name,
+      side:             _side,
+      sid:              _sid,
+      token:            _token,
+      phone:            _phone,
+      distributionLink: _distributionLink,
+      dashboardLink:    _dashboardLink,
+      isLogin:          _isLogin,
+      isPrimary:        _isPrimary
+    };
+    try { if (window.top)    { window.top.postMessage(_payload, '*'); } }    catch (e) {}
+    try { if (window.parent) { window.parent.postMessage(_payload, '*'); } } catch (e) {}
+    /* [IRONFIX 2026-07-09] the temporary [X-FRAME-FIX] top-level-login redirect was removed here: the
+       organiser screens are same-origin-iframed again (pwa/org/*), so wedding-reg-done always has a
+       parent to catch it - the staging-only top-nav crutch is gone with the iframe→fetch migration. */
+  }
+
+  window.regDone = function () {
+    postRegDone();
+    /* Standalone tab only: close it. Inside an iframe (top !== self) do NOT close. */
+    try { if (window.top === window.self && window.close) { window.close(); } } catch (e) {}
+  };
+
+  window.updateGate = function () {
+    var chkGuest = document.getElementById('chk-guest-saved');
+    var chkPriv  = document.getElementById('chk-priv-saved');
+    var guestSaved = chkGuest && chkGuest.checked;
+    var privSaved  = chkPriv  && chkPriv.checked;
+    var satisfied  = guestSaved && privSaved;
+
+    var doneBtn  = document.getElementById('done-btn');
+    var doneHint = document.getElementById('done-hint');
+    doneBtn.disabled = !satisfied;
+    if (satisfied) {
+      if (doneHint) { doneHint.textContent = '✓ מצוין! אפשר להמשיך.'; doneHint.style.color = '#1a7a3a'; }
+    } else {
+      if (doneHint) { doneHint.textContent = 'סמן/י את שתי התיבות שלמעלה כדי להמשיך.'; doneHint.style.color = '#7a5800'; }
+    }
+  };
+
+  /* ── Helpers ── */
+  function showState(id) {
+    ['state-form','state-readback','state-results'].forEach(function (s) {
+      document.getElementById(s).classList.toggle('active', s === id);
+    });
+    window.scrollTo(0, 0);
+    /* State change alters content height - tell the host iframe to resize. */
+    postHeightSoon();
+  }
+
+  function escHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  /* ────────────────────────────────────────────────────────────
+     Install the iframe height-bridge observers/listeners.
+     Prefer ResizeObserver on <body>; fall back to MutationObserver;
+     always also post on load + window resize. Everything guarded so
+     an unsupported API or exception can never break the page.
+     ──────────────────────────────────────────────────────────── */
+  function initHeightBridge() {
+    // Initial posts (fonts/layout may settle late).
+    postHeightSoon();
+
+    // 1) ResizeObserver - fires on any content-box size change of <body>.
+    try {
+      if (typeof ResizeObserver !== 'undefined' && document.body) {
+        var ro = new ResizeObserver(function () { postHeight(); });
+        ro.observe(document.body);
+      }
+    } catch (e) {}
+
+    // 2) MutationObserver - catches DOM changes that alter height even if
+    //    ResizeObserver is unavailable (older Safari) or misses a case.
+    try {
+      if (typeof MutationObserver !== 'undefined' && document.body) {
+        var mo = new MutationObserver(function () { postHeight(); });
+        mo.observe(document.body, { childList: true, subtree: true, attributes: true, characterData: true });
+      }
+    } catch (e) {}
+
+    // 3) window resize (orientation change / viewport width change on mobile).
+    try { window.addEventListener('resize', postHeight, { passive: true }); } catch (e) {
+      try { window.addEventListener('resize', postHeight); } catch (e2) {}
+    }
+
+    // 4) Web-font load can change height after paint.
+    try {
+      if (document.fonts && document.fonts.ready && typeof document.fonts.ready.then === 'function') {
+        document.fonts.ready.then(function () { postHeight(); });
+      }
+    } catch (e) {}
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initHeightBridge);
+  } else {
+    initHeightBridge();
+  }
+  // window 'load' (all images/fonts done) - one more post to be safe.
+  try { window.addEventListener('load', postHeightSoon); } catch (e) {}
+
+}());
+</script>
+
+</body>
+</html>

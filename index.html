@@ -398,7 +398,11 @@ h1,h2,h3,h4,.dash-h{font-family:'Heebo','Assistant',sans-serif;font-weight:800;}
 html[data-auth="in"] #appHeader{display:flex;}
 html[data-auth="in"] .slide{inset:64px 0 0 0;}
 #appHeader .hdr-title{font-weight:800;font-size:1.15em;color:var(--olive-d);white-space:nowrap;}
-#appHeader .hdr-user{flex:1;text-align:center;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+#appHeader .hdr-user{flex:1;display:flex;align-items:baseline;justify-content:center;gap:7px;min-width:0;overflow:hidden;white-space:nowrap;direction:rtl;} /* [FIXLIST10-STYLE] */
+#appHeader .hdr-user .cc-label{font-size:.8em;font-weight:600;letter-spacing:.05em;color:var(--muted);}
+#appHeader .hdr-user .cc-name{font-family:'Frank Ruhl Libre',serif;font-size:1.22em;font-weight:900;color:#7A1F3D;text-shadow:0 1px 0 rgba(255,255,255,.7);overflow:hidden;text-overflow:ellipsis;}
+#appHeader .hdr-user .cc-sep{color:var(--gold-soft);font-weight:900;}
+#appHeader .hdr-user .cc-side{font-size:.82em;font-weight:800;color:#7A1F3D;background:rgba(122,31,61,.07);border:1px solid rgba(122,31,61,.32);border-radius:999px;padding:2px 11px 3px;white-space:nowrap;}
 #appHeader button{min-height:46px;border:none;border-radius:12px;cursor:pointer;font-weight:700;font-size:1.05em;padding:8px 16px;}
 #hdrSettingsBtn{background:#efe7d8;color:var(--ink);font-size:1.25em;}
 #hdrLogoutBtn{background:linear-gradient(180deg,#c0392b,#96281b);color:#fff;}
@@ -440,12 +444,31 @@ html[data-auth="out"] #page-share,html[data-auth="out"] #page-dash,html[data-aut
 #page-dash,#page-combined{padding-top:10px;padding-bottom:12px;}
 /* [ROUNDFIX2b #3] with the back button moved into the dashboard, the page-dash top nav collapses so the
    iframe rises flush under the thin header bar. .pn-dash holds only the super-only pnCombinedGo; for a
-   regular/primary organiser it has no visible child → 0 height, 0 margin. The dashboard iframe reclaims
-   that space (150px→122px offset). page-combined is intentionally untouched. */
+   regular/primary organiser it has no visible child → 0 height, 0 margin. */
 #page-dash{padding-top:4px;}
 #page-dash .pn-dash{margin:0;min-height:0;gap:0;}
-#page-dash #portalDashIframe,#page-dash #portalDashSkel{height:calc(100dvh - 122px)!important;}
+/* [FIXLIST#9 2026-07-10] dead-strip fix (replaces the ROUNDFIX2b#3 static calc(100dvh - 122px)):
+   the static offset GUESSED the chrome above the iframe and left a ~40px dead band at the bottom on
+   every device (user-reported: phone/tablet/desktop). The dashboard column now FLEX-FILLS the real
+   remaining height of the page box (.slide is already an absolutely-positioned viewport-height box,
+   inset 64px under the app header), so the iframe bottom lands exactly at the padded page bottom on
+   ANY device / nav-row height / role. The skeleton is an OVERLAY of the very same box, so the loading
+   frame matches the final frame 1:1. The inline min-height:480px floor moves to the wrapper: on very
+   short viewports the page scrolls exactly as before. page-combined is handled separately (JS measure,
+   see [FIXLIST#9] in the F3 module) because real content (linkage card) flows BELOW that iframe. */
+#page-dash>.page-inner{flex:1 1 auto;display:flex;flex-direction:column;min-height:0;}
+#page-dash #portalPersonalDash{position:relative;flex:1 1 auto;min-height:480px;}
+#page-dash #portalDashIframe,#page-dash #portalDashSkel{position:absolute;inset:0;box-sizing:border-box;width:100%!important;height:100%!important;min-height:0!important;}
 html:fullscreen #portalDashIframe,html:fullscreen #portalCombinedIframe{height:86vh;}
+/* [FIXLIST#8 2026-07-10] swipe-LEAK blocker: a horizontal swipe that the scoped [ROUNDFIX2e] listener
+   ignores must NEVER become the browser's back/forward history-navigation gesture (which walks history
+   and can exit the app - the user's 'זליגה'). overscroll-behavior-x:none on the root AND on the .slide
+   scrollers cuts the horizontal overscroll chain that arms that gesture (Chromium/Firefox, browser tab
+   and installed PWA alike). Vertical scrolling, pinch-zoom and the internal swipe listener are untouched.
+   Honest limit: iOS Safari's edge-back-swipe ignores this property by design; there the [FIX9] history
+   entries keep the gesture routed to INTERNAL pages instead of leaving the app. */
+html,body{overscroll-behavior-x:none;}
+.slide{overscroll-behavior-x:none;}
 /* [B3-PERF] instant dashboard skeleton (perceived-latency kill while the GAS iframe loads) */
 .dash-skel{width:100%;border:1px solid var(--line);border-radius:10px;background:#fff;overflow:hidden;padding:16px;box-sizing:border-box;}
 .dash-skel-inner{display:flex;flex-direction:column;gap:14px;}
@@ -904,9 +927,70 @@ window.DASH_DATA = {};
   var EXEC_STAGING = 'https://script.google.com/macros/s/AKfycbwcRaHKG158wzYgva_9O5EDkJdRUiMd3XOG7AlEnCjjh3XUtQp4-9vL_FZzVNBC2CM-0w/exec';
   var IS_PROD  = PROD_HOSTS.indexOf(location.hostname) !== -1;
   var EXEC_URL = IS_PROD ? EXEC_PROD : EXEC_STAGING;
-  /* [STAGING-ROUTING] point the register/login iframe at the SAME environment as EXEC_URL
-     (its HTML src is about:blank so no prod request fires before this runs). */
-  try { var _rf0 = document.getElementById('regFrame'); if (_rf0) { _rf0.src = EXEC_URL + '?mode=register'; } } catch(_e){}
+  /* [IRONFIX 2026-07-09] iframe→fetch migration: the organiser screens are SELF-HOSTED same-origin
+     pages (pwa/org/*, generated from the GAS sources by scripts/build-org-pages.mjs) that talk to
+     /exec via fetch POST. Google's X-Frame-Options only blocks CROSS-ORIGIN frames, so same-origin
+     iframes are structurally immune - the [X-FRAME-FIX] top-nav crutch (0a70a22) is removed. The
+     '?mode=register' param is kept on the URL solely so the [B2] known-organiser branch in bootPages
+     (which regex-tests the iframe src for mode=register before appending &auth=login) stays byte-identical. */
+  /* extensionless URL: Cloudflare Pages 308-redirects *.html to the pretty URL; linking the pretty
+     form directly avoids the redirect round-trip (GitHub Pages resolves it identically). */
+  try { var _rf0 = document.getElementById('regFrame'); if (_rf0) { _rf0.src = '/org/register?mode=register'; } } catch(_e){}
+
+  /* ===== [FIXLIST#5 2026-07-10] window.appModal - styled RTL replacement for the browser's grey
+     native dialogs (shared modal spec of FIXLIST #5; same spec is implemented in the organiser screens).
+     API (Promise-based so every converted call site keeps EXACT native semantics, asynchronously):
+       appModal.alert(msg,title?)      -> Promise<void>
+       appModal.confirm(msg,title?)    -> Promise<boolean>      אישור=true · ביטול/overlay/Escape=false
+       appModal.prompt(msg,def?,title?)-> Promise<string|null>  אישור=value · ביטול/overlay/Escape=null
+     Look: palette #fffdf8 / #3c6e71 / #efe7d8, 12px radius, overlay rgba(0,0,0,.45), RTL, buttons
+     אישור/ביטול. Keys: Enter⇒confirm (unless focus is on ביטול), Escape⇒cancel/null. */
+  (function(){
+    if(window.appModal)return;
+    var CSS='.apm-ov{position:fixed;inset:0;z-index:2147483400;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:20px;}'
+      +'.apm-box{background:#fffdf8;color:#3a2f1a;border-radius:12px;max-width:420px;width:100%;padding:22px 20px;box-shadow:0 24px 60px rgba(0,0,0,.35);text-align:right;direction:rtl;font-family:\'Assistant\',\'Segoe UI\',sans-serif;}'
+      +'.apm-title{font-weight:800;font-size:1.15em;color:#3c6e71;margin:0 0 10px;}'
+      +'.apm-msg{font-size:1.05em;line-height:1.7;white-space:pre-wrap;margin:0 0 16px;}'
+      +'.apm-inp{display:block;width:100%;box-sizing:border-box;border:1.5px solid #efe7d8;border-radius:12px;padding:10px 12px;font-size:1em;font-family:inherit;margin:0 0 16px;background:#fff;color:inherit;}'
+      +'.apm-inp:focus{outline:2px solid #3c6e71;}'
+      +'.apm-btns{display:flex;gap:10px;}'
+      +'.apm-btn{min-height:44px;border:none;border-radius:12px;cursor:pointer;font-weight:700;font-size:1em;padding:8px 22px;font-family:inherit;}'
+      +'.apm-ok{background:#3c6e71;color:#fff;}'
+      +'.apm-cancel{background:#efe7d8;color:#5f4a1e;}';
+    var st=document.createElement('style');st.textContent=CSS;
+    (document.head||document.documentElement).appendChild(st);
+    function _open(kind,msg,def,title){
+      return new Promise(function(resolve){
+        var ov=document.createElement('div');ov.className='apm-ov';ov.setAttribute('dir','rtl');ov.setAttribute('role','dialog');ov.setAttribute('aria-modal','true');
+        var box=document.createElement('div');box.className='apm-box';ov.appendChild(box);
+        if(title){var h=document.createElement('div');h.className='apm-title';h.textContent=String(title);box.appendChild(h);}
+        var m=document.createElement('div');m.className='apm-msg';m.textContent=String(msg==null?'':msg);box.appendChild(m);
+        var inp=null;
+        if(kind==='prompt'){inp=document.createElement('input');inp.type='text';inp.className='apm-inp';inp.value=(def==null?'':String(def));box.appendChild(inp);}
+        var btns=document.createElement('div');btns.className='apm-btns';box.appendChild(btns);
+        var ok=document.createElement('button');ok.type='button';ok.className='apm-btn apm-ok';ok.textContent='אישור';btns.appendChild(ok);
+        var cancel=null;
+        if(kind!=='alert'){cancel=document.createElement('button');cancel.type='button';cancel.className='apm-btn apm-cancel';cancel.textContent='ביטול';btns.appendChild(cancel);}
+        function done(val){try{document.removeEventListener('keydown',onKey,true);}catch(e){}try{if(ov.parentNode)ov.parentNode.removeChild(ov);}catch(e){}resolve(val);}
+        function confirmVal(){done(kind==='confirm'?true:(kind==='prompt'?(inp?inp.value:''):undefined));}
+        function cancelVal(){done(kind==='confirm'?false:(kind==='prompt'?null:undefined));}
+        function onKey(ev){
+          if(ev.key==='Escape'){ev.preventDefault();ev.stopPropagation();cancelVal();}
+          else if(ev.key==='Enter'){ev.preventDefault();ev.stopPropagation();if(cancel&&ev.target===cancel){cancelVal();}else{confirmVal();}}
+        }
+        ok.onclick=confirmVal;if(cancel)cancel.onclick=cancelVal;
+        ov.addEventListener('click',function(ev){if(ev.target===ov)cancelVal();});
+        document.addEventListener('keydown',onKey,true);
+        document.body.appendChild(ov);
+        setTimeout(function(){try{(inp||ok).focus();if(inp)inp.select();}catch(e){}},30);
+      });
+    }
+    window.appModal={
+      alert:function(msg,title){return _open('alert',msg,null,title);},
+      confirm:function(msg,title){return _open('confirm',msg,null,title);},
+      prompt:function(msg,def,title){return _open('prompt',msg,def,title);}
+    };
+  })();
 
   /* ===== UTILITY ===== */
   var D = window.DASH_DATA || {};
@@ -1128,7 +1212,14 @@ window.DASH_DATA = {};
      itself stays text-only - the image only appears on send.
      toShareLink normalises ANY distribution link (direct GAS, or an already-stored /g/ link) to the
      invite-domain preview link, so every guest link is consistent and safe. */
-  var INVITE_BASE='https://hazmana-avi-michal.pages.dev';
+  /* [STAGING-LEAK-FIX 2026-07-09] INVITE_BASE must be host-aware, exactly like EXEC_URL.
+     ROOT CAUSE of the David leak: this was HARDCODED to the prod invite domain, so a link
+     SHARED FROM STAGING still pointed guests at hazmana-avi-michal.pages.dev, whose /g/redir
+     hardcodes the PROD /exec -> the guest wrote to the REAL sheet. Fix: on PROD keep the
+     isolated invite-preview domain (its redir routes to prod, correct); on STAGING/other route
+     through THIS origin (magiim-staging), whose /g/redir shim is host-aware -> staging /exec.
+     So a staging share stays in staging, a prod share stays in prod. */
+  var INVITE_BASE = IS_PROD ? 'https://hazmana-avi-michal.pages.dev' : location.origin;
   function toShareLink(link){
     if(!link) return link;
     var qi=link.indexOf('?');
@@ -1193,10 +1284,18 @@ window.DASH_DATA = {};
   function _emailWithImage(waText){
     var ov=document.createElement('div');ov.setAttribute('dir','rtl');
     ov.style.cssText='position:fixed;inset:0;z-index:2147483000;background:rgba(30,24,12,.55);display:flex;align-items:center;justify-content:center;padding:20px;';
+    /* [FIXLIST#4 2026-07-10] device-aware wording: this popup now ALSO serves the MOBILE email
+       fallback (when navigator.share-with-files is unavailable), where the paste gesture is a
+       long-press, not Ctrl+V. Desktop keeps the original approved text byte-for-byte. */
+    var _touch=_isTouchShareDevice();
+    var _pasteHtml=_touch
+      ?'בלחיצה על הכפתור ייפתח <b>Gmail</b> עם הכותרת והטקסט כבר מוכנים.<br><b>בגוף המייל: לחיצה ארוכה ואז "הדבק"</b> — ותמונת-ההזמנה תיכנס בראש ההודעה, מעל הטקסט והקישור.'
+      :'כשתלחצי על הכפתור, ייפתח <b>Gmail</b> בדפדפן עם הכותרת והטקסט כבר מוכנים.<br><b>ברגע ש-Gmail נפתח, לחצי <span dir="ltr">Ctrl+V</span></b> — ותמונת-ההזמנה תיכנס בראש ההודעה, מעל הטקסט והקישור.';
+    var _openLbl=_touch?'📋 העתקת התמונה ופתיחת Gmail':'📋 העתיקי את התמונה ופתחי את Gmail';
     ov.innerHTML='<div style="background:#fff;border-radius:18px;max-width:460px;width:100%;padding:26px 22px;box-shadow:0 24px 60px rgba(0,0,0,.4);text-align:center;">'
       +'<div style="font-size:2.2em;margin-bottom:6px;">📧</div>'
-      +'<div style="font-size:1.12em;line-height:1.75;color:#3a2f1a;font-weight:600;">כשתלחצי על הכפתור, ייפתח <b>Gmail</b> בדפדפן עם הכותרת והטקסט כבר מוכנים.<br><b>ברגע ש-Gmail נפתח, לחצי <span dir="ltr">Ctrl+V</span></b> — ותמונת-ההזמנה תיכנס בראש ההודעה, מעל הטקסט והקישור.</div>'
-      +'<button type="button" id="_emOpenBtn" style="width:100%;margin-top:20px;min-height:56px;border:none;border-radius:12px;background:var(--olive);color:#fff;font-weight:800;font-size:1.15em;cursor:pointer;font-family:inherit;">📋 העתיקי את התמונה ופתחי את Gmail</button>'
+      +'<div style="font-size:1.12em;line-height:1.75;color:#3a2f1a;font-weight:600;">'+_pasteHtml+'</div>'
+      +'<button type="button" id="_emOpenBtn" style="width:100%;margin-top:20px;min-height:56px;border:none;border-radius:12px;background:var(--olive);color:#fff;font-weight:800;font-size:1.15em;cursor:pointer;font-family:inherit;">'+_openLbl+'</button>'
       +'<button type="button" id="_emCancelBtn" style="width:100%;margin-top:10px;min-height:44px;border:none;border-radius:10px;background:#f0ece3;color:#6b5d45;font-weight:700;font-size:1em;cursor:pointer;font-family:inherit;">ביטול</button>'
       +'</div>';
     document.body.appendChild(ov);
@@ -1217,8 +1316,14 @@ window.DASH_DATA = {};
       if(mode==='wa'){
         window.open('https://wa.me/?text='+encodeURIComponent(waText),'_blank');
       }else{
-        if(_isTouchShareDevice()){ _plainMailto(waText); }   /* mobile fallback: plain mail (real image already tried via navigator.share) */
-        else{ _emailWithImage(waText); }                     /* [GILI-EMAIL] desktop: copy image + paste popup + mail with subject */
+        /* [FIXLIST#4 2026-07-10] EMAIL fallback now carries the image on MOBILE too. mailto: is
+           text-only by protocol (an image is technically impossible there), so the old mobile
+           fallback silently dropped the invitation image whenever the navigator.share-files path
+           was unavailable/failed - the user-reported "email from mobile has no image" case. The
+           proven desktop flow (copy image to clipboard + instruction popup + Gmail compose, which
+           on mobile offers the Gmail app) is used for BOTH; _plainMailto stays as the last resort
+           inside _gmailCompose when the popup is blocked. */
+        _emailWithImage(waText);
       }
     }
     /* DESKTOP (not a touch device) -> text path (subject + preview card). Only phones/tablets ride the FILE. */
@@ -1253,7 +1358,7 @@ window.DASH_DATA = {};
     var wtEl=document.getElementById('portalWaText');
     var dlEl=document.getElementById('portalDispLink');
     if(nameEl)nameEl.textContent=rec.name+' - '+sideLabel;
-    var hu=document.getElementById('hdrUser');if(hu)hu.textContent='מחובר/ת כ: '+rec.name+' · '+sideLabel;
+    var hu=document.getElementById('hdrUser');if(hu)hu.innerHTML='<span class="cc-label">מחובר/ת כ:</span><span class="cc-name">'+esc(rec.name)+'</span><span class="cc-sep">·</span><span class="cc-side">'+esc(sideLabel)+'</span>'; /* [FIXLIST10-STYLE] esc() blocks name injection */
     var saEl=document.getElementById('portalShareAs');if(saEl)saEl.textContent='משתף בתור: '+rec.name;
     if(wtEl)wtEl.textContent=waText;
     if(dlEl)dlEl.textContent=dispLink||'';
@@ -1668,8 +1773,8 @@ window.DASH_DATA = {};
 
   window.rGo=function(){
     var n=document.getElementById('rname').value.trim();
-    if(!n){alert("כתבו קודם שם");return;}
-    if(!rSide){alert("בחרו צד");return;}
+    if(!n){window.appModal.alert("כתבו קודם שם");return;} /* [FIXLIST#5] styled modal; early-return means nothing depends on dismissal */
+    if(!rSide){window.appModal.alert("בחרו צד");return;} /* [FIXLIST#5] */
     var sid=genId(12);
     var dispLink=EXEC_URL+'?sid='+sid+'&ch=wa';
     var dashLink=EXEC_URL+'?mode=dashboard&token='+genId(64);
@@ -1731,7 +1836,7 @@ window.DASH_DATA = {};
   };
 
   window.gSend2=function(){
-    if(gAtt2===null){alert("בחרו קודם אם מגיעים");return;}
+    if(gAtt2===null){window.appModal.alert("בחרו קודם אם מגיעים");return;} /* [FIXLIST#5] */
     var gname=document.getElementById('gname2').value.trim()||'אורח/ת הדגמה';
     var mgr=getActiveManagerInfo();
     var men=gAtt2?gMen2:0;
@@ -1888,7 +1993,7 @@ window.DASH_DATA = {};
   };
   window.exportNotes=function(){
     var o=load();var keys=Object.keys(o).filter(function(k){return o[k]&&o[k].trim();});
-    if(!keys.length){alert('עדיין לא הוספת הערות. לחצי "הוסף הערה" בכל שקופית שתרצי לשנות.');return;}
+    if(!keys.length){window.appModal.alert('עדיין לא הוספת הערות. לחצי "הוסף הערה" בכל שקופית שתרצי לשנות.');return;} /* [FIXLIST#5] */
     var txt='הערות לעדכון מערכת אישורי-ההגעה\n=================================\n\n';
     keys.forEach(function(k){txt+='* '+k+':\n  '+o[k]+'\n\n';});
     var blob=new Blob([txt],{type:'text/plain;charset=utf-8'});
@@ -1960,7 +2065,9 @@ window.DASH_DATA = {};
     var MIN_DX=70,MAX_T=700,MIN_T=50,HDOM=2.2,busy=false;
     function _skip(t){ if(!t)return false;
       if(t.closest&&t.closest('input,textarea,select,[contenteditable="true"]'))return true;
-      var el=t;while(el&&el!==document.body){try{if(el.scrollWidth>el.clientWidth+4){var ov=getComputedStyle(el).overflowX;if(ov==='auto'||ov==='scroll')return true;}}catch(e){}el=el.parentElement;}
+      /* [FIXLIST#8b 2026-07-10] the horizontal-overflow skip was removed per the user: a swipe must work
+         from ANYWHERE in the window, not only at the edges. Form fields stay excluded; the vertical-
+         dominance + distance/time thresholds still stop scrolls from navigating. */
       return false; }
     function attach(getEl, wantDir, go){
       var sx=0,sy=0,st=0,track=false;
@@ -1985,10 +2092,38 @@ window.DASH_DATA = {};
         go();
       },{passive:true});
     }
-    /* [ROUNDFIX2f] directions FLIPPED per the user's real-device correction (previous mapping felt reversed):
-       the OPEN gesture on the share window and the BACK gesture on the dashboard are swapped. */
+    /* [FIXLIST#8 2026-07-10] FINGER-DIRECTION GROUND TRUTH (dx = endX - startX, physical screen px,
+       unaffected by RTL):
+         dx<0  = finger moved RIGHT→LEFT  = "swipe LEFT"  -> dir 'left'
+         dx>0  = finger moved LEFT→RIGHT  = "swipe RIGHT" -> dir 'right'
+       USER SPEC (authoritative verbatim decision, FIXLIST 2026-07-10 #8):
+         page-share + swipe LEFT  (finger right→left) -> open the dashboard;
+         page-dash  + swipe RIGHT (finger left→right) -> back to the share screen;
+         EVERY other swipe on these screens does NOTHING - and never browser history.
+       The previous [ROUNDFIX2f] mapping (share+'right'→dash, dash+'left'→share) was the exact OPPOSITE
+       of this spec. The spec-conformant behaviour the user observes on the installed PROD app comes from
+       the NATIVE browser history gesture riding the [FIX9] history entries (forward-gesture on share →
+       dash, back-gesture on dash → share) - the same native gesture that also LEAKS out of the app when
+       history has no matching internal entry. The [FIXLIST#8] overscroll-behavior-x block (CSS, ~line
+       456) now suppresses that native gesture, so the internal listener itself must carry the user-spec
+       directions (this restores the original [ROUNDFIX2e] mapping). Only the two direction arguments
+       changed - thresholds, scoping and handlers are byte-identical. */
+    /* [FIXLIST#8b 2026-07-10 round-2] USER DECISION: keep exactly the staging behaviour but FLIP both
+       directions ("אל תשנה כלום חוץ מהפיכת הכיוונים"). So: share + swipe RIGHT -> dashboard;
+       dash + swipe LEFT -> share. Everything else (thresholds, scoping, leak-blocker CSS) unchanged. */
     attach(function(){return document.getElementById('page-share');},'right', function(){ if(_curPage==='page-share'){window.showPage('page-dash');} });
-    attach(function(){return document.getElementById('page-dash');}, 'left', function(){ if(_curPage==='page-dash'){window.showPage('page-share');} });
+    attach(function(){return document.getElementById('page-dash');}, 'left',  function(){ if(_curPage==='page-dash'){window.showPage('page-share');} });
+    /* [FIXLIST#8b] whole-surface swipe for the dashboard window: touches that start INSIDE the /org/
+       dashboard iframe never reach this parent document at all (separate touch target), which is why the
+       gesture only worked on the outer edges. The generated /org/dashboard.html now runs the same
+       detector and posts {type:'wrsvp-swipe', dir} up; the parent applies the SAME policy as the outer
+       listener (page-dash + LEFT -> share), sharing the same debounce via a local guard. */
+    var _swBusy=false;
+    window.addEventListener('message',function(e){
+      var d=e&&e.data; if(!d||d.type!=='wrsvp-swipe')return;
+      if(_swBusy)return; _swBusy=true; setTimeout(function(){_swBusy=false;},450);
+      if(_curPage==='page-dash'&&d.dir==='left'){ window.showPage('page-share'); }
+    });
   })();
   window.bootPages=function(){
     var role=window.portalRole();
@@ -2006,7 +2141,11 @@ window.DASH_DATA = {};
        and stay logged in; only when none remain do we fully log out to State A. */
     var others=(typeof portalAccounts==='function')?portalAccounts().length:0;
     var msg=(others>1)?'להתנתק מהחשבון הפעיל? (חשבונות אחרים יישארו מחוברים)':'להתנתק מהמערכת?';
-    if(!window.confirm(msg))return;
+    /* [FIXLIST#5] native window.confirm -> styled appModal.confirm. The blocking call became async, so
+       EVERYTHING that depended on its result moved inside the .then (strict control-flow integrity:
+       nothing runs synchronously after the dialog opens; cancel = identical no-op to the native path). */
+    window.appModal.confirm(msg).then(function(_ok){
+    if(!_ok)return;
     var next=(typeof portalRemoveActive==='function')?portalRemoveActive():null;
     if(next&&next.sid){
       /* another account is now active - re-render board + share card, do not reload out */
@@ -2023,6 +2162,7 @@ window.DASH_DATA = {};
     try{localStorage.removeItem(PORTAL_KEY);localStorage.removeItem(PORTAL_KEY_V2);localStorage.removeItem('wrsvpNotifPrefs_v1');localStorage.removeItem('wrsvpPollSince');sessionStorage.removeItem('wrsvpLastPage');}catch(e){}
     try{sessionStorage.setItem('wrsvpSkipIntroOnce','1');}catch(e){}
     location.reload();
+    });
   };}})();
   /* [FIX9] boot: suppress the push during the very first navigation, then replaceState the initial page so the first history entry carries state (no stray extra entry) */
   _navigatingFromPop=true;
@@ -2125,7 +2265,10 @@ window.DASH_DATA = {};
   /* [CATBATCH A3a] act-as is owned ENTIRELY by the in-iframe picker in dashboard.html
      (self-fetch via google.script.run, sets CAT_OWNER + re-fetches board). The SPA shell no
      longer forwards an owner_sid param - the dead relay + _actAsOwnerSid plumbing were removed. */
-  function dashUrl(mode){var rec=portalLoad();if(!rec||!rec.token)return '';return EXEC_URL+'?mode='+mode+'&token='+encodeURIComponent(rec.token)+'&phone='+encodeURIComponent(rec.phone||'');}
+  /* [IRONFIX 2026-07-09] the dashboard iframes now load the SELF-HOSTED same-origin page (pwa/org/,
+     immune to Google's X-Frame-Options) with the exact same query params the GAS /exec doGet consumed;
+     the page itself fetches the data from /exec via runScript POST. */
+  function dashUrl(mode){var rec=portalLoad();if(!rec||!rec.token)return '';return '/org/dashboard?mode='+mode+'&token='+encodeURIComponent(rec.token)+'&phone='+encodeURIComponent(rec.phone||'');}
   /* [B3-FAILSAFE 2026-07-05] ~12s reveal-failsafe: if a rare GAS error never fires the iframe onload,
      the iframe would stay visibility:hidden behind its skeleton forever. Armed the moment src is set to a
      non-blank value; after 12s it force-reveals the iframe (visibility:visible) and hides the skeleton
@@ -2149,6 +2292,37 @@ window.DASH_DATA = {};
     if(pg==='page-followup'){try{loadFollowup(false);}catch(e){}}/* [B2] follow-up board */
     if(pg==='page-dash'||pg==='page-combined'){try{setTimeout(function(){try{pollOnce();}catch(_e){}},1200);}catch(e){}} /* [B3-PERF] defer catch-up poll ~1.2s so it does not contend with the dashboard iframe's own GAS round-trip */
   });
+  /* [FIXLIST#9 2026-07-10] page-combined dead-strip fix. The combined iframe kept the static inline
+     calc(100dvh - 150px) guess, which leaves a dead band at the bottom exactly like page-dash did.
+     Flex-fill (the page-dash solution) cannot be used here because REAL content (the [B1 #2] linkage
+     card) flows BELOW this iframe, so the page must remain a normal scroll flow. Instead the TRUE
+     chrome above the iframe is MEASURED and the element gets exactly the remaining viewport height:
+       height = viewportHeight - (element top at scrollTop 0) - 12px page bottom padding.
+     scroll-independent (adds pg.scrollTop back), inline min-height:480px still floors it on short
+     viewports (page then scrolls, as before). Runs on page entry (twice: 60ms + 420ms, the second
+     lands after the .35s slide fade animation so the measurement is transform-free), on window /
+     visualViewport resize, and on iframe load (the moment the skeleton hides). Only style.height is
+     written - loadCombinedIframe, the skeleton reveal chain and the [G5] bridge are untouched. */
+  function _fitCombinedIframe(){
+    try{
+      var pg=document.getElementById('page-combined');
+      if(!pg||!pg.classList.contains('active'))return;
+      var padB=12; /* #page-dash,#page-combined padding-bottom (UIPOLISH3) */
+      var vh=(window.visualViewport&&window.visualViewport.height)||window.innerHeight||0;
+      ['portalCombinedSkel','portalCombinedIframe'].forEach(function(id){
+        var el=document.getElementById(id);
+        if(!el||el.style.display==='none')return;
+        var topAt0=el.getBoundingClientRect().top+pg.scrollTop;
+        var h=Math.round(vh-topAt0-padB);
+        if(h>0){el.style.height=h+'px';}
+      });
+    }catch(e){}
+  }
+  function _fitCombinedSoon(){setTimeout(_fitCombinedIframe,60);setTimeout(_fitCombinedIframe,420);}
+  document.addEventListener('wrsvp:page',function(ev){if(ev&&ev.detail&&ev.detail.page==='page-combined'){_fitCombinedSoon();}});
+  window.addEventListener('resize',function(){_fitCombinedIframe();});
+  if(window.visualViewport){try{window.visualViewport.addEventListener('resize',function(){_fitCombinedIframe();});}catch(e){}}
+  (function(){var f=document.getElementById('portalCombinedIframe');if(f){f.addEventListener('load',function(){_fitCombinedSoon();});}})();
   /* [G5] bridge: the GAS dashboard action row posts to navigate the SPA (goto-share) or request fullscreen (goto-fullscreen) */
   window.addEventListener('message',function(e){if(!e||!e.data)return;if(e.data.type==='wedding-goto-share'){try{window.showPage('page-share');if(window.shareTabSel)window.shareTabSel(1);}catch(err){}}if(e.data.type==='wedding-goto-organisers'){try{window.showPage('page-organisers');}catch(err){}}/* [ROUNDFIX2c #4] Yehuda-only dashboard button → organiser-details view */if(e.data.type==='wedding-goto-fullscreen'){try{window.tryFullscreenLandscape();}catch(err){}}if(e.data.type==='wedding-exit-fullscreen'){try{window.tryExitFullscreenPortrait();}catch(err){}}});/* [FIX6] back-to-cards -> exit fullscreen + release orientation lock */
   /* boot-case: F1's bootPages() fired 'wrsvp:page' BEFORE this module existed, so cover the missed initial page */

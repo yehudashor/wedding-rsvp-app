@@ -1,0 +1,2670 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head><meta name="deck-origin-session" content="0033b821-c86a-4ae4-9da6-86394b765860"><!-- deck-origin-session: 0033b821-c86a-4ae4-9da6-86394b765860 | 2026-06-22T19:19:44 -->
+  <meta charset="UTF-8">
+  <meta http-equiv="Cache-Control" content="no-store">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>לוח בקרה</title>
+  <link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@700;900&display=swap" rel="stylesheet"><!-- [FIXLIST10-STYLE] serif accent font for the connected-as caption -->
+  <script>
+  /* [FIXLIST#8b 2026-07-10] whole-surface swipe bridge. Touches that start inside this document (which
+     the PWA embeds as a same-origin iframe) never reach the parent's swipe listener - a separate touch
+     target - so the gesture only worked on the parent's outer edges. This detector mirrors the parent's
+     [ROUNDFIX2e] thresholds exactly and posts {type:'wrsvp-swipe', dir} up; the PARENT alone decides the
+     navigation policy (single source of truth). Skips: form fields, and elements that REALLY scroll
+     horizontally (wide tables must keep their own scroll - there a swipe scrolls, elsewhere it navigates).
+     Framed-only: when this page is served top-level by GAS (direct email links) nothing is posted. */
+  (function(){
+    if (window.self === window.top) { return; }
+    var MIN_DX=70,MAX_T=700,MIN_T=50,HDOM=2.2,busy=false,sx=0,sy=0,st=0,track=false;
+    function _skip(t){ if(!t)return false;
+      if(t.closest&&t.closest('input,textarea,select,[contenteditable="true"]'))return true;
+      var el=t;while(el&&el!==document.body){try{if(el.scrollWidth>el.clientWidth+4){var ov=getComputedStyle(el).overflowX;if(ov==='auto'||ov==='scroll')return true;}}catch(e){}el=el.parentElement;}
+      return false; }
+    document.addEventListener('touchstart',function(e){
+      track=false;
+      if(busy)return;
+      if(e.touches&&e.touches.length>1)return;
+      if(_skip(e.target))return;
+      var t=(e.touches&&e.touches[0])||e; sx=t.clientX;sy=t.clientY;st=Date.now();track=true;
+    },{passive:true});
+    document.addEventListener('touchend',function(e){
+      if(!track)return;track=false;
+      var t=(e.changedTouches&&e.changedTouches[0])||e;
+      var dx=t.clientX-sx,dy=t.clientY-sy,dt=Date.now()-st;
+      if(dt<MIN_T||dt>MAX_T)return;
+      if(Math.abs(dx)<MIN_DX)return;
+      if(Math.abs(dx)<HDOM*Math.abs(dy))return;
+      busy=true;setTimeout(function(){busy=false;},450);
+      try{ window.parent.postMessage({type:'wrsvp-swipe', dir:(dx<0)?'left':'right'}, '*'); }catch(err){}
+    },{passive:true});
+  })();
+  </script>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      font-size: 18px;
+      background: #f5f5f5;
+      color: #222;
+      margin: 0;
+      padding: 16px;
+      direction: rtl;
+    }
+    /* [FIXLIST9 2026-07-10] paint the FULL iframe viewport height on every device: html carries the
+       page background + full height, body stretches to at least that height - so no exposed strip
+       can ever show below the content inside the host iframe. (The iframe height calc itself lives
+       in pwa/index.html - a separate fix item.) */
+    html { height: 100%; background: #f5f5f5; }
+    body { min-height: 100%; }
+    /* [FIXLIST10-STYLE] "מחובר/ת כ" caption - mobile only, wine accent #7A1F3D (new to page), design-agent spec */
+    .connected-as-caption { display: none; }
+    @media (max-width: 768px) {
+      .connected-as-caption {
+        display: flex; flex-wrap: wrap; align-items: baseline; justify-content: center; gap: 6px 8px;
+        direction: rtl; text-align: center; margin: 0 0 9px; padding: 9px 14px 10px;
+        background: linear-gradient(135deg, #fffdf8 0%, #faf3e6 55%, #efe7d8 100%);
+        border: 1px solid #e6d8bd; border-inline-start: 5px solid #7A1F3D;
+        border-radius: 12px; box-shadow: 0 2px 10px rgba(122,31,61,.10);
+      }
+      .connected-as-caption .cc-label { font-size: .78rem; font-weight: 600; letter-spacing: .06em; color: #8d7d66; }
+      .connected-as-caption .cc-name { font-family: 'Frank Ruhl Libre', 'Segoe UI', serif; font-size: 1.3rem; font-weight: 900;
+        line-height: 1.15; color: #7A1F3D; text-shadow: 0 1px 0 rgba(255,255,255,.65); }
+      .connected-as-caption .cc-sep { color: #8a6d3b; font-weight: 900; }
+      .connected-as-caption .cc-side { font-size: .86rem; font-weight: 800; color: #7A1F3D; background: rgba(122,31,61,.08);
+        border: 1px solid rgba(122,31,61,.35); border-radius: 999px; padding: 2px 12px 3px; white-space: nowrap; }
+    }
+    /* [/FIXLIST10-STYLE] */
+    h1 { font-size: 1.6em; margin-bottom: 12px; }
+    h2 { font-size: 1.3em; margin-top: 24px; margin-bottom: 8px; border-bottom: 2px solid #bbb; padding-bottom: 4px; }
+    h3 { font-size: 1.1em; margin-top: 16px; margin-bottom: 4px; color: #444; }
+
+    .error-page {
+      max-width: 480px;
+      margin: 60px auto;
+      text-align: center;
+      background: #fff;
+      border-radius: 8px;
+      padding: 40px 24px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.12);
+    }
+    .error-page h1 { color: #c0392b; font-size: 1.8em; }
+    .error-page p  { color: #555; font-size: 1em; }
+
+    /* [UIPOLISH3 2026-07-04 - part ב] palette-matching summary banner (was the loud #1a6e3c
+       green that clashed with the navy/brown/olive buttons + cream background). Now a muted
+       dark-olive with a structured label / big total / breakdown-chips layout. */
+    /* [CATEGORIES-FEATBATCH R3, §0.9] ~9px (0.25cm) gap under the green card to whatever renders
+       directly beneath it (the R4D 'rl-hint' <p> in combined; the top-actions row in personal/side,
+       whose own top margin is 0). margin-bottom set to 9px LAST, after R4A/R4C/R4D DOM landed. */
+    .summary-banner { background:#4b6440; color:#fff; border-radius:12px; padding:10px 14px; margin-bottom:9px; text-align:center; line-height:1.3; }
+    .summary-banner .sb-label { font-size:.9em; font-weight:600; opacity:.92; margin-bottom:3px; }
+    .summary-banner .sb-total { font-size:1.5em; font-weight:800; margin-bottom:8px; }
+    .summary-banner .sb-total .sb-unit { font-size:.62em; font-weight:600; opacity:.9; }
+    .summary-banner .sb-break { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; }
+    .summary-banner .sb-chip { background:rgba(255,255,255,.16); border-radius:999px; padding:4px 13px; font-size:.9em; font-weight:700; white-space:nowrap; }
+    .summary-banner .sb-chip.sb-no { background:rgba(0,0,0,.2); }
+    /* [UIPOLISH3 2026-07-04 - part ד] guest-list filter (segmented). The data-flt keys are the
+       single extension point: add a key here + a branch in filterRows() to grow the filter. */
+    .flt-bar { display:flex; gap:8px; margin:2px 0 14px; }
+    .flt-btn { flex:1; min-height:46px; border:2px solid #e6d8bd; border-radius:12px; background:#fff; color:#4b6440; font-weight:700; font-size:1rem; cursor:pointer; font-family:inherit; line-height:1.2; }
+    .flt-btn:hover { background:#f4efe3; }
+    .flt-btn.active { background:#4b6440; border-color:#4b6440; color:#fff; }
+    .top-actions { display: flex; gap: 12px; flex-wrap: wrap; margin: 0 0 10px; }
+    .top-actions .ta-btn { flex: 1; min-width: 180px; min-height: 44px; border: none; border-radius: 12px; font-size: 1rem; font-weight: bold; cursor: pointer; color: #fff; font-family: inherit; }
+    /* [ROUNDFIX2c #3] on phones each action button spans the FULL width (one per row) instead of the
+       180px-min wrap that left ragged gaps. flex-basis:100% stretches to the device width dynamically. */
+    @media (max-width: 600px) { .top-actions { gap: 8px; } .top-actions .ta-btn { flex: 1 1 100%; min-width: 0; } }
+    .ta-manual { background: #2c3e50; } .ta-manual:hover { background: #34495e; }
+    .ta-list { background:#5f7a4e; } .ta-list:hover { opacity:.9; }
+    @media (min-width: 769px) { .ta-list { display:none; } }  /* desktop already shows the table */
+    .ta-unconf { background:#8a6d3b; } .ta-unconf:hover { opacity:.9; }  /* invite-token: distinct calm color */
+    #unconf-panel { background:#fffdf8; border:1px solid #e5dcc7; border-radius:14px; padding:18px 16px; margin:14px 0; box-shadow:0 8px 28px rgba(0,0,0,.14); }
+    #unconf-panel .uc-head { display:flex; align-items:center; justify-content:space-between; margin:0 0 12px; }
+    #unconf-panel .uc-head h2 { margin:0; font-size:1.35rem; color:#5f4a1e; }
+    #unconf-panel .uc-close { background:none; border:none; font-size:1.8rem; line-height:1; cursor:pointer; color:#8a6d3b; padding:0 6px; font-family:inherit; }
+    #unconf-panel .uc-sec { margin:0 0 16px; }
+    #unconf-panel .uc-sec h3 { font-size:1.1rem; color:#5f7a4e; margin:0 0 8px; }
+    #unconf-panel .uc-item { font-size:1.15rem; font-weight:700; padding:9px 12px; margin:6px 0; background:#f6f1e6; border-radius:10px; }
+    #unconf-panel .uc-item .uc-when { display:block; font-size:.85rem; font-weight:400; color:#999; margin-top:3px; }
+    #unconf-panel .uc-empty { font-size:1.05rem; color:#999; padding:6px 2px; }
+    #unconf-panel .uc-refresh { width:100%; min-height:48px; border:none; border-radius:12px; background:#5f7a4e; color:#fff; font-weight:bold; font-size:1rem; cursor:pointer; font-family:inherit; margin-top:4px; }
+    /* [ROUNDFIX-20260708 #6א] in-CONTENT unconfirmed view (replaces the records area below the buttons,
+       instead of the old static panel appended BELOW the still-visible guest list). */
+    #unconf-inline { margin:6px 0 0; }
+    #unconf-inline h2 { color:#5f4a1e; }
+    #unconf-inline .uc-sec { margin:0 0 16px; }
+    #unconf-inline .uc-sec h3 { font-size:1.1rem; color:#5f7a4e; margin:0 0 8px; }
+    #unconf-inline .uc-item { font-size:1.15rem; font-weight:700; padding:9px 12px; margin:6px 0; background:#f6f1e6; border-radius:10px; }
+    #unconf-inline .uc-item .uc-when { display:block; font-size:.85rem; font-weight:400; color:#999; margin-top:3px; }
+    #unconf-inline .uc-item .uc-chan { display:block; font-size:.85rem; font-weight:400; color:#777; margin-top:2px; }
+    #unconf-inline .uc-empty { font-size:1.05rem; color:#999; padding:6px 2px; }
+    /* [ROUNDFIX2 #3] unconfirmed-as-cards: a card per not-yet-confirmed guest, grouped by category. */
+    #unconf-inline .uc-catgroup { background:#fff; border-radius:12px; padding:12px 14px; margin:0 0 14px; box-shadow:0 1px 4px rgba(0,0,0,.08); }
+    #unconf-inline .uc-catgroup > h3 { margin:0 0 10px; color:#8a6d3b; display:flex; justify-content:space-between; align-items:center; gap:8px; font-size:1.05rem; }
+    #unconf-inline .uc-catgroup > h3 .cat-count { background:#8a6d3b; color:#fff; border-radius:999px; padding:1px 10px; font-size:.8em; font-weight:700; }
+    /* [ROUNDFIX2c #5ב] clean, aligned card: each field is a STACKED row (small muted label above a
+       larger dark value) so labels/values never misalign; the share list sits neatly under its label;
+       the category control is separated by a divider and stretches full-width. */
+    #unconf-inline .uc-card { border:1px solid #e5dcc7; border-radius:12px; padding:14px 16px; margin:0 0 12px; background:#fffdf8; }
+    #unconf-inline .uc-card:last-child { margin-bottom:0; }
+    #unconf-inline .uc-card .uc-row { margin:0 0 9px; }
+    #unconf-inline .uc-card .uc-row:last-child { margin-bottom:0; }
+    #unconf-inline .uc-card .uc-k { display:block; font-size:.8rem; font-weight:700; color:#8d7d66; margin:0 0 2px; }
+    #unconf-inline .uc-card .uc-v { display:block; font-size:1rem; color:#2c3e50; font-weight:600; }
+    #unconf-inline .uc-card .uc-name-v { font-size:1.15rem; font-weight:800; color:#5f4a1e; }
+    #unconf-inline .uc-card .uc-muted { color:#999; font-weight:400; }
+    #unconf-inline .uc-card .uc-shares { margin:3px 0 0; padding:0 14px 0 0; list-style:disc; }
+    #unconf-inline .uc-card .uc-shares li { font-size:.95rem; color:#2c3e50; padding:1px 0; }
+    #unconf-inline .uc-card .uc-catrow { margin:12px 0 0; padding-top:10px; border-top:1px dashed #e5dcc7; display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+    #unconf-inline .uc-card .uc-catrow label { font-weight:700; color:#8d7d66; font-size:.9rem; flex:0 0 auto; }
+    #unconf-inline .uc-card .uc-cat-sel { border:1.5px solid #cbbf9f; border-radius:9px; padding:8px 10px; font-size:.95rem; font-family:inherit; flex:1; min-width:150px; min-height:42px; background:#fff; }
+
+    /* [ROUNDFIX2g 2026-07-09 #4/#5] MINE_VIEW cards + category filter + per-card category icons */
+    .mine-cards { display:flex; flex-direction:column; gap:12px; margin-top:10px; }
+    .mine-card { background:#fffdf8; border:1px solid #ece3cf; border-radius:14px; padding:14px 16px; box-shadow:0 1px 3px rgba(95,74,30,.06); }
+    /* [FIXLIST1 2026-07-10] full-data MINE cards: every row now follows the unconf-card .uc-row
+       pattern - small label ABOVE the value - with a horizontal separator line between data items.
+       Card colors/shape, the mine-cat-sel combobox, the ＋/✏️/🗑️ icon bar and the chips filter
+       are untouched (data addition only). */
+    .mine-card .uc-row { display:block; padding:8px 0; }
+    .mine-card .uc-row:first-child { padding-top:0; }
+    .mine-card .uc-row + .uc-row { border-top:1px solid #efe7d8; }
+    .mine-card .uc-k { display:block; font-size:.82rem; color:#8d7d66; font-weight:700; margin:0 0 2px; }
+    .mine-card .uc-v { display:block; font-size:1rem; color:#2c3e50; font-weight:600; }
+    .mine-card .uc-v.mine-pre { white-space:pre-wrap; word-break:break-word; }
+    .mine-card .uc-name-v { font-size:1.15rem; font-weight:800; color:#5f4a1e; }
+    .mine-card .uc-catrow { margin:12px 0 0; padding-top:10px; border-top:1px dashed #e5dcc7; display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+    .mine-card .uc-catrow label { font-weight:700; color:#8d7d66; font-size:.9rem; flex:0 0 auto; }
+    .mine-card .uc-cat-sel { border:1.5px solid #cbbf9f; border-radius:9px; padding:8px 10px; font-size:.95rem; font-family:inherit; flex:1; min-width:140px; min-height:42px; background:#fff; }
+    .cat-iconbar { display:inline-flex; gap:6px; flex:0 0 auto; }
+    .cat-ic { border:1.5px solid #cbbf9f; background:#f6f1e6; border-radius:9px; min-width:38px; min-height:38px; font-size:1rem; line-height:1; cursor:pointer; transition:transform .08s, background .15s, box-shadow .15s; display:inline-flex; align-items:center; justify-content:center; }
+    .cat-ic:hover { background:#efe7d8; transform:translateY(-2px); box-shadow:0 3px 8px rgba(95,74,30,.18); }
+    .cat-ic:active { transform:translateY(0); }
+    .mine-catfilter { display:flex; gap:8px; flex-wrap:wrap; margin:6px 0 4px; padding:10px; background:linear-gradient(135deg,#faf6ec,#f3ead6); border:1px solid #e5dcc7; border-radius:14px; }
+    .mcf-chip { display:inline-flex; align-items:center; gap:7px; border:1.5px solid #cbbf9f; background:#fff; color:#5f4a1e; border-radius:999px; padding:7px 14px; font-family:inherit; font-size:.92rem; font-weight:700; cursor:pointer; transition:transform .08s, background .15s, box-shadow .15s; }
+    .mcf-chip:hover { transform:translateY(-1px); box-shadow:0 2px 8px rgba(95,74,30,.15); }
+    .mcf-chip.active { background:#3c6e71; color:#fff; border-color:#3c6e71; box-shadow:0 3px 10px rgba(60,110,113,.3); }
+    .mcf-n { background:rgba(0,0,0,.08); border-radius:999px; padding:1px 8px; font-size:.82rem; font-weight:800; }
+    .mcf-chip.active .mcf-n { background:rgba(255,255,255,.25); }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 20px;
+      font-size: 0.85em;
+      font-weight: bold;
+      vertical-align: middle;
+    }
+    .badge-groom   { background: #2c3e50; color: #fff; }
+    .badge-bride   { background: #8e44ad; color: #fff; }
+    .badge-unknown { background: #7f8c8d; color: #fff; }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      background: #fff;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 1px 4px rgba(0,0,0,.08);
+    }
+    .data-table th {
+      background: #2c3e50;
+      color: #fff;
+      padding: 10px 8px;
+      text-align: center;
+      font-size: 0.95em;
+    }
+    .data-table td {
+      padding: 9px 8px;
+      border-bottom: 1px solid #eee;
+      text-align: center;
+      vertical-align: middle;
+      font-size: 0.95em;
+    }
+    .data-table tr:last-child td { border-bottom: none; }
+    .data-table tr:nth-child(even) { background: #f9f9f9; }
+
+    .att-yes { color: #27ae60; font-size: 1.3em; }
+    .att-no  { color: #e74c3c; font-size: 1.3em; }
+
+    .org-section {
+      background: #fff;
+      border-radius: 8px;
+      padding: 14px 16px;
+      margin-bottom: 14px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.08);
+    }
+    .org-section h3 { margin-top: 0; }
+
+    .blessing-item {
+      background: #fef9e7;
+      border-right: 4px solid #f1c40f;
+      padding: 10px 14px;
+      margin-bottom: 8px;
+      border-radius: 0 6px 6px 0;
+    }
+    .blessing-item .bname { font-weight: bold; font-size: 0.9em; color: #555; margin-bottom: 4px; }
+    .blessing-item .btext { font-size: 1em; white-space: pre-wrap; }
+
+    .unassigned-section {
+      background: #fdf2f8;
+      border: 2px solid #e91e63;
+      border-radius: 8px;
+      padding: 14px 16px;
+      margin-top: 16px;
+    }
+    .unassigned-section h2 { color: #c0392b; border-color: #e91e63; }
+
+    .side-stats {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      /* [CATEGORIES-FEATBATCH R3] moved BELOW the organiser lists - add top margin to separate it. */
+      margin-top: 20px;
+      margin-bottom: 20px;
+    }
+    .side-stats .stat-box {
+      flex: 1;
+      min-width: 200px;
+      background: #fff;
+      border-radius: 8px;
+      padding: 14px 16px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.08);
+    }
+    .side-stats .stat-box h3 { margin-top: 0; }
+
+    /* -- S1c D2: per-organiser tabs inside each side of the combined view -- */
+    .org-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 0 0 14px;
+    }
+    .org-tabs .org-tab {
+      flex: 1 1 auto;
+      min-width: 160px;
+      min-height: 52px;
+      padding: 10px 18px;
+      border: 2px solid #cfd8dc;
+      border-radius: 12px;
+      background: #fff;
+      color: #2c3e50;
+      font-family: inherit;
+      font-size: 1.05rem;
+      font-weight: bold;
+      cursor: pointer;
+      line-height: 1.25;
+    }
+    .org-tabs .org-tab[aria-selected='true'] {
+      background: #2c3e50;
+      border-color: #2c3e50;
+      color: #fff;
+    }
+    .org-panel[hidden] { display: none; }
+
+    /* [ROUNDFIX2b #5] side-org ACCORDION: stack organiser headers vertically; each panel opens directly
+       below its own header (not at the end of the list). Overrides the .org-tabs flex-row for this view. */
+    .org-tabs.org-acc { flex-direction: column; gap: 8px; }
+    .org-tabs.org-acc .org-acc-head { width: 100%; flex: none; min-width: 0; text-align: right; }
+    .org-tabs.org-acc .org-acc-head[aria-expanded='true'] { background: #2c3e50; border-color: #2c3e50; color: #fff; }
+    .org-tabs.org-acc .org-acc-body { width: 100%; margin: 0 0 6px; }
+
+    .special { font-size: 0.88em; color: #555; white-space: pre-wrap; }
+
+    @media (max-width: 600px) {
+      body { font-size: 16px; padding: 10px; }
+      .data-table th, .data-table td { padding: 7px 5px; font-size: 0.88em; }
+      .side-stats { flex-direction: column; }
+    }
+
+    /* -- WRSVP-UXFIX-5: mobile responsive cards for .data-table --
+       Desktop (min-width: 769px) intentionally untouched: the rules above
+       apply as-is. Below 769px each guest row becomes a stacked card whose
+       cells carry their own header label via data-label. */
+    @media (max-width: 768px) {
+      body:not(.force-table) .data-table,
+      body:not(.force-table) .data-table thead,
+      body:not(.force-table) .data-table tbody,
+      body:not(.force-table) .data-table tr,
+      body:not(.force-table) .data-table td {
+        display: block;
+        width: 100%;
+        box-sizing: border-box;
+      }
+      /* Header row off - renderer emits it as the first <tr> (th cells);
+         cards carry their own labels instead. */
+      body:not(.force-table) .data-table thead,
+      body:not(.force-table) .data-table tr:first-child { display: none; }
+
+      body:not(.force-table) .data-table {
+        background: transparent;
+        box-shadow: none;
+        border-radius: 0;
+        border-collapse: separate;
+        overflow: visible;
+      }
+
+      /* Each row = a card (also cancels the desktop zebra stripe) */
+      body:not(.force-table) .data-table tr,
+      body:not(.force-table) .data-table tr:nth-child(even) {
+        background: #fff;
+        border: 1px solid var(--line, #e0e0e0);
+        border-radius: 12px;
+        box-shadow: 0 1px 4px rgba(0,0,0,.08);
+        margin: 0 0 12px;
+        padding: 4px 0;
+      }
+
+      /* Label right, value left (RTL flex-start = right) */
+      body:not(.force-table) .data-table td {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 10px;
+        text-align: right;
+        padding: 10px 14px;
+        font-size: 1em;
+        border-bottom: 1px solid #f0f0f0;
+      }
+      body:not(.force-table) .data-table td::before {
+        content: attr(data-label) ": ";
+        font-weight: 700;
+        color: #2c3e50;
+        flex-shrink: 0;
+      }
+      body:not(.force-table) .data-table tr:last-child td { border-bottom: 1px solid #f0f0f0; }
+      body:not(.force-table) .data-table tr td:last-child { border-bottom: none; }
+      body:not(.force-table) .data-table td.special { word-break: break-word; }
+    }
+
+    /* -- G5 A4: 8-column overhaul - value/label tokens, long-text clamp -- */
+    .muted { color:#999; font-weight:400; }
+    .rm-btn { background:none; border:none; color:#1a6e3c; font-weight:700; cursor:pointer; padding:0 2px; font-size:.9em; font-family:inherit; }
+    td.longtext .v { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; word-break:break-word; white-space:pre-wrap; }
+    td.longtext.expanded .v { display:block; -webkit-line-clamp:unset; overflow:visible; }
+    @media (max-width: 768px) {
+      body:not(.force-table) .data-table td::before { color:#8d7d66; font-weight:700; font-size:.85em; }   /* labels: muted stone */
+      body:not(.force-table) .data-table td .v { flex:1; text-align:left; color:#2c3e50; font-weight:600; }  /* values: left-aligned, dark, heavier */
+      body:not(.force-table) .data-table td.longtext { flex-wrap:wrap; }
+      body:not(.force-table) .data-table td .rm-btn { flex:0 0 100%; text-align:center; margin-top:4px; }
+    }
+
+    /* -- Manual-add affordance -- */
+    .manual-add-bar {
+      margin: 22px 0 8px;
+      text-align: center;
+    }
+    .manual-add-btn {
+      background: #2c3e50;
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      padding: 13px 26px;
+      font-size: 1.05rem;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 6px 16px -6px rgba(44,62,80,.5);
+    }
+    .manual-add-btn:hover { background: #34495e; }
+
+    .manual-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.45);
+      z-index: 50;
+      padding: 16px;
+      overflow-y: auto;
+    }
+    .manual-overlay.open { display: flex; align-items: flex-start; justify-content: center; }
+    .manual-modal {
+      background: #fff;
+      border-radius: 12px;
+      padding: 22px 20px;
+      width: 100%;
+      max-width: 420px;
+      margin: 40px auto;
+      box-shadow: 0 12px 40px rgba(0,0,0,.3);
+      direction: rtl;
+    }
+    .manual-modal h2 {
+      margin-top: 0;
+      border: none;
+      font-size: 1.3em;
+      color: #2c3e50;
+    }
+    .manual-field { margin-bottom: 14px; }
+    .manual-field label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 5px;
+      font-size: 0.95em;
+    }
+    .manual-field input {
+      width: 100%;
+      border: 1.5px solid #bbb;
+      border-radius: 10px;
+      padding: 11px 13px;
+      font-size: 1rem;
+      font-family: inherit;
+    }
+    .manual-field input:focus { border-color: #1a6e3c; outline: none; }
+    .manual-counts { display: flex; gap: 12px; }
+    .manual-counts .manual-field { flex: 1; }
+    .manual-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 18px;
+    }
+    .manual-submit {
+      flex: 1;
+      background: #1a6e3c;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 12px;
+      font-size: 1.05rem;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .manual-submit:disabled { opacity: .5; cursor: not-allowed; }
+    .manual-cancel {
+      flex: 0 0 auto;
+      background: #fff;
+      color: #555;
+      border: 1.5px solid #ccc;
+      border-radius: 10px;
+      padding: 12px 18px;
+      font-size: 1em;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .manual-msg {
+      margin-top: 12px;
+      font-size: .95em;
+      min-height: 1.2em;
+      display: none;
+    }
+    .manual-msg.err { color: #c0392b; display: block; }
+    .manual-msg.ok  { color: #1a7a3a; display: block; }
+
+    /* [B1-5-DASH 2026-07-05] DESKTOP/TABLET ONLY (paired with index.html [B1-5 REV2]): make the
+       dashboard content + table use the FULL iframe width on desktop. #dashboard-content already has
+       no max-width, so this mainly hard-guarantees full width and trims the body gutter a touch so wide
+       tables reach edge-to-edge. NOTHING below 768px is affected (mobile card layout untouched). */
+    @media (min-width: 768px) {
+      body { padding: 12px 20px; }
+      #dashboard-content { width: 100%; max-width: none; margin: 0; }
+      #dashboard-content .data-table { width: 100%; }
+    }
+
+    /* ===== CATEGORIES-FEATBATCH (R4A/R4B/R4C/R4D) ===== */
+    /* R4D framing texts around the button row */
+    .rl-hint  { font-weight:700; color:#2c3e50; font-size:1.02rem; margin:0 0 8px; }
+    .rl-hint2 { font-weight:700; color:#5f4a1e; font-size:1.02rem; margin:14px 0 8px; }
+
+    /* R4A "כולם" button (super) - calm slate, distinct from the olive list buttons */
+    .ta-all { background:#3d5a80; } .ta-all:hover { opacity:.9; }
+    /* R4C side buttons (super) */
+    .ta-side-groom { background:#2c3e50; } .ta-side-groom:hover { opacity:.9; }
+    .ta-side-bride { background:#8e44ad; } .ta-side-bride:hover { opacity:.9; }
+    .ta-back { background:#7f8c8d; } .ta-back:hover { opacity:.9; }
+
+    /* R4B category manager panel */
+    #cat-manager { background:#fbfaf6; border:1px solid #e5dcc7; border-radius:14px; padding:16px 14px; margin:14px 0; box-shadow:0 6px 22px rgba(0,0,0,.10); }
+    #cat-manager h2 { margin:0 0 10px; font-size:1.25rem; color:#3d5a80; border:none; }
+    .cat-add-row { display:flex; gap:8px; margin:0 0 12px; flex-wrap:wrap; }
+    .cat-add-row input { flex:1; min-width:150px; border:1.5px solid #bbb; border-radius:10px; padding:10px 12px; font-size:1rem; font-family:inherit; }
+    .cat-add-row button { border:none; border-radius:10px; padding:10px 18px; font-size:1rem; font-weight:bold; cursor:pointer; background:#3d5a80; color:#fff; font-family:inherit; }
+    .cat-chip { display:inline-flex; align-items:center; gap:8px; background:#eef2f7; border:1px solid #d5dfea; border-radius:999px; padding:6px 12px; margin:4px; font-weight:700; color:#2c3e50; }
+    .cat-chip .cat-count { background:#3d5a80; color:#fff; border-radius:999px; padding:1px 9px; font-size:.85em; }
+    .cat-chip button { background:none; border:none; cursor:pointer; font-size:.95em; color:#8a6d3b; padding:0 2px; font-family:inherit; font-weight:700; }
+    .cat-chip button.cat-del { color:#c0392b; }
+    .cat-empty { color:#999; font-size:.95rem; padding:4px 2px; }
+
+    /* R4A grouped "כולם" sections */
+    .cat-group { background:#fff; border-radius:12px; padding:12px 14px; margin:0 0 14px; box-shadow:0 1px 4px rgba(0,0,0,.08); }
+    .cat-group > h3 { margin:0 0 8px; color:#3d5a80; display:flex; justify-content:space-between; align-items:center; gap:8px; }
+    .cat-group > h3 .cat-count { background:#3d5a80; color:#fff; border-radius:999px; padding:1px 10px; font-size:.8em; font-weight:700; }
+    .cat-group.cat-uncat > h3 { color:#8a6d3b; }
+
+    /* [CATEGORIES-FEATBATCH2 N4] category disclosure: header is a clickable toggle, body hidden first */
+    .cat-toggle { cursor:pointer; user-select:none; }
+    .cat-group-body[hidden] { display:none; }
+    /* [CATEGORIES-FEATBATCH2 N1] purple "מארגנים בצד שלי" button (reuse .ta-side-bride #8e44ad) */
+    .ta-side-orgs { background:#8e44ad; } .ta-side-orgs:hover { opacity:.9; }
+    /* [ROUNDFIX-20260708 #1א] "האורחים שלי" button — was styleless (white text on transparent =
+       invisible). New teal/petrol #3c6e71: not previously on the page, harmonises with the olive
+       #5f7a4e, slate #3d5a80 and navy #2c3e50 palette. */
+    .ta-mine { background:#3c6e71; } .ta-mine:hover { opacity:.9; }
+    /* [ROUNDFIX2b #2] "חזור למסך השיתוף" moved into the dashboard button row — neutral slate-grey. */
+    /* [ROUNDFIX2c #2] restore the original beige (#efe7d8, the SPA .pn-mini colour it had before the
+       button was moved into this row) with dark ink text (the .ta-btn base sets white, unreadable on beige). */
+    .top-actions .ta-back-share { background:#efe7d8; color:#5f4a1e; } .ta-back-share:hover { opacity:.9; }
+    /* [ROUNDFIX2c #4] Yehuda-only "פרטי המארגנים" button — distinct dark teal-navy (not elsewhere on the page). */
+    .ta-org-details { background:#2f4858; } .ta-org-details:hover { opacity:.9; }
+
+    /* R4B multi-select + action bar */
+    .gc-check { width:20px; height:20px; cursor:pointer; }
+    #cat-actionbar { position:sticky; bottom:0; z-index:20; background:#2c3e50; color:#fff; border-radius:12px; padding:10px 12px; margin:12px 0; display:none; gap:8px; flex-wrap:wrap; align-items:center; box-shadow:0 -4px 16px rgba(0,0,0,.2); }
+    #cat-actionbar.open { display:flex; }
+    #cat-actionbar .ab-count { font-weight:800; }
+    #cat-actionbar select { border-radius:8px; padding:8px 10px; font-size:.95rem; font-family:inherit; min-width:150px; }
+    #cat-actionbar button { border:none; border-radius:8px; padding:8px 14px; font-weight:bold; cursor:pointer; font-family:inherit; }
+    #cat-actionbar .ab-assign { background:#27ae60; color:#fff; }
+    #cat-actionbar .ab-remove { background:#c0392b; color:#fff; }
+    #cat-actionbar .ab-clear { background:#7f8c8d; color:#fff; }
+    #cat-msg { font-size:.95rem; min-height:1.1em; margin:6px 0; }
+    #cat-msg.err { color:#ffb4a2; } #cat-msg.ok { color:#b7e4c7; }
+  </style>
+</head>
+<body>
+
+<!-- Phone gate prompt (hidden until showPhonePrompt) -->
+<div id='phone-prompt' class='error-page' style='display:none'>
+  <h1>&#x1F511; כניסה ללוח</h1>
+  <p>הקלד את הטלפון שאיתו נרשמת</p>
+  <input type='tel' id='gatePhone' inputmode='numeric' placeholder='050-1234567' dir='ltr'
+         style='width:100%;max-width:320px;margin:14px auto 0;display:block;border:1.5px solid #bbb;border-radius:10px;padding:12px 14px;font-size:1rem;direction:ltr;text-align:left'>
+  <button type='button' id='gateBtn'
+          style='margin:14px auto 0;display:block;background:#1a6e3c;color:#fff;border:none;border-radius:10px;padding:12px 28px;font-size:1.05rem;font-weight:bold;cursor:pointer'>
+    כניסה
+  </button>
+  <div id='gateMsg' style='margin-top:12px;color:#c0392b;font-size:.95em;min-height:1.2em'></div>
+</div>
+
+<!-- Generic error page (hidden until showError) -->
+<div id='error-page' class='error-page' style='display:none'>
+  <h1>&#x1F512; &#x05D0;&#x05D9;&#x05DF; &#x05D2;&#x05D9;&#x05E9;&#x05D4;</h1>
+  <p id='error-msg'>&#x05D4;&#x05E7;&#x05D9;&#x05E9;&#x05D5;&#x05E8; &#x05E9;&#x05D1;&#x05D9;&#x05D3;&#x05DA; &#x05D0;&#x05D9;&#x05E0;&#x05D5; &#x05EA;&#x05E7;&#x05E3; &#x05D0;&#x05D5; &#x05E9;&#x05E4;&#x05D2; &#x05EA;&#x05D5;&#x05E7;&#x05E4;&#x05D5;.<br>&#x05D0;&#x05E0;&#x05D0; &#x05E4;&#x05E0;&#x05D4; &#x05DC;&#x05DE;&#x05D0;&#x05E8;&#x05D2;&#x05DF; &#x05D4;&#x05E8;&#x05D0;&#x05E9;&#x05D9;.</p>
+</div>
+
+<!-- ═══ [FIXLIST5 2026-07-10] appModal - in-app styled replacement for the native gray browser
+     dialogs. ONE shared component spec, implemented per-document (the organiser screens are
+     separate documents). Promise-based with EXACT native semantics:
+       appModal.alert(msg, title?)        -> Promise<void>          (אישור / Enter / Escape dismiss)
+       appModal.confirm(msg, title?)      -> Promise<boolean>       (אישור/Enter = true · ביטול/Escape = false)
+       appModal.prompt(msg, def?, title?) -> Promise<string|null>   (אישור/Enter = value · ביטול/Escape = null)
+     RTL; app palette: #fffdf8 surface / #3c6e71 primary button / #efe7d8 accent button / dark text;
+     12px radius; rgba(0,0,0,.45) overlay. NO outside-click dismissal (native dialogs are modal).
+     Sequential calls are queued, so overlapping dialogs can never collide. ═══ -->
+<script>
+(function () {
+  'use strict';
+  var css = ''
+    + '#app-modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;display:none;'
+    +   'align-items:center;justify-content:center;padding:16px;direction:rtl;}'
+    + '#app-modal-ov.open{display:flex;}'
+    + '#app-modal-box{background:#fffdf8;color:#2c3e50;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,.3);'
+    +   'width:100%;max-width:420px;padding:20px 18px;font-family:inherit;text-align:right;}'
+    + '#app-modal-title{margin:0 0 10px;font-size:1.15rem;font-weight:800;color:#5f4a1e;border:none;}'
+    + '#app-modal-msg{margin:0 0 14px;font-size:1rem;line-height:1.5;white-space:pre-wrap;word-break:break-word;}'
+    + '#app-modal-input{display:none;width:100%;border:1.5px solid #cbbf9f;border-radius:10px;padding:10px 12px;'
+    +   'font-size:1rem;font-family:inherit;margin:0 0 14px;background:#fff;box-sizing:border-box;}'
+    + '#app-modal-input:focus{border-color:#3c6e71;outline:none;}'
+    + '#app-modal-btns{display:flex;gap:10px;}'
+    + '#app-modal-ok{flex:1;background:#3c6e71;color:#fff;border:none;border-radius:10px;padding:11px 18px;'
+    +   'font-size:1rem;font-weight:bold;cursor:pointer;font-family:inherit;min-height:46px;}'
+    + '#app-modal-cancel{flex:0 0 auto;background:#efe7d8;color:#5f4a1e;border:none;border-radius:10px;'
+    +   'padding:11px 18px;font-size:1rem;font-weight:bold;cursor:pointer;font-family:inherit;min-height:46px;display:none;}'
+    + '#app-modal-ok:hover,#app-modal-cancel:hover{opacity:.9;}';
+  var st = document.createElement('style');
+  st.textContent = css;
+  document.head.appendChild(st);
+
+  var ov = null, boxTitle, boxMsg, boxInput, btnOk, btnCancel;
+  var queue = Promise.resolve();   // serialises overlapping dialog requests (one dialog at a time)
+  var settle = null;               // resolver of the ACTIVE dialog ('null' = none open)
+  var activeKind = '';
+  var prevFocus = null;
+
+  function build() {
+    if (ov) { return; }
+    ov = document.createElement('div');
+    ov.id = 'app-modal-ov';
+    ov.innerHTML = '<div id="app-modal-box" role="dialog" aria-modal="true" aria-labelledby="app-modal-title">'
+      + '<h2 id="app-modal-title"></h2>'
+      + '<div id="app-modal-msg"></div>'
+      + '<input id="app-modal-input" type="text" autocomplete="off">'
+      + '<div id="app-modal-btns">'
+      +   '<button type="button" id="app-modal-ok">אישור</button>'
+      +   '<button type="button" id="app-modal-cancel">ביטול</button>'
+      + '</div></div>';
+    document.body.appendChild(ov);
+    boxTitle = document.getElementById('app-modal-title');
+    boxMsg = document.getElementById('app-modal-msg');
+    boxInput = document.getElementById('app-modal-input');
+    btnOk = document.getElementById('app-modal-ok');
+    btnCancel = document.getElementById('app-modal-cancel');
+    btnOk.addEventListener('click', function () { done(true); });
+    btnCancel.addEventListener('click', function () { done(false); });
+    // Escape⇒cancel/null, Enter⇒confirm - CAPTURE phase so no page-level key handler (e.g. the
+    // phone-gate Enter submit) can ever fire underneath an open dialog.
+    document.addEventListener('keydown', function (e) {
+      if (!settle || !ov.classList.contains('open')) { return; }
+      if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); done(false); }
+      else if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); done(true); }
+    }, true);
+  }
+
+  // Resolve the active dialog with the EXACT native return value per kind.
+  function done(ok) {
+    if (!settle) { return; }
+    var s = settle; settle = null;
+    var val;
+    if (activeKind === 'alert') { val = undefined; }                      // native alert(): undefined
+    else if (activeKind === 'confirm') { val = !!ok; }                    // native confirm(): true/false
+    else { val = ok ? String(boxInput.value) : null; }                    // native prompt(): string/null
+    ov.classList.remove('open');
+    try { if (prevFocus && prevFocus.focus) { prevFocus.focus(); } } catch (e) {}
+    prevFocus = null;
+    s(val);
+  }
+
+  function show(kind, msg, def, title) {
+    build();
+    activeKind = kind;
+    boxTitle.textContent = (title == null ? '' : String(title));
+    boxTitle.style.display = boxTitle.textContent ? 'block' : 'none';
+    boxMsg.textContent = (msg == null ? '' : String(msg));
+    boxInput.style.display = (kind === 'prompt') ? 'block' : 'none';
+    boxInput.value = (kind === 'prompt' && def != null) ? String(def) : '';
+    btnCancel.style.display = (kind === 'alert') ? 'none' : 'inline-block';
+    prevFocus = document.activeElement;
+    ov.classList.add('open');
+    return new Promise(function (resolve) {
+      settle = resolve;
+      try {
+        if (kind === 'prompt') { boxInput.focus(); boxInput.select(); }   // native prompt pre-selects the default
+        else { btnOk.focus(); }
+      } catch (e) {}
+    });
+  }
+
+  // Public API - each call queues behind any dialog already open.
+  function enqueue(kind, msg, def, title) {
+    var p = queue.then(function () { return show(kind, msg, def, title); });
+    queue = p.then(function () {}, function () {});
+    return p;
+  }
+  window.appModal = {
+    alert:   function (msg, title)      { return enqueue('alert',   msg, undefined, title); },
+    confirm: function (msg, title)      { return enqueue('confirm', msg, undefined, title); },
+    prompt:  function (msg, def, title) { return enqueue('prompt',  msg, def,       title); }
+  };
+}());
+</script>
+
+<script>
+/* [IRONFIX 2026-07-09] runScript bridge - replaces the GAS client RPC (google-script-run) for the
+   self-hosted organiser screens. POST text/plain (a CORS "simple request" - OPTIONS returns 405 on
+   /exec, so no preflight may ever be triggered), redirect:'follow' (GAS answers via googleusercontent
+   redirect). Host-based env routing identical to [STAGING-ROUTING] in index.html: unknown hosts
+   fail-safe to STAGING. Each BUILD entry maps the original positional signature to the matching
+   doPost action payload. then(success, failure) mirrors withSuccessHandler/withFailureHandler
+   exactly: failure fires only on network/server-level errors, never on success-handler exceptions. */
+(function () {
+  'use strict';
+  var PROD_HOSTS = ['magiim.pages.dev', 'yehudashor.github.io'];
+  var EXEC_PROD = 'https://script.google.com/macros/s/AKfycbyMjAOKf5l_5hzeLy4DAEBanw9ZO3n3_S7TVXACYRrCQh_QeTNuuqqSUSm6bl59mRVM_A/exec';
+  var EXEC_STAGING = 'https://script.google.com/macros/s/AKfycbwcRaHKG158wzYgva_9O5EDkJdRUiMd3XOG7AlEnCjjh3XUtQp4-9vL_FZzVNBC2CM-0w/exec';
+  var EXEC_URL = (PROD_HOSTS.indexOf(location.hostname) !== -1) ? EXEC_PROD : EXEC_STAGING;
+  var BUILD = {
+    getDashboardData:      function (a) { return { action: 'dashboardData',      token: a[0], mode: a[1], phone: a[2] || '', owner_sid: a[3] || '' }; },
+    getCategoriesData:     function (a) { return { action: 'categoriesData',     token: a[0], owner_sid: a[1] || '', phone: a[2] || '' }; },
+    getSideCategoriesData: function (a) { return { action: 'sideCategoriesData', token: a[0], phone: a[1] || '' }; },
+    getUnconfirmedInvites: function (a) { return { action: 'unconfirmedInvites', token: a[0], mode: a[1], phone: a[2] || '' }; },
+    categoryOp:            function (a) { var b = a[0] || {}, o = { action: 'categoryOp' }; for (var k in b) { if (Object.prototype.hasOwnProperty.call(b, k)) o[k] = b[k]; } return o; },
+    addManualGuest:        function (a) { var b = a[0] || {}, o = { action: 'addManual' };  for (var k in b) { if (Object.prototype.hasOwnProperty.call(b, k)) o[k] = b[k]; } return o; },
+    registerOrganiser:     function (a) { return { action: 'registerOrg', name: a[0], side: a[1], phone: a[2] || '' }; }
+  };
+  window.runScript = function (fn) {
+    var args = Array.prototype.slice.call(arguments, 1);
+    var build = BUILD[fn];
+    if (!build) { return Promise.reject(new Error('runScript: unknown fn ' + fn)); }
+    return fetch(EXEC_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(build(args)),
+      redirect: 'follow'
+    }).then(function (r) {
+      /* [verifier-2 F3] a GAS server-crash returns an HTML error page; surface it to failure handlers
+         as the same friendly communication-error text the register screen always used as its fallback,
+         instead of a raw JSON-parse exception string. */
+      return r.json().catch(function () { throw new Error('שגיאת תקשורת - נסו שוב'); });
+    });
+  };
+}());
+</script>
+<script>
+(function () {
+  'use strict';
+
+  // ── [IRONFIX 2026-07-09] Gate vars from the URL (self-hosted page; no GAS template injection) ──
+  // Same params dashUrl()/index.html always passed: ?mode=&token=&phone=[&owner_sid=]. Mapping matches
+  // doGet exactly: URL mode 'dashboard' -> template mode 'personal' (_renderDashboardShell('personal')),
+  // 'side'/'combined' pass through. personal/side start as the SAME empty shell the server rendered
+  // (NEEDS_PHONE gate unchanged); combined does one initial getDashboardData fetch at boot (below),
+  // exactly the call doGet 'combined' made server-side.
+  var __IRONFIX_QS = new URLSearchParams(location.search);
+  var __IRONFIX_MODE = __IRONFIX_QS.get('mode') || 'dashboard';
+  var TOKEN = __IRONFIX_QS.get('token') || '';
+  var MODE = (__IRONFIX_MODE === 'dashboard') ? 'personal' : __IRONFIX_MODE;
+  var NEEDS_PHONE = (MODE !== 'combined');
+  var SRV_DATA = {};
+  var SRV_ERR = '';
+  var PHONE_PREFILL = __IRONFIX_QS.get('phone') || '';
+  var OWNER_SID_INIT = __IRONFIX_QS.get('owner_sid') || '';
+  var LSKEY = 'wrsvp_phone_' + TOKEN;
+
+  // Phone that authenticated this session - reused to refresh the board after a manual add.
+  // Empty for the master/combined view (no phone gate); refresh falls back to reload there.
+  var AUTH_PHONE = '';
+
+  // Data object for the active render (set by renderData)
+  var D = {};
+
+  // [UIPOLISH3 2026-07-04 - part ד] active guest-list filter: 'all' | 'coming' | 'notcoming'.
+  var FILTER = 'all';
+
+  // ===== CATEGORIES-FEATBATCH state =====
+  // Super iff this is the combined super-board (no per-owner token gate). The super gets the
+  // R4C act-as side-buttons + primary picker (owner_sid re-scope). IS_SUPER stays strictly the
+  // combined board: only the super may pass owner_sid.
+  var IS_SUPER = (MODE === 'combined');
+  // Active act-as owner sid (R4C). '' = the super's own combined "all" view; a sid = one primary's board.
+  // [A4] NON-super callers MUST leave this '' (they may never pass owner_sid); the server would
+  // reject a forged owner_sid anyway, but the client never sets it off the super path.
+  var CAT_OWNER = '';
+
+  // [CATEGORIES-FEATBATCH A4] the category UI (manager add/rename/delete, "כולם" button, multi-select
+  // checkboxes + action-bar, grouped-by-category view) is available to:
+  //   - the SUPER on the combined board (self, or an acted-as primary via owner_sid), AND
+  //   - ANY PRIMARY (is_primary/admin) on their OWN personal/side board, scoped to THEIR OWN guests.
+  // A regular organiser gets NOTHING. D.is_primary is authoritative (server, from Senders). This is
+  // a function (not the init-time IS_SUPER constant) because D.is_primary only arrives with the data.
+  function catUiEnabled() {
+    // [CATEGORIES-FEATBATCH2 N2] broadened: EVERY authenticated organiser on their OWN personal/side
+    // board (not only a primary) may categorise their OWN guests. The combined-super path is unchanged
+    // (IS_SUPER short-circuits first; the new clause is never reached there, and MODE==='combined' would
+    // make it false anyway). Write-isolation is intact server-side: a non-super caller sends no owner_sid
+    // so categoryOp/getCategoriesData resolve to the caller's own sid.
+    if (IS_SUPER) { return true; }
+    return !!(D && D.sid && MODE !== 'combined');   // any authenticated organiser on their OWN board
+  }
+  // The viewer's OWN sid (personal/side payload). Empty on the super combined board (no single owner).
+  function selfSid() { return String((D && D.sid) || ''); }
+  // Latest categories payload from mode=categories: { categories:[{cat_id,name,created_at,count}], assignments:[{dedupe_key,cat_id}] }.
+  var CAT_DATA = { categories: [], assignments: [] };
+  // dedupe_key -> cat_id join map, rebuilt from CAT_DATA.assignments on every fetch.
+  var CAT_ASSIGN = {};
+  // Whether the "כולם" grouped view is the active records view (vs. the default side lists).
+  var CAT_VIEW = false;
+  // Selected dedupe_keys for bulk classify (R4B).
+  var CAT_SEL = {};
+
+  // ===== CATEGORIES-FEATBATCH2 state (N1/N3) =====
+  // [N1] whether the purple "מארגנים בצד שלי" per-organiser tabs view is the active records view on a
+  // PRIMARY's side board. Mutually exclusive with CAT_VIEW and with the default breakdown (FIX-A).
+  var SIDE_ORG_VIEW = false;
+  // [N3] side-scoped read-only categories cache, keyed by sender_id → { name, categories, assignments }.
+  // Fetched ONCE (lazily on first purple-button open) via mode=side_categories, reused per tab open.
+  var SIDE_CAT = { byOwner: {} };
+  var SIDE_CAT_LOADED = false;
+  // [N1-PERSONAL] side-board breakdown fetched lazily when a primary is on their PERSONAL board
+  // (personal payload has no D.breakdown). Fetched once via getDashboardData(TOKEN,'side',AUTH_PHONE).
+  var SIDE_BREAKDOWN = null;
+
+  // ===== ROUNDFIX-20260708 view-state (records-area is exactly one of: default | MINE | CAT | SIDE_ORG | UNCONF) =====
+  // [#1ב] "האורחים שלי": show ONLY the viewer's own guests (own-sid scope), nothing else.
+  var MINE_VIEW = false;
+  // [#6א] "מי לא אישר עדיין": show ONLY the unconfirmed list IN-CONTENT (below the buttons), replacing
+  //       the records area (was a separate static panel appended BELOW the still-visible guest list).
+  var UNCONF_VIEW = false;
+  // [#3] one-shot guard so a PRIMARY's board opens on the category view by default, without
+  //      overriding the user's later navigation.
+  var _defaultApplied = false;
+  // [#4] set by a view-switching button so renderData scrolls the records area up to the buttons.
+  var _scrollPending = false;
+
+  // ===== ROUNDFIX2 (שלב-ב׳) — unconfirmed-as-cards state =====
+  // [#3] active filter for the unconfirmed cards: 'all' | 'notopened' (טופס טרם נפתח) | 'opened' (נפתח אך טרם אושר).
+  var UNCONF_FILTER = 'all';
+  // cached people[] from the last getUnconfirmedInvites (so filter/assign re-render without a refetch).
+  var UNCONF_PEOPLE = null;
+
+  // ── HTML-escape a value for safe insertion into innerHTML
+  function esc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      // [CATEGORIES-FEATBATCH A1 SECURITY] escape the single-quote too: user-controlled
+      // category names (and guest fields) land inside single-quote-delimited attributes
+      // (data-cat, data-name, <option value='...'>, data-dk). Without this a name like
+      // x' onerror='… would break out of the attribute and inject a handler (stored XSS),
+      // exploitable cross-actor once primaries manage their own categories (A4). Do NOT
+      // rely on server sanitiseText for quote safety - escape at the sink.
+      .replace(/'/g, '&#39;');
+  }
+
+  // ── Wrap numbers / Latin text in <bdi> for correct RTL rendering
+  function bdi(v) {
+    return '<bdi>' + esc(v) + '</bdi>';
+  }
+
+  // ── Attending check mark / cross
+  function attCell(v) {
+    var yes = (v === true || String(v).toLowerCase() === 'true');
+    return yes
+      ? '<span class=\'att-yes\'>✓</span>'
+      : '<span class=\'att-no\'>✗</span>';
+  }
+
+  // ── Side badge HTML
+  function sideBadge(side) {
+    var cls, lbl;
+    if (side === 'groom') {
+      cls = 'badge-groom';
+      lbl = "החתן 🤵"; // החתן 🤵
+    } else if (side === 'bride') {
+      cls = 'badge-bride';
+      lbl = "הכלה 👰"; // הכלה 👰
+    } else {
+      cls = 'badge-unknown';
+      lbl = esc(side);
+    }
+    return '<span class=\'badge ' + cls + '\'>' + lbl + '</span>';
+  }
+
+  // ── req #1: map a channel code to a Hebrew label for display
+  function channelLabel(ch) {
+    var c = String(ch || '').toLowerCase();
+    if (c === 'wa') { return 'וואטסאפ'; }
+    if (c === 'email') { return 'מייל'; }
+    if (c === 'manual') { return 'ידנית'; }
+    return c ? c : '-';
+  }
+  // ── req #1: format a date/time to DD/MM/YYYY HH:mm in Asia/Jerusalem (Israel time)
+  function fmtDateTimeIL(v) {
+    if (!v) { return ''; }
+    var d = new Date(v);
+    if (isNaN(d.getTime())) { return String(v); }
+    try {
+      var parts = new Intl.DateTimeFormat('en-GB', {
+        timeZone: 'Asia/Jerusalem', day: '2-digit', month: '2-digit', year: 'numeric',
+        hour: '2-digit', minute: '2-digit', hour12: false
+      }).formatToParts(d);
+      var m = {};
+      for (var i = 0; i < parts.length; i++) { m[parts[i].type] = parts[i].value; }
+      return m.day + '/' + m.month + '/' + m.year + ' ' + m.hour + ':' + m.minute;
+    } catch (e) {
+      return String(v);
+    }
+  }
+  // ── One <tr> for a guest row (includes special_requests column)
+  function guestRow(g) {
+    var sp = String(g.special_requests || '').replace(/^RECOVERED:?\s*/, '');
+    var bl = String(g.blessing || '');
+    function longTd(cls, label, txt, emptyTxt) {
+      var body = txt ? esc(txt) : '<span class=\'muted\'>' + emptyTxt + '</span>';
+      var more = (txt && txt.length > 80) ? '<button type=\'button\' class=\'rm-btn\'>קרא עוד…</button>' : '';
+      return '<td class=\'' + cls + ' longtext\' data-label=\'' + label + '\'><span class=\'v\'>' + body + '</span>' + more + '</td>';
+    }
+    var invBy = String(g.invited_by_name || '');   // req #3: organiser who owns this guest (may be blank)
+    var baseRow = '<tr>'
+      + '<td data-label=\'שם האורח\'><span class=\'v\'>' + esc(g.guest_name) + '</span></td>'
+      + '<td data-label=\'נשלח ע"י\'><span class=\'v\'>' + esc(invBy) + '</span></td>'
+      + '<td data-label=\'מגיע?\'><span class=\'v\'>' + attCell(g.attending) + '</span></td>'
+      + '<td data-label=\'גברים\'><span class=\'v\'>' + bdi(g.men_count) + '</span></td>'
+      + '<td data-label=\'נשים\'><span class=\'v\'>' + bdi(g.women_count) + '</span></td>'
+      + '<td data-label=\'טלפון\'><span class=\'v\'>' + bdi(g.phone) + '</span></td>'
+      + '<td data-label=\'הזנה\'><span class=\'v\'>' + (String(g.channel) === 'manual' ? 'ידנית' : 'אוטומטית') + '</span></td>'
+      + '<td data-label=\'נשלח דרך\'><span class=\'v\'>' + channelLabel(g.channel) + '</span></td>'
+      + '<td data-label=\'מתי אישר\'><span class=\'v\'>' + bdi(fmtDateTimeIL(g.timestamp)) + '</span></td>'
+      + longTd('special', 'בקשות מיוחדות', sp, 'אין')
+      + longTd('bless', 'ברכה', bl, 'לא רשם')
+      + '</tr>';
+    if (g.nameClashWarning) {
+      baseRow += '<tr class=\'name-clash-row\'><td colspan=\'11\' style=\'background:#fff3cd;color:#7d5a14;font-weight:bold;text-align:right;padding:8px 12px;border-top:0;\'>'
+        + '⚠️ כבר קיים אצלך אורח עם שם כזה במדויק, ועם מספר מוזמנים שונה - אנא בדוק את העניין'
+        + '</td></tr>';
+    }
+    return baseRow;
+  }
+
+  // [CATEGORIES-FEATBATCH R5, §0.2] client mirror of _sortGuestsNewestFirst: active-row
+  // TIMESTAMP descending, tie-break response_id desc. Sorts a COPY (guestTable's rows may be
+  // a shared breakdown array). _sortTs is provided by the server; fall back to parsing timestamp.
+  function _sortGuestsNewestFirstClient(rows) {
+    return (rows || []).slice().sort(function (a, b) {
+      var ta = Number(a && a._sortTs); if (!ta || isNaN(ta)) { ta = new Date((a && a.timestamp) || 0).getTime() || 0; }
+      var tb = Number(b && b._sortTs); if (!tb || isNaN(tb)) { tb = new Date((b && b.timestamp) || 0).getTime() || 0; }
+      var d = tb - ta;
+      if (d) { return d; }
+      var ra = String((a && a.response_id) || '');
+      var rb = String((b && b.response_id) || '');
+      return ra < rb ? 1 : (ra > rb ? -1 : 0);   // response_id desc (tie-break)
+    });
+  }
+
+  // ── Full guest table; handles empty array gracefully
+  function guestTable(rows) {
+    if (!rows || rows.length === 0) {
+      return '<p style=\'color:#777\'>אין רשומות.</p>';
+    }
+    // [R5 §0.2] belt-and-suspenders: sort a COPY newest-first at every render site.
+    rows = _sortGuestsNewestFirstClient(rows);
+    var h = '<table class=\'data-table\'>'
+      + '<tr>'
+      + "<th>שם</th>"           // שם
+      + "<th>נשלח ע\"י</th>"  // נשלח ע"י (invited_by_name, req #3)
+      + "<th>מגיע?</th>"  // מגיע?
+      + "<th>גברים</th>"  // גברים
+      + "<th>נשים</th>"         // נשים
+      + "<th>טלפון</th>"   // טלפון
+      + "<th>הזנה</th>" // הזנה (manual/auto)
+      + "<th>נשלח דרך</th>" // נשלח דרך (channel)
+      + "<th>מתי אישר</th>" // מתי אישר (timestamp)
+      + "<th>בקשות מיוחדות</th>" // בקשות מיוחדות
+      + "<th>ברכה</th>" // ברכה
+      + '</tr>';
+    for (var i = 0; i < rows.length; i++) h += guestRow(rows[i]);
+    h += '</table>';
+    return h;
+  }
+
+  // ── Summary sentence: "אישרו X איש: Y גברים, Z נשים; W לא יגיעו"
+  function summaryText(s) {
+    s = s || {total: 0, men: 0, women: 0, notComing: 0};
+    return "אישרו " + bdi(s.total)     // אישרו X
+      + " איש: "                                   // איש:
+      + bdi(s.men)   + " גברים, "       // Y גברים,
+      + bdi(s.women) + " נשים; "             // Z נשים;
+      + bdi(s.notComing) + " לא יגיעו."; // W לא יגיעו.
+  }
+
+  // [UIPOLISH3 2026-07-04 - part ב] structured, palette-matching summary banner. Replaces the
+  //   cramped run-on sentence with: context label / big total / breakdown chips. Pure display -
+  //   the numbers come straight from the same summary object (_buildSummary); no logic changed.
+  function summaryBanner(label, s) {
+    s = s || { total: 0, men: 0, women: 0, notComing: 0 };
+    return '<div class=\'summary-banner\'>'
+      + '<div class=\'sb-label\'>' + label + '</div>'
+      + '<div class=\'sb-total\'>' + bdi(s.total) + ' <span class=\'sb-unit\'>איש</span></div>'
+      + '<div class=\'sb-break\'>'
+      +   '<span class=\'sb-chip\'>' + bdi(s.men) + ' גברים</span>'
+      +   '<span class=\'sb-chip\'>' + bdi(s.women) + ' נשים</span>'
+      +   '<span class=\'sb-chip sb-no\'>' + bdi(s.notComing) + ' לא יגיעו</span>'
+      + '</div>'
+      + '</div>';
+  }
+
+  // [FIXLIST10 2026-07-10] mobile-only "מחובר/ת כ" caption, rendered EXACTLY above the green
+  // summary banner (the CSS shows it only at max-width:600px; on desktop the SPA header already
+  // carries the same caption). DATA CORRECTNESS: name+side come ONLY from the server-verified
+  // getDashboardData payload (senderName/senderSide, set in 03_dashboard.js for personal+side
+  // after validateDashboardToken + the phone gate) - never client-guessed. Fail-closed: when
+  // either field is missing (e.g. the combined super payload) NOTHING is rendered, so a wrong
+  // side can never be shown.
+  function connectedAsHtml() {
+    var nm = String((D && D.senderName) || '');
+    var sd = String((D && D.senderSide) || '');
+    var sideLbl = (sd === 'groom') ? 'צד החתן' : ((sd === 'bride') ? 'צד הכלה' : '');
+    if (!nm || !sideLbl) { return ''; }
+    return '<div class=\'connected-as-caption\' dir=\'rtl\'><span class=\'cc-label\'>מחובר/ת כ:</span><span class=\'cc-name\'>' + esc(nm) + '</span><span class=\'cc-sep\'>·</span><span class=\'cc-side\'>' + sideLbl + '</span></div>';
+  }
+
+  // ── PHASE 4: top action row (rendered between the green summary box and the tables)
+  function topActionsHtml() {
+    var h = '<div class=\'top-actions\'>';
+    // [ROUNDFIX2c #1] button order swapped: "האורחים שלי" is now FIRST, "אורחים לפי קטגוריות" SECOND.
+    // (1) "האורחים שלי" — shows all own guests directly (clears category/side-org views).
+    //     Gate: single-owner board, not combined.
+    if (TOKEN && MODE !== 'combined') { h += '<button type=\'button\' class=\'ta-btn ta-mine\' id=\'ta-mine-btn\'>&#128101; האורחים שלי</button>'; }
+    // (2) "אורחים לפי קטגוריות" — catUiEnabled() returns true for ANY authenticated organiser on their
+    //     own board (broadened in N2), so regular organisers see this too.
+    if (catUiEnabled()) { h += '<button type=\'button\' class=\'ta-btn ta-all\' id=\'ta-all-btn\'>&#128101; אורחים לפי קטגוריות</button>'; }
+    // (3) "אורחים לפי מארגן" — was "מארגנים בצד שלי". PRIMARY-ONLY gate unchanged.
+    //     [CATEGORIES-FEATBATCH2 N1] Uses its OWN gate (MODE!=='combined' && D.is_primary), NOT
+    //     catUiEnabled(), so broadening catUiEnabled (N2) never exposes this cross-organiser
+    //     view to a non-primary. A primary promoted via setprimary loads the PERSONAL board
+    //     (MODE='personal'); the button appears there too. Combined super excluded (MODE!=='combined').
+    if (MODE !== 'combined' && D && D.is_primary) { h += '<button type=\'button\' class=\'ta-btn ta-side-orgs\' id=\'ta-side-orgs-btn\'>&#128101; אורחים לפי מארגן</button>'; }
+    // (4) "מי לא אישר עדיין" — label unchanged.
+    if (TOKEN && MODE !== 'combined') { h += '<button type=\'button\' class=\'ta-btn ta-unconf\' id=\'ta-unconf-btn\'>&#128336; מי לא אישר עדיין</button>'; }
+    // (5) "הוסף אורחים ידנית" — was "הוסף מאשר ידנית".
+    if (TOKEN && MODE !== 'combined') { h += '<button type=\'button\' class=\'ta-btn ta-manual\' id=\'ta-manual-btn\'>&#10133; הוסף אורחים ידנית</button>'; }
+    // (6) "תצוגת שורות ועמודות" — was "הצגה כרשימה". No gate (visible to all).
+    h += '<button type=\'button\' class=\'ta-btn ta-list\' id=\'ta-list-btn\'>&#128421;&#65039; תצוגת שורות ועמודות</button>';
+    // (7) [ROUNDFIX2b #2] "חזור למסך השיתוף" — moved INTO the dashboard button row (was a separate SPA
+    //     mini-nav button above the iframe), styled exactly like the other buttons. Posts a message so the
+    //     host SPA navigates back to the share screen. Organiser boards only (not the combined super board).
+    if (TOKEN && MODE !== 'combined') { h += '<button type=\'button\' class=\'ta-btn ta-back-share\' id=\'ta-back-share-btn\'>&#11013;&#65039; חזור למסך השיתוף</button>'; }
+    // (8) [ROUNDFIX2c #4] YEHUDA-ONLY (sid baa34f647c10, the super/owner): a button to the organiser-
+    //     details view, placed LAST (very bottom). The sid is server-authoritative (from the token), so a
+    //     regular OR primary organiser can NEVER see it. Posts a message so the host SPA opens page-organisers.
+    if (MODE !== 'combined' && String((D && D.sid) || '') === 'baa34f647c10') {
+      h += '<button type=\'button\' class=\'ta-btn ta-org-details\' id=\'ta-org-details-btn\'>&#128451;&#65039; פרטי המארגנים</button>';
+    }
+    return h + '</div>';
+  }
+
+  // [CATEGORIES-FEATBATCH R4C] two super-only side buttons: pick a primary of that side and
+  // re-render the combined board scoped to that owner_sid. Rendered ONLY on the super board.
+  function sideActBtnsHtml() {
+    if (!IS_SUPER) { return ''; }
+    var h = '<div class=\'top-actions\'>';
+    h += '<button type=\'button\' class=\'ta-btn ta-side-groom\' data-actside=\'groom\'>&#129333; אורחים צד החתן</button>';
+    h += '<button type=\'button\' class=\'ta-btn ta-side-bride\' data-actside=\'bride\'>&#128112; אורחים צד הכלה</button>';
+    if (CAT_OWNER) { h += '<button type=\'button\' class=\'ta-btn ta-back\' id=\'ta-back-all\'>&#8617; חזרה לכל הצדדים</button>'; }
+    return h + '</div>';
+  }
+
+  // [UIPOLISH3 2026-07-04 - part ד] guest-list filter (personal view). Segmented control; the
+  //   data-flt keys are the single extension point - add a key here + a branch in filterRows().
+  function filterBarHtml() {
+    function b(v, lbl) {
+      return '<button type=\'button\' class=\'flt-btn' + (FILTER === v ? ' active' : '')
+        + '\' data-flt=\'' + v + '\'>' + lbl + '</button>';
+    }
+    return '<div class=\'flt-bar\' role=\'tablist\'>'
+      + b('all', 'הכל')
+      + b('coming', 'מגיעים')
+      + b('notcoming', 'לא מגיעים')
+      + '</div>';
+  }
+  // Apply the active filter to a rows array (attending flag only, for now - extensible).
+  function filterRows(rows) {
+    rows = rows || [];
+    if (FILTER === 'coming') {
+      return rows.filter(function (g) { return g.attending === true || String(g.attending).toLowerCase() === 'true'; });
+    }
+    if (FILTER === 'notcoming') {
+      return rows.filter(function (g) { return !(g.attending === true || String(g.attending).toLowerCase() === 'true'); });
+    }
+    return rows;
+  }
+
+  // ── S1c D2: build a per-organiser TAB bar + panels for ONE side of the combined
+  //    view. `breakdown` is an array of { sender_id, name, guests, summary }. One tab
+  //    per organiser; clicking a tab shows ONLY that organiser guest table + summary
+  //    (pure DOM toggle, wired after innerHTML). A single organiser still renders one
+  //    tab. If `breakdown` is absent/empty, returns '' so the caller falls back to the
+  //    existing flat guestTable(rows). `key` is a stable per-side id (e.g. 'groom').
+  function combinedOrgTabs(key, breakdown) {
+    if (!breakdown || breakdown.length === 0) { return ''; }
+    var tabs = '<div class=\'org-tabs\' role=\'tablist\'>';
+    var panels = '';
+    for (var i = 0; i < breakdown.length; i++) {
+      var org = breakdown[i];
+      // [CATEGORIES-FEATBATCH R4D] default-collapsed: NONE pre-selected on load (was i===0).
+      // The delegated org-tab handler (below) reveals only the clicked panel.
+      var active = false;
+      var tabId = 'orgtab-' + key + '-' + i;
+      var panId = 'orgpanel-' + key + '-' + i;
+      var lbl = esc(org.name || org.sender_id || ('מארגן ' + (i + 1))); // מארגן N
+      tabs += '<button type=\'button\' class=\'org-tab\' role=\'tab\''
+        + ' id=\'' + tabId + '\''
+        + ' data-org-side=\'' + key + '\''
+        + ' aria-controls=\'' + panId + '\''
+        + ' aria-selected=\'' + (active ? 'true' : 'false') + '\'>'
+        + lbl + '</button>';
+      panels += '<div class=\'org-panel\' role=\'tabpanel\''
+        + ' id=\'' + panId + '\''
+        + ' aria-labelledby=\'' + tabId + '\''
+        + (active ? '' : ' hidden') + '>'
+        + '<p>' + summaryText(org.summary) + '</p>'
+        + guestTable(org.guests || [])
+        + '</div>';
+    }
+    tabs += '</div>';
+    return tabs + panels;
+  }
+
+  // ===== CATEGORIES-FEATBATCH render helpers (R4A/R4B) =====
+
+  // Rebuild the dedupe_key -> cat_id join map from the latest CAT_DATA payload.
+  function _rebuildAssignMap() {
+    CAT_ASSIGN = {};
+    var a = (CAT_DATA && CAT_DATA.assignments) || [];
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] && a[i].dedupe_key) { CAT_ASSIGN[String(a[i].dedupe_key)] = String(a[i].cat_id || ''); }
+    }
+  }
+
+  // R4B: the category-manager panel (add / rename / delete). Super OR a primary on their own board [A4].
+  function categoryManagerHtml() {
+    if (!catUiEnabled()) { return ''; }
+    var cats = (CAT_DATA && CAT_DATA.categories) || [];
+    var h = '<div id=\'cat-manager\'>';
+    h += '<h2>&#127991;&#65039; ניהול קטגוריות' + (CAT_OWNER ? ' (מארגן נבחר)' : '') + '</h2>';
+    h += '<div class=\'cat-add-row\'>'
+      + '<input type=\'text\' id=\'cat-new-name\' placeholder=\'לדוגמא: אורחים מצד האבא, האמא, חברים וכדומה\' maxlength=\'100\' autocomplete=\'off\'>'
+      + '<button type=\'button\' id=\'cat-add-btn\'>&#10133; הוסף קטגוריה</button>'
+      + '</div>';
+    if (!cats.length) {
+      h += '<div class=\'cat-empty\'>אין עדיין קטגוריות. הוסף קטגוריה ראשונה למעלה.</div>';
+    } else {
+      h += '<div>';
+      for (var i = 0; i < cats.length; i++) {
+        var c = cats[i];
+        h += '<span class=\'cat-chip\' data-cat=\'' + esc(c.cat_id) + '\'>'
+          + '<span class=\'cat-name\'>' + esc(c.name) + '</span>'
+          + '<span class=\'cat-count\'>' + bdi(c.count || 0) + '</span>'
+          + '<button type=\'button\' class=\'cat-rename\' data-cat=\'' + esc(c.cat_id) + '\' title=\'שנה שם\'>&#9998;</button>'
+          + '<button type=\'button\' class=\'cat-del\' data-cat=\'' + esc(c.cat_id) + '\' data-name=\'' + esc(c.name) + '\' title=\'מחק\'>&#128465;&#65039;</button>'
+          + '</span>';
+      }
+      h += '</div>';
+    }
+    h += '<div id=\'cat-msg\'></div>';
+    h += '</div>';
+    return h;
+  }
+
+  // R4B: the sticky bulk action-bar (assign to a category / remove). Hidden until a selection exists.
+  // Super OR a primary on their own board [A4].
+  function categoryActionBarHtml() {
+    if (!catUiEnabled()) { return ''; }
+    var cats = (CAT_DATA && CAT_DATA.categories) || [];
+    var opts = '<option value=\'\'>שייך לקטגוריה…</option>';
+    for (var i = 0; i < cats.length; i++) {
+      opts += '<option value=\'' + esc(cats[i].cat_id) + '\'>' + esc(cats[i].name) + '</option>';
+    }
+    return '<div id=\'cat-actionbar\'>'
+      + '<span class=\'ab-count\'><span id=\'ab-count-n\'>0</span> נבחרו</span>'
+      + '<select id=\'ab-select\'>' + opts + '</select>'
+      + '<button type=\'button\' class=\'ab-assign\' id=\'ab-assign-btn\'>שייך / העבר</button>'
+      + '<button type=\'button\' class=\'ab-remove\' id=\'ab-remove-btn\'>הסר סיווג</button>'
+      + '<button type=\'button\' class=\'ab-clear\' id=\'ab-clear-btn\'>נקה בחירה</button>'
+      + '</div>';
+  }
+
+  // A guest row block for one category bucket. Wraps a compact card-friendly table so a checkbox aligns
+  // per guest. [CATEGORIES-FEATBATCH2 N3/FIX-B] parameterised by `readOnly`:
+  //   readOnly===false → the writable own-view: leading ✓ column + per-row .gc-check checkbox.
+  //   readOnly===true  → the N3 side-org drill-in: ZERO write-control nodes (no ✓ header, no .gc-check),
+  //     so wireCategoryControls (scoped away from the cat-ro wrapper) never wires a write control here.
+  function _catGuestRowsHtml(guests, readOnly) {
+    if (!guests || !guests.length) { return '<p style=\'color:#777\'>אין רשומות בקטגוריה זו.</p>'; }
+    var sorted = _sortGuestsNewestFirstClient(guests);
+    var h = '<table class=\'data-table\'>'
+      + '<tr>'
+      + (readOnly ? '' : '<th>&#10003;</th>')
+      + "<th>שם</th>"
+      + "<th>נשלח ע\"י</th>"
+      + "<th>מגיע?</th>"
+      + "<th>גברים</th>"
+      + "<th>נשים</th>"
+      + "<th>טלפון</th>"
+      + "<th>מתי אישר</th>"
+      + '</tr>';
+    for (var i = 0; i < sorted.length; i++) {
+      var g = sorted[i];
+      var dk = String(g.dedupe_key || '');
+      var checked = CAT_SEL[dk] ? ' checked' : '';
+      h += '<tr>'
+        + (readOnly ? '' : '<td data-label=\'בחר\'><input type=\'checkbox\' class=\'gc-check\' data-dk=\'' + esc(dk) + '\'' + checked + '></td>')
+        + '<td data-label=\'שם האורח\'><span class=\'v\'>' + esc(g.guest_name) + '</span></td>'
+        + '<td data-label=\'נשלח ע"י\'><span class=\'v\'>' + esc(g.invited_by_name || '') + '</span></td>'
+        + '<td data-label=\'מגיע?\'><span class=\'v\'>' + attCell(g.attending) + '</span></td>'
+        + '<td data-label=\'גברים\'><span class=\'v\'>' + bdi(g.men_count) + '</span></td>'
+        + '<td data-label=\'נשים\'><span class=\'v\'>' + bdi(g.women_count) + '</span></td>'
+        + '<td data-label=\'טלפון\'><span class=\'v\'>' + bdi(g.phone) + '</span></td>'
+        + '<td data-label=\'מתי אישר\'><span class=\'v\'>' + bdi(fmtDateTimeIL(g.timestamp)) + '</span></td>'
+        + '</tr>';
+    }
+    h += '</table>';
+    return h;
+  }
+
+  // [CATEGORIES-FEATBATCH2 N3/N4] SHARED parameterised grouping core. Buckets `guests` by
+  // assignMap[dedupe_key] into `categories` (+ an "ללא סיווג" bucket), emitting one .cat-group per
+  // category. Each category header is an N4 disclosure toggle (.cat-toggle) whose guest table lives in
+  // a .cat-group-body[hidden] (CLOSED by default; the delegated #dashboard-content handler toggles it).
+  //   `key`      disambiguates the disclosure body ids so own-view ('own') vs side-org ('sideorg-'+i)
+  //              panels never collide.
+  //   `readOnly` true → NO write-control nodes anywhere (passed through to _catGuestRowsHtml). The
+  //              manager/action-bar are emitted by the CALLER (own-view only), never here.
+  function categoryGroupedFrom(guests, categories, assignMap, readOnly, key) {
+    guests = guests || [];
+    categories = categories || [];
+    assignMap = assignMap || {};
+    var byCat = {};
+    var uncat = [];
+    for (var i = 0; i < guests.length; i++) {
+      var dk = String(guests[i].dedupe_key || '');
+      var cid = assignMap[dk] || '';
+      if (cid) { (byCat[cid] = byCat[cid] || []).push(guests[i]); }
+      else { uncat.push(guests[i]); }
+    }
+    // [ROUNDFIX2e #3] `open` controls the disclosure default: an open section omits `hidden` and starts
+    // aria-expanded='true'. User categories are ALWAYS closed; the "ללא סיווג" bucket opens by default
+    // ONLY when there are no user categories (so all guests are visible under it immediately).
+    function section(label, rows, uncatCls, pidSuffix, open) {
+      var pid = 'catbody-' + key + '-' + pidSuffix;
+      return '<div class=\'cat-group' + (uncatCls ? ' cat-uncat' : '') + '\'>'
+        + '<h3 class=\'cat-toggle\' role=\'button\' tabindex=\'0\' data-cat-toggle=\'' + esc(pid) + '\''
+        +   ' aria-expanded=\'' + (open ? 'true' : 'false') + '\' aria-controls=\'' + esc(pid) + '\'>'
+        +   '<span>' + esc(label) + '</span><span class=\'cat-count\'>' + bdi(rows.length) + '</span></h3>'
+        + '<div class=\'cat-group-body\' id=\'' + esc(pid) + '\'' + (open ? '' : ' hidden') + '>' + _catGuestRowsHtml(rows, readOnly) + '</div>'
+        + '</div>';
+    }
+    var h = '';
+    // One section per category (empty ones included, per R4A + §0.4) — always CLOSED by default.
+    for (var c = 0; c < categories.length; c++) {
+      var cat = categories[c];
+      h += section(cat.name, byCat[cat.cat_id] || [], false, 'c' + c, false);
+    }
+    // Uncategorised bucket — always LAST; OPEN by default only when it is the ONLY group (no user categories).
+    h += section('ללא סיווג', uncat, true, 'uncat', categories.length === 0);
+    return h;
+  }
+
+  // R4A: the grouped "חלוקה לקטגוריות" view - EVERY rsvp'd guest-party of the (target) owner, grouped by
+  // that owner's dynamic categories. Writable own-view: manager + action-bar wrap the shared core.
+  function categoryGroupedHtml() {
+    // Collect the owner's guests, scoped to the SAME sid-set the super's act-as view would show, so a
+    // primary's own "כולם" === the super acting-as that primary (R4C "בדיוק כמה שהוא מוצג אצלו"):
+    //   - COMBINED super board: guests come from the combined payload (groom+bride+unassigned). When
+    //     CAT_OWNER is set the SERVER already narrowed the payload to that owner (SENDER_ID===owner),
+    //     so no client filter is needed - just use all.
+    //   - OWN board [N2]: guests come from D.rows; scope to SENDER_ID===selfSid() (personal rows are
+    //     already own-sid only; a side board's D.rows spans the whole side, so filter to the caller's
+    //     own sid here so the scope matches the super's act-as-of-this-organiser exactly).
+    var all;
+    if (IS_SUPER) {
+      all = [].concat(D.groomRows || [], D.brideRows || [], D.unassigned || []);
+    } else {
+      var _self = selfSid();
+      all = (D.rows || []).filter(function (g) { return String(g.sender_id || '') === _self; });
+    }
+    var cats = (CAT_DATA && CAT_DATA.categories) || [];
+    // manager + action-bar are OWN-VIEW write controls, emitted OUTSIDE the shared read-only core
+    // (readOnly=false) so the grouping structure stays identical for both views.
+    return categoryManagerHtml()
+      + categoryGroupedFrom(all, cats, CAT_ASSIGN, false, 'own')
+      + categoryActionBarHtml();
+  }
+
+  // [CATEGORIES-FEATBATCH2 N1+N3] the purple per-organiser tab bar for a PRIMARY's side board. One tab
+  // per side-organiser (default CLOSED); each panel body renders that organiser's guests grouped by
+  // THAT organiser's OWN categories, READ-ONLY (FIX-B: wrapped in a .cat-ro / data-readonly='1' wrapper
+  // so wireCategoryControls skips any write control inside; the readOnly renderer emits none anyway).
+  // Reuses the existing delegated .org-tab handler via data-org-side='sideorg' (distinct key → ids never
+  // collide with combined groom/bride). N4 collapse applies inside each panel automatically.
+  // [N1-PERSONAL] When the primary is on their PERSONAL board, D.breakdown is absent; fall back to
+  // SIDE_BREAKDOWN (fetched lazily by fetchSideBreakdown when the button is clicked). Show a "טוען…"
+  // placeholder if the fetch hasn't returned yet (SIDE_BREAKDOWN===null, not yet resolved).
+  function sideOrgTabsHtml() {
+    var bd = (D.breakdown && D.breakdown.length) ? D.breakdown : (SIDE_BREAKDOWN || []);
+    if (!bd.length) {
+      if (SIDE_BREAKDOWN === null) { return '<p style=\'color:#777\'>&#8987; טוען מארגנים…</p>'; }
+      return '<p style=\'color:#777\'>אין מארגנים להצגה.</p>';
+    }
+    // [ROUNDFIX2b #5] ACCORDION: each organiser header is IMMEDIATELY followed by its own (collapsed)
+    // panel, so clicking a name opens that organiser's categories/guests RIGHT BELOW the name (not at the
+    // end of the list); clicking the same name again closes it. The delegated .org-tab handler toggles
+    // in-place for data-org-side='sideorg' (vs the exclusive tab behaviour kept for the combined view).
+    var h = '<div class=\'org-tabs org-acc\' role=\'tablist\'>';
+    for (var i = 0; i < bd.length; i++) {
+      var org = bd[i];
+      var tabId = 'orgtab-sideorg-' + i;
+      var panId = 'orgpanel-sideorg-' + i;
+      var lbl = esc(org.name || org.sender_id || ('מארגן ' + (i + 1)));
+      var oc = (SIDE_CAT && SIDE_CAT.byOwner && SIDE_CAT.byOwner[org.sender_id]) || { categories: [], assignments: [] };
+      var amap = {};
+      (oc.assignments || []).forEach(function (a) { amap[String(a.dedupe_key)] = String(a.cat_id); });
+      h += '<button type=\'button\' class=\'org-tab org-acc-head\' role=\'button\''
+        + ' id=\'' + tabId + '\''
+        + ' data-org-side=\'sideorg\''
+        + ' aria-controls=\'' + panId + '\''
+        + ' aria-expanded=\'false\'>'
+        + lbl + '</button>'
+        + '<div class=\'org-panel org-acc-body cat-ro\' data-readonly=\'1\' role=\'region\''
+        + ' id=\'' + panId + '\''
+        + ' aria-labelledby=\'' + tabId + '\' hidden>'
+        + categoryGroupedFrom(org.guests || [], oc.categories || [], amap, true, 'sideorg-' + i)
+        + '</div>';
+    }
+    return h + '</div>';
+  }
+
+  // [ROUNDFIX-20260708] mutual-exclusivity: the records area is EXACTLY one of
+  // {default | MINE | UNCONF | CAT | SIDE_ORG}. Every view-switch button clears all first.
+  function _clearViews() {
+    MINE_VIEW = false; UNCONF_VIEW = false; CAT_VIEW = false; SIDE_ORG_VIEW = false; CAT_SEL = {};
+  }
+
+  // [ROUNDFIX-20260708 #1ב] "האורחים שלי" — ONLY the viewer's own guests (own-sid scope), nothing else
+  // (no per-organiser breakdown, no unconfirmed data). On a personal board D.rows is already own-only;
+  // on a primary's SIDE board D.rows spans the whole side, so filter to selfSid() here.
+  // [ROUNDFIX2g-20260709 #4/#5] MINE_VIEW is CARD-based (mirrors the "מי לא אישר" cards): each guest
+  // card carries a category combobox (assign/unassign, keyed by dedupe_key) + a floating icon bar
+  // (＋ add / ✏ rename / 🗑 delete category). A category FILTER bar sits above the attending filter,
+  // one-shot-defaulting to the category holding the MOST of my guests.
+  var MINE_CAT_FILTER = '';          // '' = all · '__uncat__' = ללא סיווג · else a cat_id
+  var _mineCatDefaultApplied = false;
+
+  function _mineList() {
+    var self = selfSid();
+    return (D.rows || []).filter(function (g) { return !self || String(g.sender_id || '') === self; });
+  }
+  function _catNameById(cid) {
+    var cats = (CAT_DATA && CAT_DATA.categories) || [];
+    for (var i = 0; i < cats.length; i++) { if (String(cats[i].cat_id) === String(cid)) { return cats[i].name; } }
+    return '';
+  }
+  // per-category counts of MY guests, via the client-side join map CAT_ASSIGN[dedupe_key].
+  function _mineCatCounts(mine) {
+    var by = {}, uncat = 0;
+    for (var i = 0; i < mine.length; i++) {
+      var cid = CAT_ASSIGN[String(mine[i].dedupe_key || '')] || '';
+      if (cid) { by[cid] = (by[cid] || 0) + 1; } else { uncat++; }
+    }
+    return { by: by, uncat: uncat };
+  }
+  function mineGuestsHtml() {
+    var mine = _mineList();
+    var cats = (CAT_DATA && CAT_DATA.categories) || [];
+    // if the active filter points at a category that no longer exists (e.g. just deleted), reset to all.
+    if (MINE_CAT_FILTER && MINE_CAT_FILTER !== '__uncat__' && !_catNameById(MINE_CAT_FILTER)) { MINE_CAT_FILTER = ''; }
+    // [#5] one-shot default: preselect the category with the most of my guests (uncat counts too).
+    // [FIX 2026-07-09] Only lock the default ONCE categories are actually loaded — the first render
+    // fires while fetchCategories() is still in flight (CAT_DATA empty), and locking then would pin the
+    // filter to "__uncat__" for the whole session (hiding categorised guests). Deferring to the loaded
+    // render fixes it; if the organiser has no categories at all, MINE_CAT_FILTER stays '' (show all).
+    if (!_mineCatDefaultApplied && catUiEnabled() && CAT_DATA && CAT_DATA.categories && CAT_DATA.categories.length) {
+      _mineCatDefaultApplied = true;
+      var cc0 = _mineCatCounts(mine), best = '', bestN = -1;
+      for (var k = 0; k < cats.length; k++) {
+        var n = cc0.by[String(cats[k].cat_id)] || 0;
+        if (n > bestN) { bestN = n; best = String(cats[k].cat_id); }
+      }
+      if (cc0.uncat > bestN) { best = '__uncat__'; bestN = cc0.uncat; }
+      MINE_CAT_FILTER = (bestN > 0) ? best : '';   // no categorised guests at all → show all
+    }
+    // apply the category filter, then the existing attending filter.
+    var shown = mine;
+    if (MINE_CAT_FILTER === '__uncat__') { shown = mine.filter(function (g) { return !CAT_ASSIGN[String(g.dedupe_key || '')]; }); }
+    else if (MINE_CAT_FILTER)           { shown = mine.filter(function (g) { return String(CAT_ASSIGN[String(g.dedupe_key || '')] || '') === MINE_CAT_FILTER; }); }
+    shown = filterRows(shown);
+    return '<h2>האורחים שלי</h2>'
+      + mineCatFilterHtml(mine)
+      + filterBarHtml()
+      + '<div class=\'mine-cards\'>' + mineCardsHtml(shown) + '</div>';
+  }
+  // [#5] category filter bar above the attending filter; a chip per category with a live count.
+  function mineCatFilterHtml(mine) {
+    if (!catUiEnabled()) { return ''; }
+    var cats = (CAT_DATA && CAT_DATA.categories) || [];
+    var cc = _mineCatCounts(mine);
+    function chip(v, lbl, n) {
+      return '<button type=\'button\' class=\'mcf-chip' + (MINE_CAT_FILTER === v ? ' active' : '')
+        + '\' data-minecatflt=\'' + esc(v) + '\'>' + esc(lbl) + '<span class=\'mcf-n\'>' + bdi(n) + '</span></button>';
+    }
+    var h = '<div class=\'mine-catfilter\' role=\'tablist\'>';
+    h += chip('', 'הכל', mine.length);
+    for (var i = 0; i < cats.length; i++) { h += chip(String(cats[i].cat_id), cats[i].name, cc.by[String(cats[i].cat_id)] || 0); }
+    h += chip('__uncat__', 'ללא סיווג', cc.uncat);
+    return h + '</div>';
+  }
+  // [#4] one MINE card: guest facts + category combobox (data-dk=dedupe_key) + floating ＋/✏/🗑 icons.
+  function mineCardsHtml(rows) {
+    rows = rows || [];
+    if (!rows.length) { return '<div class=\'uc-empty\'>אין אורחים בתצוגה זו. &#128077;</div>'; }
+    var cats = (CAT_DATA && CAT_DATA.categories) || [];
+    var enable = catUiEnabled();
+    // [FIXLIST1 2026-07-10] one stacked data row (small label above the value; the CSS draws the
+    // horizontal separator line between consecutive rows).
+    function _mrow(k, v, vCls) {
+      return '<div class=\'uc-row\'><span class=\'uc-k\'>' + k + '</span><span class=\'uc-v' + (vCls ? ' ' + vCls : '') + '\'>' + v + '</span></div>';
+    }
+    var h = '';
+    for (var i = 0; i < rows.length; i++) {
+      var g = rows[i];
+      var dk = String(g.dedupe_key || '');
+      var curCat = CAT_ASSIGN[dk] || '';
+      var att = (g.attending === true || String(g.attending).toLowerCase() === 'true');
+      // [FIXLIST1 2026-07-10] raw counts exactly as the category-view row builder shows them
+      // (_catGuestRowsHtml: bdi(men_count)/bdi(women_count), attending-independent).
+      var men = Number(g.men_count) || 0;
+      var women = Number(g.women_count) || 0;
+      var catRow = '';
+      if (enable) {
+        var opts = '<option value=\'\'>— ללא סיווג —</option>';
+        for (var c = 0; c < cats.length; c++) {
+          var sel = (String(cats[c].cat_id) === String(curCat)) ? ' selected' : '';
+          opts += '<option value=\'' + esc(cats[c].cat_id) + '\'' + sel + '>' + esc(cats[c].name) + '</option>';
+        }
+        catRow = '<div class=\'uc-catrow\'><label>סיווג לקטגוריה:</label>'
+          + '<select class=\'uc-cat-sel mine-cat-sel\' data-dk=\'' + esc(dk) + '\'>' + opts + '</select>'
+          + '<span class=\'cat-iconbar\'>'
+          +   '<button type=\'button\' class=\'cat-ic mine-cat-ic\' data-icat=\'add\' title=\'הוסף קטגוריה חדשה\'>&#10133;</button>'
+          +   '<button type=\'button\' class=\'cat-ic mine-cat-ic\' data-icat=\'rename\' title=\'שנה שם קטגוריה שנבחרה\'>&#9999;&#65039;</button>'
+          +   '<button type=\'button\' class=\'cat-ic mine-cat-ic\' data-icat=\'delete\' title=\'מחק קטגוריה שנבחרה\'>&#128465;&#65039;</button>'
+          + '</span>'
+          + '</div>';
+      }
+      // [FIXLIST1 2026-07-10] COMPLETE field set on every MINE card. The authoritative list is
+      // derived from the category-view row builder (_catGuestRowsHtml) + the guest-table fields
+      // (guestRow) the user listed: גברים, נשים, סה״כ, טלפון, ערוץ-ההגעה, תאריך-האישור, וברכה אם
+      // קיימת. Labels reuse the exact existing table wording ('נשלח דרך' / 'מתי אישר'). 'נשלח ע"י'
+      // is deliberately omitted - the MINE view is own-guests-only, so it is always the viewer
+      // themselves. The old compressed 'כמות' row is superseded by the granular גברים/נשים/סה״כ
+      // rows (same numbers, fuller). Design (colors/shape/combobox/iconbar/chips) untouched.
+      h += '<div class=\'uc-card mine-card\'>'
+        + _mrow('שם', esc(g.guest_name), 'uc-name-v')
+        + _mrow('סטטוס', att ? 'מגיע/ה &#9989;' : 'לא מגיע/ה')
+        + _mrow('גברים', bdi(men))
+        + _mrow('נשים', bdi(women))
+        + _mrow('סה״כ', bdi(men + women))
+        + _mrow('טלפון', g.phone ? bdi(g.phone) : '<span class=\'muted\'>-</span>')
+        + _mrow('נשלח דרך', esc(channelLabel(g.channel)))
+        + _mrow('מתי אישר', g.timestamp ? bdi(fmtDateTimeIL(g.timestamp)) : '<span class=\'muted\'>-</span>')
+        + ((g.blessing && String(g.blessing).trim()) ? _mrow('ברכה', esc(g.blessing), 'mine-pre') : '')
+        + catRow
+        + '</div>';
+    }
+    return h;
+  }
+
+  // [ROUNDFIX-20260708 #6א] "מי לא אישר עדיין" — in-content skeleton (below the buttons). fetchUnconfirmed
+  // fills #unconf-opened / #unconf-notopened (renderUnconfirmed targets those same ids). Shows ONLY the
+  // unconfirmed list — the guest records are NOT rendered in this view.
+  function unconfInlineHtml() {
+    function fb(v, lbl) {
+      return '<button type=\'button\' class=\'flt-btn' + (UNCONF_FILTER === v ? ' active' : '')
+        + '\' data-ucflt=\'' + v + '\'>' + lbl + '</button>';
+    }
+    return '<div id=\'unconf-inline\'>'
+      + '<h2>מי עדיין לא אישר</h2>'
+      + '<div class=\'flt-bar\' role=\'tablist\'>'
+      +   fb('all', 'הכל') + fb('notopened', 'טופס טרם נפתח') + fb('opened', 'נפתח אך טרם אושר')
+      + '</div>'
+      + '<div id=\'unconf-cards\'>' + (UNCONF_PEOPLE ? _unconfCardsHtml() : '<div class=\'uc-empty\'>&#8987; טוען…</div>') + '</div>'
+      + '</div>';
+  }
+
+  // [ROUNDFIX2 #3] build the category-grouped cards from the cached UNCONF_PEOPLE, honoring UNCONF_FILTER.
+  function _unconfCardsHtml() {
+    var people = (UNCONF_PEOPLE || []).filter(function (p) {
+      if (UNCONF_FILTER === 'notopened') { return p.status === 'notopened'; }
+      if (UNCONF_FILTER === 'opened')    { return p.status === 'opened'; }
+      return true;   // 'all'
+    });
+    if (!people.length) { return '<div class=\'uc-empty\'>אין אורחים בתצוגה זו. &#128077;</div>'; }
+    // Group by the VIEWER's OWN categories (CAT_DATA); anything unmatched → "ללא סיווג".
+    var cats = (CAT_DATA && CAT_DATA.categories) || [];
+    var known = {};
+    for (var c = 0; c < cats.length; c++) { known[String(cats[c].cat_id)] = true; }
+    var buckets = {}, uncat = [];
+    for (var i = 0; i < people.length; i++) {
+      var cid = String(people[i].cat_id || '');
+      if (cid && known[cid]) { (buckets[cid] = buckets[cid] || []).push(people[i]); }
+      else { uncat.push(people[i]); }
+    }
+    var h = '';
+    for (var ci = 0; ci < cats.length; ci++) {
+      var rows = buckets[String(cats[ci].cat_id)] || [];
+      if (rows.length) { h += _unconfGroupHtml(cats[ci].name, rows); }
+    }
+    h += _unconfGroupHtml('ללא סיווג', uncat);
+    return h || '<div class=\'uc-empty\'>אין אורחים בתצוגה זו. &#128077;</div>';
+  }
+  function _unconfGroupHtml(label, rows) {
+    if (!rows || !rows.length) { return ''; }
+    var h = '<div class=\'uc-catgroup\'><h3><span>' + esc(label) + '</span><span class=\'cat-count\'>' + bdi(rows.length) + '</span></h3>';
+    for (var i = 0; i < rows.length; i++) { h += _unconfCardHtml(rows[i]); }
+    return h + '</div>';
+  }
+  function _unconfCardHtml(p) {
+    var shares = p.share_times || [];
+    var sharesHtml = shares.length
+      ? '<ul class=\'uc-shares\'>' + shares.map(function (t) { return '<li>' + esc(fmtDateTimeIL(t)) + '</li>'; }).join('') + '</ul>'
+      : '<span class=\'uc-v uc-muted\'>אין רישום</span>';
+    var lastOpened = p.last_opened ? esc(fmtDateTimeIL(p.last_opened)) : 'טרם נפתח';
+    // [ROUNDFIX2c #5א] the category assign/unassign control is now VISIBLE on EVERY categorisable card
+    // (dropped the p.sid===selfSid gate that hid it in the aggregated view). Picking a category assigns;
+    // picking "ללא סיווג" removes the assignment. Written via categoryOp, scoped server-side to the caller.
+    var catRow = '';
+    if (catUiEnabled() && p.person_key) {
+      var cats = (CAT_DATA && CAT_DATA.categories) || [];
+      var opts = '<option value=\'\'>— ללא סיווג —</option>';
+      for (var c = 0; c < cats.length; c++) {
+        var sel = (String(cats[c].cat_id) === String(p.cat_id || '')) ? ' selected' : '';
+        opts += '<option value=\'' + esc(cats[c].cat_id) + '\'' + sel + '>' + esc(cats[c].name) + '</option>';
+      }
+      catRow = '<div class=\'uc-catrow\'><label>סיווג לקטגוריה:</label><select class=\'uc-cat-sel\' data-pk=\'' + esc(p.person_key) + '\'>' + opts + '</select></div>';
+    }
+    // [ROUNDFIX2c #5ב] stacked rows (label above value) for clean, aligned, readable cards.
+    return '<div class=\'uc-card\'>'
+      + '<div class=\'uc-row\'><span class=\'uc-k\'>השם שקראתי לו בשליחה</span><span class=\'uc-v uc-name-v\'>' + esc(p.invitee_name) + '</span></div>'
+      + '<div class=\'uc-row\'><span class=\'uc-k\'>נשלח דרך</span><span class=\'uc-v\'>' + esc(channelLabel(p.channel)) + '</span></div>'
+      + '<div class=\'uc-row\'><span class=\'uc-k\'>תאריכי שליחת הקישור</span>' + sharesHtml + '</div>'
+      + '<div class=\'uc-row\'><span class=\'uc-k\'>תאריך אחרון שבו הטופס נפתח</span><span class=\'uc-v\'>' + lastOpened + '</span></div>'
+      + catRow
+      + '</div>';
+  }
+  // re-fill the cards container from the cache (filter change / assign) without a refetch.
+  function renderUnconfCards() {
+    var host = document.getElementById('unconf-cards');
+    if (host) { host.innerHTML = _unconfCardsHtml(); }
+  }
+
+  // ── Main render function - takes the data OBJECT (not a JSON string)
+  function renderData(obj) {
+    D = (obj && typeof obj === 'object') ? obj : {};
+    showSection('dashboard-content');
+    var out  = document.getElementById('dashboard-content');
+    var html = '';
+
+    // [ROUNDFIX2g-20260709 #3] a PRIMARY's (or the super-owner Yehuda's) personal/side board opens on
+    // "האורחים שלי" (MINE_VIEW) by DEFAULT — no longer the category view. One-shot (_defaultApplied) so
+    // the user's later navigation is never overridden. Categories are still pre-fetched: the MINE cards
+    // carry a per-guest category combobox and the MINE category-filter both need the assignment map.
+    if (!_defaultApplied && MODE !== 'combined' && D && (D.is_primary || String(D.sid || '') === 'baa34f647c10') && catUiEnabled()) {
+      _defaultApplied = true;
+      MINE_VIEW = true;
+      if ((!CAT_DATA.categories || !CAT_DATA.categories.length) && (!CAT_DATA.assignments || !CAT_DATA.assignments.length)) {
+        fetchCategories(true);
+      }
+    }
+
+    if (MODE === 'personal') {
+      // ── Personal dashboard ───────────────────────────────────────────────
+      // Spec: "דרכך אישרו X איש: Y גברים, Z נשים; W לא יגיעו"
+      // Shows: senderName, side badge, summary banner, guest table with special_requests
+      // [UIPOLISH3 2026-07-04 - part ג] the side badge ("הכלה 👰 / החתן 🤵 בהתאמה") was removed
+      //   from here; dropping the badge div lets the summary banner + action buttons rise up to
+      //   where the badge began. sideBadge() itself is untouched (still used in the side view).
+      html += "<h1 style='text-align:center;margin:0 auto;'>לוח אישי - " // לוח אישי -
+        + esc(D.senderName) + '</h1>';
+
+      html += connectedAsHtml();   // [FIXLIST10] mobile-only caption, directly above the green banner
+
+      if (D.summary) {
+        html += summaryBanner('דרכך אישרו', D.summary); // part ב: structured, palette-matching banner
+      }
+      html += topActionsHtml();
+
+      // [CATEGORIES-FEATBATCH2 N1-PERSONAL] a PRIMARY who toggled the purple "מארגנים בצד שלי" button
+      // while on their PERSONAL board (promoted via setprimary, MODE='personal') sees the per-organiser
+      // tabs just like the side board. D.breakdown is absent here so sideOrgTabsHtml falls back to
+      // SIDE_BREAKDOWN (lazy-fetched by fetchSideBreakdown). Mutually exclusive with CAT_VIEW (FIX-A).
+      // Combined super board intentionally excluded (MODE!=='combined' is the shared gate).
+      if (MINE_VIEW) {
+        html += mineGuestsHtml();                       // [ROUNDFIX #1ב] only my own guests
+      } else if (UNCONF_VIEW) {
+        html += unconfInlineHtml();                     // [ROUNDFIX #6א] only the unconfirmed list, in-content
+      } else if (SIDE_ORG_VIEW && D.is_primary) {
+        html += sideOrgTabsHtml();
+      } else if (CAT_VIEW && catUiEnabled()) {
+        // [CATEGORIES-FEATBATCH A4] a PRIMARY who toggled "כולם" sees their OWN guests grouped by their
+        // OWN categories (own-sid scope, === the super's act-as view of this primary). Regular/off = the
+        // normal list. catUiEnabled() gates the toggle button, so CAT_VIEW can only be true for a primary.
+        html += categoryGroupedHtml();
+      } else {
+        html += "<h2>רשימת האורחים שאישרו הגעה!</h2>"; // list title
+        html += filterBarHtml();                       // part ד: guest-list filter (all / coming / not-coming)
+        html += guestTable(filterRows(D.rows || []));
+      }
+
+    } else if (MODE === 'side') {
+      // ── Side dashboard ───────────────────────────────────────────────────
+      // Only reachable if is_primary=true (enforced server-side before this renders)
+      // Shows: side badge, overall summary, per-organiser breakdown, full side table
+      var side = D.senderSide || '';
+      html += connectedAsHtml();   // [FIXLIST10] mobile-only caption, directly above the green banner
+      if (D.summary) {
+        html += summaryBanner('סה״כ', D.summary); // part ב: structured, palette-matching banner
+      }
+      html += topActionsHtml();
+
+      // [CATEGORIES-FEATBATCH2 N1] a PRIMARY who toggled the purple "מארגנים בצד שלי" button sees the
+      // per-organiser tabs (each drill-in = that organiser's guests grouped by THEIR categories,
+      // read-only). Mutually exclusive with CAT_VIEW + the default breakdown (FIX-A; enforced both here
+      // and in the toggle wiring). Checked FIRST so it wins its own view.
+      // Gate uses MODE!=='combined' (matches the button-emission gate) so combined super is always excluded.
+      if (MINE_VIEW) {
+        html += mineGuestsHtml();                       // [ROUNDFIX #1ב] only my own guests
+      } else if (UNCONF_VIEW) {
+        html += unconfInlineHtml();                     // [ROUNDFIX #6א] only the unconfirmed list, in-content
+      } else if (SIDE_ORG_VIEW && MODE !== 'combined' && D.is_primary) {
+        html += sideOrgTabsHtml();
+      } else if (CAT_VIEW && catUiEnabled()) {
+        // [CATEGORIES-FEATBATCH2 N2] any authenticated organiser who toggled "חלוקה לקטגוריות" on their
+        // side board sees THEIR OWN guests grouped by their own categories (own-sid scope). Off = normal.
+        html += categoryGroupedHtml();
+      } else {
+        // Per-organiser breakdown
+        if (D.breakdown && D.breakdown.length > 0) {
+          html += "<h2>פירוט לפי מארגן</h2>"; // פירוט לפי מארגן
+          for (var b = 0; b < D.breakdown.length; b++) {
+            var org = D.breakdown[b];
+            html += '<div class=\'org-section\'>'
+              + '<h3>' + esc(org.name || org.sender_id) + ' - '
+              + summaryText(org.summary)
+              + '</h3>'
+              + guestTable(org.guests || [])
+              + '</div>';
+          }
+        }
+
+        html += "<h2>כל הרשומות לצד</h2>"; // כל הרשומות לצד
+        html += guestTable(D.rows || []);
+      }
+
+    } else if (MODE === 'combined') {
+      // ── Combined dashboard ───────────────────────────────────────────────
+      // Shows: overall stats, per-side stats, groom table, bride table,
+      //        UNASSIGNED section (always rendered), blessings list
+      html += "<h1 style='text-align:center;margin:0 auto;'>לוח-על משולב &#x1F441;&#xFE0F;</h1>"; // לוח-על משולב
+
+      if (D.summary) {
+        html += summaryBanner('סה״כ שני הצדדים', D.summary); // part ב: structured, palette-matching banner
+      }
+
+      // [CATEGORIES-FEATBATCH R3, §0.9] The green card is directly followed (with the ~9px gap set
+      // in CSS) by the R4D framing text, then the action buttons. "פילוח לפי צד" heading is DELETED;
+      // the side-stats block is MOVED to AFTER the organiser lists (rendered near the end below).
+
+      // R4D framing text ABOVE the buttons.
+      html += "<p class='rl-hint'>לצפייה ברשימת האורחים המלאה לחץ כאן:</p>";
+      html += topActionsHtml();
+      html += sideActBtnsHtml();                     // R4C super-only side buttons (+ back-to-all when acting-as)
+      // R4D framing text BELOW the buttons (immediately above the organiser lists).
+      html += "<p class='rl-hint2'>צפייה ברשימת האורחים של מארגן:</p>";
+
+      if (CAT_VIEW) {
+        // [R4A] "כולם" grouped-by-category view (category manager + grouped lists + action bar).
+        html += categoryGroupedHtml();
+      } else {
+        // Default records view: per-organiser collapsed tabs (R4D), side breakdown moved below (R3).
+        // Groom side - per-organiser tabs when a breakdown exists; flat list otherwise.
+        var groomTabs = combinedOrgTabs('groom', D.groomBreakdown);
+        if (groomTabs) {
+          html += "<h2>רשומות - צד החתן 🤵</h2>"; // רשומות - צד החתן 🤵
+          html += groomTabs;
+        } else if (D.groomRows && D.groomRows.length > 0) {
+          html += "<h2>רשומות - צד החתן 🤵</h2>"; // רשומות - צד החתן 🤵
+          html += guestTable(D.groomRows);
+        }
+
+        // Bride side - per-organiser tabs when a breakdown exists; flat list otherwise.
+        var brideTabs = combinedOrgTabs('bride', D.brideBreakdown);
+        if (brideTabs) {
+          html += "<h2>רשומות - צד הכלה 👰</h2>"; // רשומות - צד הכלה 👰
+          html += brideTabs;
+        } else if (D.brideRows && D.brideRows.length > 0) {
+          html += "<h2>רשומות - צד הכלה 👰</h2>"; // רשומות - צד הכלה 👰
+          html += guestTable(D.brideRows);
+        }
+      }
+
+      // [R3 §0.9] side breakdown MOVED here - AFTER the organiser lists, WITHOUT the deleted heading.
+      html += '<div class=\'side-stats\'>';
+      if (D.groomSummary) {
+        html += '<div class=\'stat-box\'>'
+          + "<h3>צד החתן 🤵</h3>" // צד החתן 🤵
+          + '<p>' + summaryText(D.groomSummary) + '</p>'
+          + '</div>';
+      }
+      if (D.brideSummary) {
+        html += '<div class=\'stat-box\'>'
+          + "<h3>צד הכלה 👰</h3>" // צד הכלה 👰
+          + '<p>' + summaryText(D.brideSummary) + '</p>'
+          + '</div>';
+      }
+      html += '</div>';
+
+      // UNASSIGNED section - always rendered in combined mode; flagged separately per spec
+      html += '<div class=\'unassigned-section\'>';
+      html += "<h2>&#x26A0;&#xFE0F; UNASSIGNED - לטיפול ידני</h2>"; // ⚠️ UNASSIGNED - לטיפול ידני
+      if (!D.unassigned || D.unassigned.length === 0) {
+        html += "<p>אין שורות לא-משויכות. &#x1F44D;</p>"; // אין שורות לא-משויכות. 👍
+      } else {
+        html += "<p>שורות אלה הגיעו ללא sender_id מוכר ודורשות שיוך ידני.</p>"; // שורות אלה הגיעו ללא sender_id מוכר ודורשות שיוך ידני.
+        html += guestTable(D.unassigned);
+      }
+      html += '</div>';
+
+      // Blessings list
+      if (D.blessings && D.blessings.length > 0) {
+        html += "<h2>&#x1F48C; ברכות (" + bdi(D.blessings.length) + ')</h2>'; // 💌 ברכות (N)
+        for (var bi = 0; bi < D.blessings.length; bi++) {
+          var bl = D.blessings[bi];
+          html += '<div class=\'blessing-item\'>'
+            + '<div class=\'bname\'>' + esc(bl.guest_name) + '</div>'
+            + '<div class=\'btext\'>' + esc(bl.blessing) + '</div>'
+            + '</div>';
+        }
+      }
+
+    } else {
+      html = "<p>מצב לא מוכר.</p>"; // מצב לא מוכר.
+    }
+
+    out.innerHTML = html;
+
+    // ── PHASE 4 / G5: wire the top action row. ta-manual opens the manual-add modal;
+    //    ta-list toggles body.force-table (real desktop table below 768px) and, when
+    //    switching to list view, asks the host SPA to enter fullscreen-landscape via the
+    //    wedding-goto-fullscreen bridge (mirror of the removed wedding-goto-share bridge).
+    var taM = document.getElementById('ta-manual-btn');
+    if (taM) { taM.addEventListener('click', openManualAdd); }
+    // [ROUNDFIX-20260708 #6א] "מי לא אישר עדיין" → in-CONTENT view (replaces the records area below the
+    // buttons), shows ONLY the unconfirmed list. Instant switch (#2), then fetchUnconfirmed fills the two
+    // id targets (#unconf-opened / #unconf-notopened) that unconfInlineHtml just rendered.
+    var taU = document.getElementById('ta-unconf-btn');
+    if (taU) {
+      taU.addEventListener('click', function () {
+        _clearViews(); UNCONF_VIEW = true; _scrollPending = true;
+        renderData(D);          // [#2] instant switch (skeleton shows "טוען…")
+        // [ROUNDFIX2 #3] ensure the owner's categories are loaded so the cards can group + offer the
+        // assign dropdown (a primary lands on CAT_VIEW first, so usually already loaded; this covers a
+        // regular organiser who opens unconfirmed directly).
+        if (catUiEnabled() && (!CAT_DATA.categories || !CAT_DATA.categories.length)) { fetchCategories(true); }
+        fetchUnconfirmed();
+      });
+    }
+    // [ROUNDFIX-20260708 #1ב] "האורחים שלי" → ONLY the viewer's own guests (mutually-exclusive view).
+    var taMine = document.getElementById('ta-mine-btn');
+    if (taMine) {
+      taMine.addEventListener('click', function () {
+        _clearViews(); MINE_VIEW = true; _scrollPending = true;
+        renderData(D);
+      });
+    }
+    // QA FIX: inside the GAS double sandbox the host SPA is window.top (window.parent is
+    // Google's wrapper) - post to BOTH, exactly like the proven wedding-reg-done bridge.
+    function _gotoFullscreen() {
+      var _p = { type: 'wedding-goto-fullscreen' };
+      try { if (window.top) { window.top.postMessage(_p, '*'); } } catch (e) {}
+      try { if (window.parent && window.parent !== window.top) { window.parent.postMessage(_p, '*'); } } catch (e) {}
+    }
+    // Symmetric exit: on the OFF toggle (back to cards) ask the host SPA to leave
+    // fullscreen-landscape. Same dual-post pattern; index.html does the real exitFullscreen/unlock.
+    function _exitFullscreen() {
+      var _p = { type: 'wedding-exit-fullscreen' };
+      try { if (window.top) { window.top.postMessage(_p, '*'); } } catch (e) {}
+      try { if (window.parent && window.parent !== window.top) { window.parent.postMessage(_p, '*'); } } catch (e) {}
+    }
+    var taL = document.getElementById('ta-list-btn');
+    if (taL) {
+      // [ROUNDFIX-20260708 #6ב] OFF-label is the ACTION the button performs → "תצוגת שורות ועמודות"
+      // (was "הצגה כרשימה"). This handler overwrote the static label on every render, which is why the
+      // static rename at topActionsHtml never showed. ON-label stays "חזרה לתצוגת כרטיסים".
+      taL.textContent = document.body.classList.contains('force-table') ? '📱 חזרה לתצוגת כרטיסים' : '🖥️ תצוגת שורות ועמודות'; // re-sync after re-render
+      taL.addEventListener('click', function () {
+        var on = document.body.classList.toggle('force-table');
+        taL.textContent = on ? '📱 חזרה לתצוגת כרטיסים' : '🖥️ תצוגת שורות ועמודות';
+        if (on) { _gotoFullscreen(); } else { _exitFullscreen(); }
+      });
+    }
+
+    // [ROUNDFIX2b #2] "חזור למסך השיתוף" — ask the host SPA to navigate back to the share screen.
+    // Dual-post (window.top + window.parent) exactly like _gotoFullscreen (the dashboard runs inside the
+    // GAS double sandbox, so the host SPA is window.top). index.html listens for 'wedding-goto-share'.
+    var taBack = document.getElementById('ta-back-share-btn');
+    if (taBack) {
+      taBack.addEventListener('click', function () {
+        var _p = { type: 'wedding-goto-share' };
+        try { if (window.top) { window.top.postMessage(_p, '*'); } } catch (e) {}
+        try { if (window.parent && window.parent !== window.top) { window.parent.postMessage(_p, '*'); } } catch (e) {}
+      });
+    }
+    // [ROUNDFIX2c #4] Yehuda-only "פרטי המארגנים" → ask the host SPA to open page-organisers. Same
+    // dual-post bridge; index.html listens for 'wedding-goto-organisers'. Button is sid-gated in
+    // topActionsHtml, so this only ever wires for Yehuda's board.
+    var taOrg = document.getElementById('ta-org-details-btn');
+    if (taOrg) {
+      taOrg.addEventListener('click', function () {
+        var _p = { type: 'wedding-goto-organisers' };
+        try { if (window.top) { window.top.postMessage(_p, '*'); } } catch (e) {}
+        try { if (window.parent && window.parent !== window.top) { window.parent.postMessage(_p, '*'); } } catch (e) {}
+      });
+    }
+
+    // [CATEGORIES-FEATBATCH2 N1] wire the purple "מארגנים בצד שלי" toggle. STANDALONE (NOT gated by
+    // catUiEnabled) so it is independent of the N2 category-UI gate; the button exists on a PRIMARY's
+    // personal OR side board (topActionsHtml gate: MODE!=='combined' && D.is_primary).
+    // FIX-A: enabling this view forces CAT_VIEW off + clears CAT_SEL so {default, CAT_VIEW,
+    // SIDE_ORG_VIEW} stay mutually exclusive (exactly one active).
+    // [N1-PERSONAL] when on the personal board (D.breakdown absent, SIDE_BREAKDOWN===null), also kick
+    // off fetchSideBreakdown() ONCE so sideOrgTabsHtml has data to build the tab bar. This is IN
+    // ADDITION to the existing fetchSideCategories(true) for N3 (both fetches run concurrently; each
+    // re-renders on completion, which is safe — second render simply overwrites with fuller state).
+    var soBtn = document.getElementById('ta-side-orgs-btn');
+    if (soBtn) {
+      soBtn.addEventListener('click', function () {
+        var wasOn = SIDE_ORG_VIEW;
+        _clearViews();                                  // mutual exclusivity (FIX-A superset)
+        if (wasOn) { renderData(D); return; }           // toggle OFF → back to default
+        SIDE_ORG_VIEW = true; _scrollPending = true;
+        // [ROUNDFIX-20260708 #2/#5] render IMMEDIATELY: sideOrgTabsHtml shows collapsed tabs (or a
+        // "טוען מארגנים…" placeholder while the breakdown loads) — the old screen never lingers, and
+        // no organiser is auto-expanded. The fetches below re-render with fuller data when they land.
+        renderData(D);
+        if (!SIDE_CAT_LOADED) { fetchSideCategories(true); }        // N3 read-only per-organiser categories
+        if (!D.breakdown && SIDE_BREAKDOWN === null) { fetchSideBreakdown(); }  // N1-PERSONAL breakdown
+      });
+    }
+
+    // [CATEGORIES-FEATBATCH] wire the super-only category / act-as controls (re-created each render).
+    wireCategoryControls();
+
+    // [ROUNDFIX2b #4] after a view-switch button, scroll so ONLY the "חזור למסך השיתוף" button stays at
+    // the top and the newly-opened view starts right below it (the six view buttons scroll off above;
+    // scroll back down to see them again). Anchor on the back button (last in the row); fall back to the
+    // whole action row if it is absent (e.g. combined board).
+    if (_scrollPending) {
+      _scrollPending = false;
+      try {
+        var _anchor = out.querySelector('#ta-back-share-btn') || out.querySelector('.top-actions');
+        if (_anchor && _anchor.scrollIntoView) { _anchor.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+      } catch (e) {}
+    }
+  }
+
+  // ===== CATEGORIES-FEATBATCH wiring (R4A/R4B/R4C) =====
+  function _catMsg(text, kind) {
+    var m = document.getElementById('cat-msg');
+    if (!m) { return; }
+    m.textContent = text || '';
+    m.className = (kind || '');
+  }
+
+  // Fetch mode=categories for the current (target) owner, then re-render.
+  // [A4] Available to the super AND to a primary on their own board. A non-super primary passes
+  // CAT_OWNER='' so getCategoriesData defaults owner=caller's own sid server-side (own-set only).
+  function fetchCategories(thenRender) {
+    if (!catUiEnabled()) { return; }
+    runScript('getCategoriesData', TOKEN, CAT_OWNER, AUTH_PHONE)
+      .then(function (res) {
+        if (res && res.ok) {
+          CAT_DATA = { categories: res.categories || [], assignments: res.assignments || [] };
+          _rebuildAssignMap();
+        }
+        if (thenRender) { renderData(D); }
+      }, function () { if (thenRender) { renderData(D); } });
+  }
+
+  // [CATEGORIES-FEATBATCH2 N3] fetch the side-scoped read-only categories (mode=side_categories) ONCE,
+  // cache byOwner keyed by sender_id, then re-render. Mirrors fetchCategories; authorised server-side by
+  // the SAME primary+phone factor the side board already enforces (getSideCategoriesData). Never throws.
+  function fetchSideCategories(thenRender) {
+    runScript('getSideCategoriesData', TOKEN, AUTH_PHONE)
+      .then(function (res) {
+        if (res && res.ok) { SIDE_CAT = { byOwner: res.byOwner || {} }; SIDE_CAT_LOADED = true; }
+        if (thenRender) { renderData(D); }
+      }, function () { if (thenRender) { renderData(D); } });
+  }
+
+  // [CATEGORIES-FEATBATCH2 N1-PERSONAL] fetch the side-board breakdown (organiser list + guests) for a
+  // primary who is viewing their PERSONAL board (D.breakdown absent on personal payload). Uses the same
+  // getDashboardData(TOKEN, 'side', AUTH_PHONE) call the side board makes — the promoted primary IS
+  // authorised server-side (is_primary + phone gated, read-only). Stores .breakdown into SIDE_BREAKDOWN
+  // and re-renders so sideOrgTabsHtml can build the tab bar. Called ONCE (guard: SIDE_BREAKDOWN===null).
+  // Never throws: failure handler re-renders with SIDE_BREAKDOWN still null → "אין מארגנים" fallback.
+  function fetchSideBreakdown() {
+    runScript('getDashboardData', TOKEN, 'side', AUTH_PHONE)
+      .then(function (res) {
+        if (res && res.breakdown) { SIDE_BREAKDOWN = res.breakdown; }
+        else { SIDE_BREAKDOWN = []; }   // resolved but empty — stop showing "טוען…"
+        renderData(D);
+      }, function () {
+        SIDE_BREAKDOWN = [];            // mark resolved so placeholder doesn't spin forever
+        renderData(D);
+      });
+  }
+
+  // POST a categoryOp; on success refresh categories + re-render. `optimisticSel` keeps the
+  // current selection when appropriate (assign/unassign keep it; delete/create clear msg).
+  function postCategoryOp(body) {
+    body.action = 'categoryOp';
+    body.token = TOKEN;
+    // [CATEGORIES-FEATBATCH M2] carry the session phone so the owner-token super path passes the
+    // categoryOp phone-gate that now mirrors the combined-read gate. AUTH_PHONE is seeded from
+    // PHONE_PREFILL on the combined super path (empty for a MASTER_TOKEN caller, which is phone-less;
+    // empty too for a lower-role primary, whose own-sid resolution never needs a phone). Without this
+    // the super's OWN create/assign would fail the new gate.
+    body.phone = AUTH_PHONE;
+    if (CAT_OWNER) { body.owner_sid = CAT_OWNER; }
+    runScript('categoryOp', body)
+      .then(function (res) {
+        if (res && res.ok) {
+          // [CATEGORIES-FEATBATCH2 N5] ROOT-CAUSE FIX for the ~5-click add: the server already returned
+          // the fresh authoritative list in res.categories. For create/rename/delete render IMMEDIATELY
+          // from res (no second async fetchCategories hop that lags + re-wires a fresh #cat-add-btn mid-
+          // flight). Only assign/unassign genuinely change the join map → keep the authoritative refetch.
+          CAT_DATA.categories = res.categories || CAT_DATA.categories;
+          if (body.op === 'create' || body.op === 'rename') {
+            // create/rename NEVER change assignments → CAT_DATA/join map already authoritative.
+            _rebuildAssignMap(); renderData(D);
+          } else if (body.op === 'delete') {
+            // drop the deleted cat_id from assignments so no orphan lingers (server cascaded the
+            // junction rows in-lock), then render from the authoritative categories.
+            var _del = body.cat_id;
+            CAT_DATA.assignments = (CAT_DATA.assignments || []).filter(function (a) { return String(a.cat_id) !== String(_del); });
+            _rebuildAssignMap(); renderData(D);
+          } else {
+            // assign/unassign: the join map genuinely changed → authoritative refetch.
+            fetchCategories(true);
+          }
+        } else {
+          _catMsg((res && res.error) ? res.error : 'שגיאה', 'err');
+          _reenableAddBtn();   // [N5] failed op does NOT re-render → un-stick the in-flight guard
+        }
+      }, function () { _catMsg('שגיאה בשליחה, נסה שוב', 'err'); _reenableAddBtn(); });
+  }
+
+  // [CATEGORIES-FEATBATCH2 N5] re-enable the add button after a FAILED op (success re-renders a fresh
+  // button, so this is only needed on the error/failure paths where no renderData runs).
+  function _reenableAddBtn() {
+    var b = document.getElementById('cat-add-btn');
+    if (b) { b.disabled = false; }
+  }
+
+  function _selectedKeys() {
+    var out = [];
+    for (var k in CAT_SEL) { if (CAT_SEL.hasOwnProperty(k) && CAT_SEL[k]) { out.push(k); } }
+    return out;
+  }
+  function _syncActionBar() {
+    var bar = document.getElementById('cat-actionbar');
+    var n = _selectedKeys().length;
+    var cn = document.getElementById('ab-count-n');
+    if (cn) { cn.textContent = String(n); }
+    if (bar) { if (n > 0) { bar.classList.add('open'); } else { bar.classList.remove('open'); } }
+  }
+
+  function wireCategoryControls() {
+    // [A4] wire for the super OR a primary on their own board. Regular organisers render no category
+    // DOM (catUiEnabled false), so there is nothing to wire and we bail early.
+    if (!catUiEnabled()) { return; }
+
+    // R4A: "כולם" toggle - enter the grouped view (fetch categories first if empty). Present for a
+    // primary's own board too (the button is rendered by topActionsHtml under catUiEnabled).
+    var taAll = document.getElementById('ta-all-btn');
+    if (taAll) {
+      taAll.addEventListener('click', function () {
+        var wasOn = CAT_VIEW;
+        _clearViews();                                  // mutual exclusivity (FIX-A superset)
+        if (wasOn) { renderData(D); return; }           // toggle OFF → back to default
+        CAT_VIEW = true; _scrollPending = true;
+        // [ROUNDFIX-20260708 #2] render IMMEDIATELY so the view switches without waiting on the server;
+        // the fetch below fills the categories then re-renders.
+        renderData(D);
+        if ((!CAT_DATA.categories || CAT_DATA.categories.length === 0) && !CAT_DATA.assignments.length) {
+          fetchCategories(true);
+        }
+      });
+    }
+
+    // R4C: side buttons + back-to-all are SUPER-ONLY act-as (owner_sid re-scope). A primary's own
+    // board never renders these (sideActBtnsHtml is IS_SUPER-gated), and a non-super caller must
+    // never pass owner_sid - so wire them only for the super.
+    if (IS_SUPER) {
+      var sideBtns = out_qsa('[data-actside]');
+      for (var s = 0; s < sideBtns.length; s++) {
+        (function (btn) {
+          btn.addEventListener('click', function () { pickPrimaryForSide(btn.getAttribute('data-actside')); });
+        })(sideBtns[s]);
+      }
+      var backAll = document.getElementById('ta-back-all');
+      if (backAll) {
+        backAll.addEventListener('click', function () {
+          CAT_OWNER = '';
+          CAT_SEL = {};
+          loadOwnerBoard();   // reload the full combined board
+        });
+      }
+    }
+
+    // R4B: category manager - add. [CATEGORIES-FEATBATCH2 N5] in-flight guard: disable the button while
+    // the create round-trips (mirrors the manual-add btn.disabled pattern) so rapid clicks can't fire
+    // against a node being replaced. The button is destroyed on the next renderData, so re-enabling is
+    // only needed on the FAILURE path (a failed create does NOT re-render); success re-renders a fresh
+    // button. Combined with the immediate-render fix in postCategoryOp → one click adds the category.
+    var addBtn = byIdRw('cat-add-btn');   // [FIX-B] never a read-only-wrapped node
+    if (addBtn) {
+      addBtn.addEventListener('click', function () {
+        if (addBtn.disabled) { return; }
+        var inp = document.getElementById('cat-new-name');
+        var name = inp ? String(inp.value || '').trim() : '';
+        if (!name) { _catMsg('יש להזין שם קטגוריה.', 'err'); return; }
+        _catMsg('מוסיף…', '');
+        addBtn.disabled = true;
+        postCategoryOp({ op: 'create', name: name });
+      });
+    }
+    // R4B: rename + delete (per-chip buttons). [FIX-B] RW-scoped so read-only wrappers are skipped.
+    var rens = out_qsa_rw('.cat-rename');
+    for (var r = 0; r < rens.length; r++) {
+      (function (b) {
+        b.addEventListener('click', function () {
+          var cid = b.getAttribute('data-cat');
+          // [FIXLIST5 2026-07-10] appModal.prompt replaces the native prompt - identical semantics
+          // (null = ביטול); the whole continuation moved into .then, nothing runs before the answer.
+          appModal.prompt('שם חדש לקטגוריה:').then(function (nm) {
+            if (nm === null) { return; }
+            nm = String(nm).trim();
+            if (!nm) { _catMsg('שם ריק - בוטל.', 'err'); return; }
+            _catMsg('משנה שם…', '');
+            postCategoryOp({ op: 'rename', cat_id: cid, name: nm });
+          });
+        });
+      })(rens[r]);
+    }
+    var dels = out_qsa_rw('.cat-del');
+    for (var d = 0; d < dels.length; d++) {
+      (function (b) {
+        b.addEventListener('click', function () {
+          var cid = b.getAttribute('data-cat');
+          var nm = b.getAttribute('data-name') || '';
+          // [FIXLIST5 2026-07-10] appModal.confirm replaces the native confirm - the delete runs
+          // ONLY on אישור (true); ביטול/Escape (false) is a no-op, exactly like the old early-return.
+          appModal.confirm('למחוק את הקטגוריה "' + nm + '"? האורחים לא יימחקו, רק השיוך יוסר.').then(function (ok) {
+            if (!ok) { return; }
+            _catMsg('מוחק…', '');
+            postCategoryOp({ op: 'delete', cat_id: cid });
+          });
+        });
+      })(dels[d]);
+    }
+
+    // R4B: multi-select checkboxes. [FIX-B] RW-scoped: the read-only side-org drill-in emits NO
+    // .gc-check, and even if one ever appeared inside .cat-ro it would be skipped here.
+    var checks = out_qsa_rw('.gc-check');
+    for (var c = 0; c < checks.length; c++) {
+      (function (chk) {
+        chk.addEventListener('change', function () {
+          var dk = chk.getAttribute('data-dk');
+          if (chk.checked) { CAT_SEL[dk] = true; } else { delete CAT_SEL[dk]; }
+          _syncActionBar();
+        });
+      })(checks[c]);
+    }
+    // R4B: action bar buttons. [FIX-B] byIdRw → never a read-only-wrapped #ab-* node.
+    var abAssign = byIdRw('ab-assign-btn');
+    if (abAssign) {
+      abAssign.addEventListener('click', function () {
+        var keys = _selectedKeys();
+        if (!keys.length) { _catMsg('לא נבחרו אורחים.', 'err'); return; }
+        var sel = document.getElementById('ab-select');
+        var cid = sel ? sel.value : '';
+        if (!cid) { _catMsg('בחר קטגוריה מהרשימה.', 'err'); return; }
+        _catMsg('משייך ' + keys.length + ' אורחים…', '');
+        CAT_SEL = {};
+        postCategoryOp({ op: 'assign', cat_id: cid, dedupe_keys: keys });
+      });
+    }
+    var abRemove = byIdRw('ab-remove-btn');
+    if (abRemove) {
+      abRemove.addEventListener('click', function () {
+        var keys = _selectedKeys();
+        if (!keys.length) { _catMsg('לא נבחרו אורחים.', 'err'); return; }
+        _catMsg('מסיר סיווג מ-' + keys.length + ' אורחים…', '');
+        CAT_SEL = {};
+        postCategoryOp({ op: 'unassign', dedupe_keys: keys });
+      });
+    }
+    var abClear = byIdRw('ab-clear-btn');
+    if (abClear) {
+      abClear.addEventListener('click', function () { CAT_SEL = {}; renderData(D); });
+    }
+    _syncActionBar();
+  }
+
+  // querySelectorAll scoped to the dashboard content (avoids the static panels).
+  function out_qsa(sel) {
+    var dc = document.getElementById('dashboard-content');
+    return dc ? dc.querySelectorAll(sel) : [];
+  }
+
+  // [CATEGORIES-FEATBATCH2 FIX-B] querySelectorAll for WRITE controls only: identical to out_qsa but
+  // filters out any node inside a read-only wrapper (.cat-ro / data-readonly='1'), so a category
+  // manager / multi-select control that ever appears inside the N3 side-org drill-in is NEVER wired.
+  // The readOnly renderer already emits zero write controls; this is the structural belt-and-braces.
+  function out_qsa_rw(sel) {
+    var all = out_qsa(sel);
+    var out = [];
+    for (var i = 0; i < all.length; i++) {
+      var n = all[i];
+      if (n && n.closest && n.closest('.cat-ro')) { continue; }   // skip read-only-wrapped write controls
+      out.push(n);
+    }
+    return out;
+  }
+  // A getElementById-style lookup that returns null if the found node lives inside a read-only wrapper.
+  function byIdRw(id) {
+    var n = document.getElementById(id);
+    if (n && n.closest && n.closest('.cat-ro')) { return null; }
+    return n;
+  }
+
+  // R4C: choose a primary organiser of `side` from the loaded organiser list, then act-as.
+  // The combined payload already carries breakdowns with sender_id+name per side; use them.
+  function pickPrimaryForSide(side) {
+    var bd = (side === 'groom') ? (D.groomBreakdown || []) : (D.brideBreakdown || []);
+    if (!bd.length) { _catMsg('אין מארגנים בצד זה.', 'err'); return; }
+    // Build a numbered picker. [FIXLIST5 2026-07-10] appModal.prompt replaces the native prompt -
+    // identical semantics (null = ביטול; the modal's pre-wrap message renders the numbered lines);
+    // the whole continuation moved into .then, so nothing act-as related runs before the answer.
+    var lines = [];
+    for (var i = 0; i < bd.length; i++) { lines.push((i + 1) + ') ' + (bd[i].name || bd[i].sender_id)); }
+    appModal.prompt('בחר מארגן להצגת התצוגה שלו:\n' + lines.join('\n') + '\n\nהקלד מספר:').then(function (pick) {
+      if (pick === null) { return; }
+      var idx = parseInt(String(pick).trim(), 10) - 1;
+      if (isNaN(idx) || idx < 0 || idx >= bd.length) { _catMsg('בחירה לא תקינה.', 'err'); return; }
+      CAT_OWNER = String(bd[idx].sender_id || '');
+      CAT_SEL = {};
+      CAT_VIEW = true;   // acting-as opens straight into that owner's "כולם"/categories view
+      loadOwnerBoard();
+    });
+  }
+
+  // Reload the combined board (optionally scoped to CAT_OWNER) from the server, then its categories.
+  function loadOwnerBoard() {
+    runScript('getDashboardData', TOKEN, MODE, AUTH_PHONE, CAT_OWNER)
+      .then(function (res) {
+        if (res && !res.error) { D = res; fetchCategories(true); }
+        else { _catMsg('אין גישה למארגן זה.', 'err'); }
+      }, function () { _catMsg('שגיאה בטעינה.', 'err'); });
+  }
+
+  // ── Toggle which top-level section is visible
+  function showSection(id) {
+    ['phone-prompt', 'error-page', 'dashboard-content'].forEach(function (s) {
+      var el = document.getElementById(s);
+      if (el) { el.style.display = (s === id) ? 'block' : 'none'; }
+    });
+  }
+
+  // ── Show the phone-entry prompt with an optional message
+  function showPhonePrompt(msg) {
+    showSection('phone-prompt');
+    var m = document.getElementById('gateMsg');
+    if (m) { m.textContent = msg || ''; }
+  }
+
+  // ── Show the generic error page with an optional message
+  function showError(msg) {
+    showSection('error-page');
+    if (msg) {
+      var m = document.getElementById('error-msg');
+      if (m) { m.textContent = msg; }
+    }
+  }
+
+  // ── Manual-add: open the modal (clears fields + message each time)
+  function openManualAdd() {
+    var ov = document.getElementById('manual-overlay');
+    if (!ov) { return; }
+    document.getElementById('m-name').value = '';
+    document.getElementById('m-men').value = '0';
+    document.getElementById('m-women').value = '0';
+    document.getElementById('m-phone').value = '';
+    // req #3: bind the manual-add to THIS dashboard's own organiser so it is impossible
+    // to add for the wrong organiser without seeing it. senderName is present in
+    // personal/side mode; blank -> hide the line gracefully (combined/master has no single owner).
+    var af = document.getElementById('manual-adding-for');
+    if (af) {
+      var owner = String((D && D.senderName) || '');
+      if (owner) { af.innerHTML = 'מוסיף עבור: ' + esc(owner); af.style.display = 'block'; }
+      else { af.textContent = ''; af.style.display = 'none'; }
+    }
+    setManualMsg('', '');
+    var btn = document.getElementById('manual-submit-btn');
+    if (btn) { btn.disabled = false; btn.textContent = 'הוסף לרשימה'; }
+    ov.classList.add('open');
+    document.getElementById('m-name').focus();
+  }
+
+  // ── Manual-add: close the modal
+  function closeManualAdd() {
+    var ov = document.getElementById('manual-overlay');
+    if (ov) { ov.classList.remove('open'); }
+  }
+
+  // ── Manual-add: set the inline message (kind = 'ok' | 'err' | '')
+  function setManualMsg(text, kind) {
+    var m = document.getElementById('manual-msg');
+    if (!m) { return; }
+    m.textContent = text || '';
+    m.className = 'manual-msg' + (kind ? ' ' + kind : '');
+  }
+
+  // ── Manual-add: refresh the board so the new person shows in the counts
+  // ── INVITE-TOKEN: "מי לא אישר עדיין" panel. Reads Invites via getUnconfirmedInvites,
+  //    gated identically to getDashboardData for the current MODE. Purely additive.
+  // [ROUNDFIX-20260708 #6א] the static #unconf-panel is gone; "מי לא אישר עדיין" now renders IN-CONTENT
+  // (UNCONF_VIEW → unconfInlineHtml, replacing the records area). openUnconfirmed/closeUnconfirmed/
+  // isUnconfOpen/_unconfPanel were removed. fetchUnconfirmed + renderUnconfirmed still fill the same ids.
+  function fetchUnconfirmed() {
+    try {
+      runScript('getUnconfirmedInvites', TOKEN, MODE, AUTH_PHONE)
+        .then(renderUnconfirmed, renderUnconfirmedError);
+    } catch (e) { renderUnconfirmedError(e); }
+  }
+  // [ROUNDFIX2 #3] cache the enriched people[] and render the category-grouped cards.
+  function renderUnconfirmed(res) {
+    if (!res || !res.ok) { return renderUnconfirmedError(); }
+    UNCONF_PEOPLE = res.people || [];
+    renderUnconfCards();
+  }
+  function renderUnconfirmedError() {
+    UNCONF_PEOPLE = UNCONF_PEOPLE || [];
+    var host = document.getElementById('unconf-cards');
+    if (host) { host.innerHTML = '<div class=\'uc-empty\'>שגיאה בטעינה</div>'; }
+  }
+
+  function refreshBoard() {
+    if (AUTH_PHONE) {
+      authAndLoad(AUTH_PHONE);
+    } else {
+      // Master/combined view has no phone gate - re-render from server via getDashboardData.
+      runScript('getDashboardData', TOKEN, MODE, AUTH_PHONE)
+        .then(function (res) { if (res && !res.error) { renderData(res); } }, function () {});
+    }
+  }
+
+  // [FIXLIST2 2026-07-10] client-side mirror of normalizeIsraeliPhone (07_security.js) -
+  // IDENTICAL algorithm, so client validation can never accept what the server rejects:
+  // digits-only, '972…'→'0…', 9-digit '5…'→'05…', then /^05[0-689]\d{7}$/ or ''.
+  function normalizeIsraeliPhoneClient(raw) {
+    var d = String(raw == null ? '' : raw).replace(/\D/g, '');
+    if (d.indexOf('972') === 0) { d = '0' + d.slice(3); }
+    if (d.length === 9 && d.charAt(0) === '5') { d = '0' + d; }
+    if (/^05[0-689]\d{7}$/.test(d)) { return d; }
+    return '';
+  }
+
+  // ── Manual-add: validate + submit to the EXISTING backend (addManualGuest).
+  // Payload matches the addManualGuest(payload) contract in 01_brain.js:
+  //   dashboard_token (auth), guest_name, phone, attending (bool), men_count, women_count.
+  // sender_id/side are resolved server-side from the token (authoritative); channel = 'manual'.
+  function submitManualAdd() {
+    var name  = document.getElementById('m-name').value.trim();
+    var men   = parseInt(document.getElementById('m-men').value, 10);   if (isNaN(men)   || men   < 0) { men   = 0; }
+    var women = parseInt(document.getElementById('m-women').value, 10); if (isNaN(women) || women < 0) { women = 0; }
+    var phone = document.getElementById('m-phone').value.trim();
+
+    if (!name) {
+      setManualMsg('יש להזין שם.', 'err');
+      document.getElementById('m-name').focus();
+      return;
+    }
+
+    // [FIXLIST2 2026-07-10] phone is now MANDATORY (user decision; the server enforces it too in
+    // addManualGuest / 01_brain.js). Mirrors the name-validation pattern above; the format check
+    // mirrors normalizeIsraeliPhone (07_security.js) EXACTLY via normalizeIsraeliPhoneClient.
+    if (!phone) {
+      setManualMsg('יש להזין טלפון.', 'err');
+      document.getElementById('m-phone').focus();
+      return;
+    }
+    if (normalizeIsraeliPhoneClient(phone) === '') {
+      setManualMsg('מספר הטלפון אינו תקין - יש להזין מספר נייד ישראלי (למשל 0501234567).', 'err');
+      document.getElementById('m-phone').focus();
+      return;
+    }
+
+    var payload = {
+      dashboard_token: TOKEN,
+      guest_name:      name,
+      men_count:       men,
+      women_count:     women,
+      phone:           phone,
+      attending:       true
+    };
+
+    var btn = document.getElementById('manual-submit-btn');
+    if (btn) { btn.disabled = true; btn.textContent = 'מוסיף…'; }
+    setManualMsg('', '');
+
+    runScript('addManualGuest', payload)
+      .then(function (res) {
+        if (res && res.success) {
+          setManualMsg('נוסף בהצלחה!', 'ok');
+          refreshBoard();
+          setTimeout(closeManualAdd, 900);
+        } else {
+          if (btn) { btn.disabled = false; btn.textContent = 'הוסף לרשימה'; }
+          setManualMsg((res && res.error) ? res.error : 'שגיאה, נסה שוב', 'err');
+        }
+      }, function () {
+        if (btn) { btn.disabled = false; btn.textContent = 'הוסף לרשימה'; }
+        setManualMsg('שגיאה בשליחה, נסה שוב', 'err');
+      });
+  }
+
+  // ── Authenticate the phone against the server, then render on success
+  function authAndLoad(phone) {
+    runScript('getDashboardData', TOKEN, MODE, phone)
+      .then(function (res) {
+        if (res && res.error) {
+          localStorage.removeItem(LSKEY);
+          showPhonePrompt('מספר לא תואם, נסה שוב');
+        } else {
+          localStorage.setItem(LSKEY, phone);
+          AUTH_PHONE = phone;
+          renderData(res);
+        }
+      }, function () { showPhonePrompt('שגיאה, נסה שוב'); });
+  }
+
+  // ── G2 EDIT 2: live-sync bridge - the host SPA polls check_updates and posts
+  //    {type:'wedding-refresh'} on any new guest; refresh the board in place.
+  //    Skip while the manual-add modal is open (never clobber in-progress input)
+  //    and while unauthenticated; simple in-flight guard prevents request stacking.
+  var _refreshBusy = false;
+  window.addEventListener('message', function (e) {
+    if (!e || !e.data || e.data.type !== 'wedding-refresh') return;
+    try {
+      var ov = document.getElementById('manual-overlay');
+      if (ov && ov.classList.contains('open')) return; /* never clobber in-progress manual add */
+      if (NEEDS_PHONE && !AUTH_PHONE) return; /* not authenticated yet */
+      if (_refreshBusy) return;
+      _refreshBusy = true;
+      setTimeout(function () { _refreshBusy = false; }, 4000);
+      refreshBoard();
+      // [ROUNDFIX-20260708 #6א] keep the in-content unconfirmed view live only while it is the active view.
+      if (UNCONF_VIEW) { fetchUnconfirmed(); }
+    } catch (err) {}
+  });
+
+  // ── Gate on load
+  document.addEventListener('DOMContentLoaded', function () {
+    var gateBtn = document.getElementById('gateBtn');
+    if (gateBtn) {
+      gateBtn.addEventListener('click', function () {
+        authAndLoad(document.getElementById('gatePhone').value);
+      });
+    }
+    var gatePhone = document.getElementById('gatePhone');
+    if (gatePhone) {
+      gatePhone.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') { authAndLoad(gatePhone.value); }
+      });
+    }
+
+    // Manual-add modal wiring
+    var mSubmit = document.getElementById('manual-submit-btn');
+    if (mSubmit) { mSubmit.addEventListener('click', submitManualAdd); }
+    var mCancel = document.getElementById('manual-cancel-btn');
+    if (mCancel) { mCancel.addEventListener('click', closeManualAdd); }
+    var mOverlay = document.getElementById('manual-overlay');
+    if (mOverlay) {
+      mOverlay.addEventListener('click', function (e) {
+        if (e.target === mOverlay) { closeManualAdd(); }   // click on the backdrop closes
+      });
+    }
+
+    // ── G5 A4d: DELEGATED "קרא עוד…" expander - attached ONCE on the stable
+    //    #dashboard-content container so it survives every renderData rebuild.
+    var dc = document.getElementById('dashboard-content');
+    if (dc) {
+      dc.addEventListener('click', function (ev) {
+        var b = ev.target && ev.target.closest ? ev.target.closest('.rm-btn') : null;
+        if (!b) { return; }
+        var td = b.closest('td.longtext'); if (!td) { return; }
+        var open = td.classList.toggle('expanded');
+        b.textContent = open ? 'הסתר' : 'קרא עוד…';
+      });
+
+      // ── S1c D2: DELEGATED per-organiser tab switch (combined view). Attached ONCE on
+      //    the stable container so it survives every renderData rebuild. Pure DOM toggle:
+      //    within the clicked tab's side, mark it aria-selected and show only its panel.
+      dc.addEventListener('click', function (ev) {
+        var tab = ev.target && ev.target.closest ? ev.target.closest('.org-tab') : null;
+        if (!tab) { return; }
+        var side = tab.getAttribute('data-org-side');
+        if (!side) { return; }
+        // [ROUNDFIX2b #5] ACCORDION (side-org): toggle THIS organiser's own panel open/closed in place,
+        // right below its name; a second click on the same name closes it. Independent of the others.
+        if (side === 'sideorg') {
+          var own = document.getElementById(tab.getAttribute('aria-controls'));
+          if (own) {
+            var opening = own.hidden;
+            own.hidden = !opening;
+            tab.setAttribute('aria-expanded', opening ? 'true' : 'false');
+          }
+          return;
+        }
+        // Combined (groom/bride): EXCLUSIVE tabs — show only the clicked panel within its bar.
+        var bar = tab.parentNode; // the .org-tabs bar for this side
+        var sideTabs = bar.querySelectorAll('.org-tab');
+        for (var i = 0; i < sideTabs.length; i++) {
+          var t = sideTabs[i];
+          var on = (t === tab);
+          t.setAttribute('aria-selected', on ? 'true' : 'false');
+          var pan = document.getElementById(t.getAttribute('aria-controls'));
+          if (pan) { pan.hidden = !on; }
+        }
+      });
+
+      // ── [CATEGORIES-FEATBATCH2 N4] DELEGATED category-disclosure toggle. ONE handler on the stable
+      //    #dashboard-content (mirrors the .org-tab pattern) so it survives every renderData rebuild and
+      //    is compatible with N5's immediate re-render. Applies to BOTH the own "חלוקה לקטגוריות" view
+      //    and the N3 side-org drill-in: a click on a .cat-toggle header shows/hides its guest table.
+      dc.addEventListener('click', function (ev) {
+        var hd = ev.target && ev.target.closest ? ev.target.closest('.cat-toggle') : null;
+        if (!hd) { return; }
+        var pid = hd.getAttribute('data-cat-toggle');
+        var pan = pid ? document.getElementById(pid) : null;
+        if (!pan) { return; }
+        var open = pan.hidden;          // currently hidden → we are opening it
+        pan.hidden = !open;
+        hd.setAttribute('aria-expanded', open ? 'true' : 'false');
+      });
+
+      // [UIPOLISH3 2026-07-04 - part ד] DELEGATED guest-list filter (personal view). Attached
+      //   ONCE on the stable #dashboard-content so it survives every renderData rebuild. Sets
+      //   FILTER and re-renders from the cached D object - the active pill + filtered table stay
+      //   in sync. Display only; no core/data logic is touched.
+      dc.addEventListener('click', function (ev) {
+        var fb = ev.target && ev.target.closest ? ev.target.closest('.flt-btn') : null;
+        if (!fb) { return; }
+        var v = fb.getAttribute('data-flt');
+        if (!v || v === FILTER) { return; }
+        FILTER = v;
+        renderData(D);
+      });
+
+      // [ROUNDFIX2 #3] unconfirmed-cards filter (הכל / טופס טרם נפתח / נפתח אך טרם אושר). Same .flt-btn
+      // class, distinct data-ucflt attribute → this and the guest-list data-flt handler never collide.
+      // Re-renders the cards from the cache (no server refetch); updates the active pill in place.
+      dc.addEventListener('click', function (ev) {
+        var b = ev.target && ev.target.closest ? ev.target.closest('.flt-btn') : null;
+        if (!b) { return; }
+        var v = b.getAttribute('data-ucflt');
+        if (!v || v === UNCONF_FILTER) { return; }
+        UNCONF_FILTER = v;
+        var pills = b.parentNode.querySelectorAll('.flt-btn');
+        for (var i = 0; i < pills.length; i++) { pills[i].classList.toggle('active', pills[i] === b); }
+        renderUnconfCards();
+      });
+
+      // [ROUNDFIX2 #2] assign a category to a NOT-YET-CONFIRMED guest from their card (own invites only).
+      // Writes via the SAME categoryOp the confirmed-guest flow uses, keyed by the invite person_key
+      // ('name:'+normName+'_'+sid); on confirmation 01_brain.js migrates it to the real dedupe_key.
+      dc.addEventListener('change', function (ev) {
+        var sel = ev.target && ev.target.closest ? ev.target.closest('.uc-cat-sel') : null;
+        if (!sel) { return; }
+        var pk = sel.getAttribute('data-pk');
+        if (!pk) { return; }
+        var cid = sel.value || '';
+        if (UNCONF_PEOPLE) {   // optimistic cache update so the card doesn't jump before the refetch
+          for (var i = 0; i < UNCONF_PEOPLE.length; i++) {
+            if (UNCONF_PEOPLE[i].person_key === pk) { UNCONF_PEOPLE[i].cat_id = cid; break; }
+          }
+        }
+        var body = cid
+          ? { action: 'categoryOp', op: 'assign', token: TOKEN, phone: AUTH_PHONE, cat_id: cid, dedupe_keys: [pk] }
+          : { action: 'categoryOp', op: 'unassign', token: TOKEN, phone: AUTH_PHONE, dedupe_keys: [pk] };
+        runScript('categoryOp', body)
+          .then(function () { fetchUnconfirmed(); }, function () { fetchUnconfirmed(); });
+      });
+
+      // [ROUNDFIX2g #5] MINE category-filter chips (data-minecatflt). Distinct attribute → never collides
+      // with the attending data-flt or the unconfirmed data-ucflt handlers. Re-renders from the cache.
+      dc.addEventListener('click', function (ev) {
+        var b = ev.target && ev.target.closest ? ev.target.closest('.mcf-chip') : null;
+        if (!b) { return; }
+        var v = b.getAttribute('data-minecatflt') || '';
+        if (v === MINE_CAT_FILTER) { return; }
+        MINE_CAT_FILTER = v;
+        renderData(D);
+      });
+
+      // [ROUNDFIX2g #4] MINE per-guest category assign/unassign. data-dk = the CONFIRMED guest's dedupe_key
+      // (the same key GuestCategory is keyed by). Optimistic join-map update so the card/filter don't flicker.
+      dc.addEventListener('change', function (ev) {
+        var sel = ev.target && ev.target.closest ? ev.target.closest('.mine-cat-sel') : null;
+        if (!sel) { return; }
+        var dk = sel.getAttribute('data-dk');
+        if (!dk) { return; }
+        var cid = sel.value || '';
+        if (cid) { CAT_ASSIGN[String(dk)] = cid; } else { delete CAT_ASSIGN[String(dk)]; }
+        var body = cid
+          ? { action: 'categoryOp', op: 'assign', token: TOKEN, phone: AUTH_PHONE, cat_id: cid, dedupe_keys: [dk] }
+          : { action: 'categoryOp', op: 'unassign', token: TOKEN, phone: AUTH_PHONE, dedupe_keys: [dk] };
+        runScript('categoryOp', body)
+          .then(function () { fetchCategories(true); }, function () { fetchCategories(true); });
+      });
+
+      // [ROUNDFIX2g #4] MINE floating category icons: ＋ add / ✏ rename / 🗑 delete. Reuse postCategoryOp
+      // (which re-renders from the authoritative server list). rename/delete act on the card's SELECTED cat.
+      dc.addEventListener('click', function (ev) {
+        var icn = ev.target && ev.target.closest ? ev.target.closest('.mine-cat-ic') : null;
+        if (!icn) { return; }
+        var act = icn.getAttribute('data-icat');
+        var card = icn.closest ? icn.closest('.mine-card') : null;
+        var selEl = card ? card.querySelector('.mine-cat-sel') : null;
+        var curCid = selEl ? (selEl.value || '') : '';
+        function trim(s) { return String(s == null ? '' : s).replace(/^\s+|\s+$/g, ''); }
+        // [FIXLIST5 2026-07-10] appModal replaces the native prompt/alert/confirm - identical
+        // semantics per kind (prompt: null = ביטול, trim(null)='' keeps the old no-op; confirm:
+        // the op runs ONLY on אישור). Each branch's continuation moved into .then; the branches
+        // are mutually exclusive and nothing follows the if/else-if chain in this handler.
+        if (act === 'add') {
+          appModal.prompt('שם הקטגוריה החדשה:', '').then(function (res) {
+            var nm = trim(res);
+            if (nm) { postCategoryOp({ op: 'create', name: nm }); }
+          });
+        } else if (act === 'rename') {
+          if (!curCid) { appModal.alert('בחר/י קודם קטגוריה מהרשימה, ואז שנה/י את שמה.'); return; }
+          var cur = _catNameById(curCid);
+          appModal.prompt('שם חדש לקטגוריה:', cur).then(function (res) {
+            var nn = trim(res);
+            if (nn && nn !== cur) { postCategoryOp({ op: 'rename', cat_id: curCid, name: nn }); }
+          });
+        } else if (act === 'delete') {
+          if (!curCid) { appModal.alert('בחר/י קודם קטגוריה מהרשימה, ואז מחק/י אותה.'); return; }
+          appModal.confirm('למחוק את הקטגוריה "' + _catNameById(curCid) + '"? השיוך יוסר מכל האורחים שבה (האורחים עצמם לא נמחקים).').then(function (ok) {
+            if (ok) { postCategoryOp({ op: 'delete', cat_id: curCid }); }
+          });
+        }
+      });
+    }
+
+    if (NEEDS_PHONE) {
+      // PHASE 4: the SPA injects ?phone= via the server (t.PHONE_PREFILL). When present,
+      // auto-pass the phone gate so the dashboard NEVER prompts inside the SPA iframe.
+      // The prompt remains the fallback when absent/invalid (authAndLoad shows it on mismatch).
+      var prefill = String(PHONE_PREFILL || '').trim();
+      var remembered = localStorage.getItem(LSKEY);
+      if (prefill) { authAndLoad(prefill); }
+      else if (remembered) { authAndLoad(remembered); }
+      else { showPhonePrompt(''); }
+    } else if (SRV_ERR) {
+      showError(SRV_ERR);
+    } else {
+      // [CATEGORIES-FEATBATCH] combined super iframe: seed AUTH_PHONE from the server-injected
+      // PHONE_PREFILL so authenticated in-iframe category ops + act-as reloads carry the phone
+      // (the OWNER_SID self-serve path requires it; a MASTER_TOKEN caller ignores it). No prompt.
+      AUTH_PHONE = String(PHONE_PREFILL || '').trim();
+      // [CATEGORIES-FEATBATCH A3b] defensively seed CAT_OWNER from the server-forwarded ownerSid on
+      // the initial combined load. The server already scoped SRV_DATA to this owner_sid (getDashboardData
+      // act-as path), so seeding CAT_OWNER keeps the board + the in-iframe category manager coherent
+      // (categoryOp/getCategoriesData then target the same owner). SUPER-ONLY: only the combined board
+      // may act-as, and only the super may pass owner_sid; a non-super board never reaches this branch
+      // with a seed (IS_SUPER guards it, and a forged owner_sid was already rejected server-side).
+      if (IS_SUPER && OWNER_SID_INIT) {
+        CAT_OWNER = OWNER_SID_INIT;
+        CAT_VIEW = true;   // an act-as owner_sid opens straight into that owner's grouped view (mirrors pickPrimaryForSide)
+      }
+      /* [IRONFIX 2026-07-09] self-hosted combined board: SRV_DATA is no longer server-injected; run the
+         SAME getDashboardData(token,'combined',phone,owner_sid) call doGet made, then render. The error
+         path mirrors _renderDashboard 1:1 (failed gate -> data stays {}, the error text is shown). */
+      runScript('getDashboardData', TOKEN, 'combined', PHONE_PREFILL, OWNER_SID_INIT)
+        .then(function (res) {
+          if (res && !res.error) {
+            SRV_DATA = res;
+            try { renderData(SRV_DATA); } catch (e) { showError('שגיאה'); }
+          } else {
+            /* [verifier-2 F4] mirror _renderDashboard's failed-gate zeroing (02_server.js:722-732):
+               on a failed combined gate the GAS template rendered with token=''/PHONE_PREFILL=''/
+               ownerSid='' so no later in-page action (e.g. a wedding-refresh ping) could act on the
+               rejected credentials. Reproduce that exactly. */
+            TOKEN = ''; PHONE_PREFILL = ''; OWNER_SID_INIT = ''; CAT_OWNER = ''; AUTH_PHONE = '';
+            showError((res && res.error) || 'אין גישה');
+          }
+        }, function () { showError('שגיאה'); });
+    }
+  });
+}());
+</script>
+
+<div id='dashboard-content' style='display:none'>
+  <p style='color:#777'>&#x05D8;&#x05D5;&#x05E2;&#x05DF; &#x05E0;&#x05EA;&#x05D5;&#x05E0;&#x05D9;&#x05DD;&#x2026;</p>
+</div>
+
+<!-- [ROUNDFIX-20260708 #6א] the static “מי עדיין לא אישר” panel was REMOVED - the view now renders
+     in-content (below the buttons) via UNCONF_VIEW → unconfInlineHtml, replacing the records area. -->
+
+<!-- Manual-add modal (opened from the “הוסף מאשר ידנית” button; hidden by default) -->
+<div id='manual-overlay' class='manual-overlay'>
+  <div class='manual-modal' role='dialog' aria-modal='true' aria-labelledby='manual-title'>
+    <h2 id='manual-title'>הוספת מאשר ידנית</h2>
+    <p style='color:#666;font-size:.9em;margin:0 0 14px'>למי שאישר הגעה מחוץ לקישור (למשל הזמנה מודפסת). האורח יתווסף לספירה מיד.</p>
+    <p id='manual-adding-for' style='display:none;font-weight:bold;color:#1a6e3c;background:#eaf6ee;border-radius:8px;padding:9px 12px;margin:0 0 14px;font-size:.98em'></p>
+
+    <div class='manual-field'>
+      <label for='m-name'>שם המוזמן <span style='color:#c00'>*</span></label>
+      <input type='text' id='m-name' placeholder='שם מלא' autocomplete='off'>
+    </div>
+
+    <div class='manual-counts'>
+      <div class='manual-field'>
+        <label for='m-men'>גברים</label>
+        <input type='number' id='m-men' inputmode='numeric' min='0' value='0' dir='ltr'>
+      </div>
+      <div class='manual-field'>
+        <label for='m-women'>נשים</label>
+        <input type='number' id='m-women' inputmode='numeric' min='0' value='0' dir='ltr'>
+      </div>
+    </div>
+
+    <div class='manual-field'>
+      <label for='m-phone'>טלפון <span style='color:#c00'>*</span></label> <!-- [FIXLIST2] mandatory -->
+      <input type='tel' id='m-phone' inputmode='numeric' placeholder='050-1234567' dir='ltr' autocomplete='off'>
+    </div>
+
+    <div id='manual-msg' class='manual-msg'></div>
+
+    <div class='manual-actions'>
+      <button type='button' class='manual-submit' id='manual-submit-btn'>הוסף לרשימה</button>
+      <button type='button' class='manual-cancel' id='manual-cancel-btn'>ביטול</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
