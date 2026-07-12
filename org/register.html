@@ -904,6 +904,12 @@
     getUnconfirmedInvites: function (a) { return { action: 'unconfirmedInvites', token: a[0], mode: a[1], phone: a[2] || '' }; },
     categoryOp:            function (a) { var b = a[0] || {}, o = { action: 'categoryOp' }; for (var k in b) { if (Object.prototype.hasOwnProperty.call(b, k)) o[k] = b[k]; } return o; },
     addManualGuest:        function (a) { var b = a[0] || {}, o = { action: 'addManual' };  for (var k in b) { if (Object.prototype.hasOwnProperty.call(b, k)) o[k] = b[k]; } return o; },
+    // [MINE-MUT 2026-07-12] organiser self-service MANUAL guest mutators. Single-object arg (like
+    // addManualGuest/categoryOp): spread every payload field onto the doPost action. Client shapes:
+    //   deleteManualGuest({ dashboard_token, response_id })
+    //   updateManualGuest({ dashboard_token, response_id, guest_name, phone, men_count, women_count })
+    deleteManualGuest:     function (a) { var b = a[0] || {}, o = { action: 'deleteManualGuest' }; for (var k in b) { if (Object.prototype.hasOwnProperty.call(b, k)) o[k] = b[k]; } return o; },
+    updateManualGuest:     function (a) { var b = a[0] || {}, o = { action: 'updateManualGuest' }; for (var k in b) { if (Object.prototype.hasOwnProperty.call(b, k)) o[k] = b[k]; } return o; },
     registerOrganiser:     function (a) { return { action: 'registerOrg', name: a[0], side: a[1], phone: a[2] || '' }; }
   };
   window.runScript = function (fn) {

@@ -75,6 +75,17 @@
         border: 1px solid rgba(122,31,61,.35); border-radius: 999px; padding: 2px 12px 3px; white-space: nowrap; }
     }
     /* [/FIXLIST10-STYLE] */
+    /* [FIXLIST-R3 #3 2026-07-10] first-time onboarding simulation: teaches that the data lives under the
+       "האורחים שלי" button. A click-blocking overlay covers the board for exactly 5s; the button blinks
+       for the first 2s; then an auto scroll-down to the first 7 cards and back up. Runs 3× per device. */
+    /* overlay sits ABOVE the blinking button too, so nothing on the board is clickable during the 5s.
+       It is fully transparent, so the button + its glow show through (the box-shadow paints regardless). */
+    #onb-overlay { position: fixed; inset: 0; z-index: 950; background: transparent; cursor: default; }
+    .onb-blink { animation: onbBlink 0.6s ease-in-out infinite; position: relative; }
+    @keyframes onbBlink {
+      0%,100% { box-shadow: 0 0 0 0 rgba(60,110,113,0); transform: scale(1); }
+      50%     { box-shadow: 0 0 0 6px rgba(60,110,113,.55), 0 0 14px 3px rgba(60,110,113,.5); transform: scale(1.045); }
+    }
     h1 { font-size: 1.6em; margin-bottom: 12px; }
     h2 { font-size: 1.3em; margin-top: 24px; margin-bottom: 8px; border-bottom: 2px solid #bbb; padding-bottom: 4px; }
     h3 { font-size: 1.1em; margin-top: 16px; margin-bottom: 4px; color: #444; }
@@ -181,12 +192,56 @@
     .cat-ic { border:1.5px solid #cbbf9f; background:#f6f1e6; border-radius:9px; min-width:38px; min-height:38px; font-size:1rem; line-height:1; cursor:pointer; transition:transform .08s, background .15s, box-shadow .15s; display:inline-flex; align-items:center; justify-content:center; }
     .cat-ic:hover { background:#efe7d8; transform:translateY(-2px); box-shadow:0 3px 8px rgba(95,74,30,.18); }
     .cat-ic:active { transform:translateY(0); }
+    /* [MINEFILTER 2026-07-12] Filter groups now distribute EVENLY across the FULL row width with
+       no dead space, at any chip count. Each chip is flex:1 (grows to fill), flex-wrap lets extra
+       chips flow onto the next full-width row, and a min-width floor keeps them readable on phones
+       so the last row's chips still stretch to the edges (justify-content stretch via flex-grow). */
     .mine-catfilter { display:flex; gap:8px; flex-wrap:wrap; margin:6px 0 4px; padding:10px; background:linear-gradient(135deg,#faf6ec,#f3ead6); border:1px solid #e5dcc7; border-radius:14px; }
-    .mcf-chip { display:inline-flex; align-items:center; gap:7px; border:1.5px solid #cbbf9f; background:#fff; color:#5f4a1e; border-radius:999px; padding:7px 14px; font-family:inherit; font-size:.92rem; font-weight:700; cursor:pointer; transition:transform .08s, background .15s, box-shadow .15s; }
+    .mcf-chip { flex:1 1 120px; min-width:110px; display:inline-flex; align-items:center; justify-content:center; gap:7px; border:1.5px solid #cbbf9f; background:#fff; color:#5f4a1e; border-radius:999px; padding:9px 14px; min-height:44px; font-family:inherit; font-size:.92rem; font-weight:700; cursor:pointer; transition:transform .08s, background .15s, box-shadow .15s; }
     .mcf-chip:hover { transform:translateY(-1px); box-shadow:0 2px 8px rgba(95,74,30,.15); }
     .mcf-chip.active { background:#3c6e71; color:#fff; border-color:#3c6e71; box-shadow:0 3px 10px rgba(60,110,113,.3); }
     .mcf-n { background:rgba(0,0,0,.08); border-radius:999px; padding:1px 8px; font-size:.82rem; font-weight:800; }
     .mcf-chip.active .mcf-n { background:rgba(255,255,255,.25); }
+    /* [MINESCROLL 2026-07-12] small breathing gap when an anchor is scrolled to the top of the iframe
+       viewport (the fixed host #appHeader lives OUTSIDE this iframe, so no header overlap here). */
+    .mine-anchor { scroll-margin-top:10px; }
+    /* [MINESCROLL 2026-07-12] centered "back-up" arrow row, above the cards. The arrow matches the
+       .mine-cat-ic "+" size (≈38px), palette teal on beige; hidden until JS adds .show after an
+       auto-scroll. Pointer-events off while hidden so it never blocks taps on the filter bar. */
+    .mine-backup-row { display:flex; justify-content:center; align-items:center; height:0; margin:0; overflow:visible; scroll-margin-top:10px; transition:height .18s ease, margin .18s ease; }
+    .mine-backup-row.show { height:44px; margin:8px 0 2px; }
+    .mine-backup-arrow { display:inline-flex; align-items:center; justify-content:center; width:38px; height:38px; min-width:38px; min-height:38px; padding:0; border:1.5px solid #3c6e71; background:#3c6e71; color:#fff; border-radius:999px; font-size:1.25rem; line-height:1; font-weight:800; cursor:pointer; box-shadow:0 3px 10px rgba(60,110,113,.3); opacity:0; transform:translateY(-6px) scale(.9); pointer-events:none; transition:opacity .18s ease, transform .18s ease, background .15s; }
+    .mine-backup-arrow:hover { background:#345f62; }
+    .mine-backup-arrow.show { opacity:1; transform:translateY(0) scale(1); pointer-events:auto; }
+    /* [MINE-MUT 2026-07-12] SOURCE filter bar — mirrors .mine-catfilter/.mcf-chip exactly (beige #efe7d8, olive/teal #3c6e71). */
+    .mine-srcfilter { display:flex; gap:8px; flex-wrap:wrap; margin:6px 0 4px; padding:10px; background:linear-gradient(135deg,#faf6ec,#f3ead6); border:1px solid #e5dcc7; border-radius:14px; }
+    .msf-chip { flex:1 1 120px; min-width:110px; display:inline-flex; align-items:center; justify-content:center; gap:7px; border:1.5px solid #cbbf9f; background:#fff; color:#5f4a1e; border-radius:999px; padding:9px 14px; min-height:44px; font-family:inherit; font-size:.92rem; font-weight:700; cursor:pointer; transition:transform .08s, background .15s, box-shadow .15s; }
+    .msf-chip:hover { transform:translateY(-1px); box-shadow:0 2px 8px rgba(95,74,30,.15); }
+    .msf-chip.active { background:#3c6e71; color:#fff; border-color:#3c6e71; box-shadow:0 3px 10px rgba(60,110,113,.3); }
+    /* [MINEFILTER 2026-07-12] a small caption above each filter group so the now-header-less groups
+       stay self-explanatory once "הכל" was pulled out into the single master button. */
+    .mine-filter-cap { display:block; font-size:.8rem; font-weight:800; color:#8d7d66; margin:12px 2px 2px; }
+    /* [MINEFILTER 2026-07-12] the single MASTER "הכל" button — sits directly under the "האורחים שלי"
+       heading, visually separate from the three filter groups. Resets ALL filters at once. Full-width,
+       wine/teal accent when active (no filter applied). */
+    .mine-master-all { display:flex; margin:8px 0 14px; }
+    .mine-master-btn { flex:1; min-height:50px; display:inline-flex; align-items:center; justify-content:center; gap:10px; border:2px solid #cbbf9f; background:#fff; color:#5f4a1e; border-radius:14px; padding:10px 18px; font-family:inherit; font-size:1.05rem; font-weight:800; cursor:pointer; transition:transform .08s, background .15s, box-shadow .15s; }
+    .mine-master-btn:hover { transform:translateY(-1px); box-shadow:0 2px 10px rgba(95,74,30,.18); }
+    .mine-master-btn.active { background:#3c6e71; color:#fff; border-color:#3c6e71; box-shadow:0 4px 14px rgba(60,110,113,.32); }
+    .mine-master-btn .mmb-n { background:rgba(0,0,0,.08); border-radius:999px; padding:2px 10px; font-size:.85rem; font-weight:800; }
+    .mine-master-btn.active .mmb-n { background:rgba(255,255,255,.25); }
+    /* [MINEFILTER 2026-07-12] brief highlight ring when a manual action's guest card is focused. */
+    @keyframes mineFocusPulse { 0%{ box-shadow:0 0 0 0 rgba(60,110,113,.55); } 60%{ box-shadow:0 0 0 8px rgba(60,110,113,.08); } 100%{ box-shadow:0 0 0 0 rgba(60,110,113,0); } }
+    .mine-card.mine-focus { border-color:#3c6e71; animation:mineFocusPulse 1.6s ease-out 2; background:#f3f8f8; }
+    /* [MINE-MUT 2026-07-12] per-card manual actions row (update/delete) under the MINE card — RTL, touch-friendly (≥40px). */
+    .mine-manual-actions { display:flex; gap:8px; flex-wrap:wrap; margin:10px 0 0; padding-top:10px; border-top:1px dashed #e5dcc7; }
+    .mine-act-btn { display:inline-flex; align-items:center; justify-content:center; gap:6px; min-height:40px; padding:8px 16px; border-radius:9px; font-family:inherit; font-size:.92rem; font-weight:700; cursor:pointer; transition:transform .08s, background .15s, box-shadow .15s; border:1.5px solid #cbbf9f; }
+    .mine-act-btn:hover { transform:translateY(-1px); box-shadow:0 2px 8px rgba(95,74,30,.18); }
+    .mine-act-btn:active { transform:translateY(0); }
+    .mine-act-update { background:#3c6e71; color:#fff; border-color:#3c6e71; }
+    .mine-act-update:hover { box-shadow:0 3px 10px rgba(60,110,113,.3); }
+    .mine-act-delete { background:#fff; color:#c0392b; border-color:#e0a99f; }
+    .mine-act-delete:hover { background:#c0392b; color:#fff; border-color:#c0392b; box-shadow:0 3px 10px rgba(192,57,43,.28); }
 
     .badge {
       display: inline-block;
@@ -663,7 +718,7 @@
     s(val);
   }
 
-  function show(kind, msg, def, title) {
+  function show(kind, msg, def, title, labels) {
     build();
     activeKind = kind;
     boxTitle.textContent = (title == null ? '' : String(title));
@@ -672,6 +727,12 @@
     boxInput.style.display = (kind === 'prompt') ? 'block' : 'none';
     boxInput.value = (kind === 'prompt' && def != null) ? String(def) : '';
     btnCancel.style.display = (kind === 'alert') ? 'none' : 'inline-block';
+    // [MINE-MUT 2026-07-12] optional per-call button-label override. ONLY the two button texts
+    // change; default stays אישור/ביטול so every existing caller (which passes no labels) is
+    // byte-for-byte unchanged. labels = { yes?:'…', no?:'…' }.
+    var L = labels || {};
+    btnOk.textContent     = (L.yes != null) ? String(L.yes) : 'אישור';
+    btnCancel.textContent = (L.no  != null) ? String(L.no)  : 'ביטול';
     prevFocus = document.activeElement;
     ov.classList.add('open');
     return new Promise(function (resolve) {
@@ -684,15 +745,18 @@
   }
 
   // Public API - each call queues behind any dialog already open.
-  function enqueue(kind, msg, def, title) {
-    var p = queue.then(function () { return show(kind, msg, def, title); });
+  function enqueue(kind, msg, def, title, labels) {
+    var p = queue.then(function () { return show(kind, msg, def, title, labels); });
     queue = p.then(function () {}, function () {});
     return p;
   }
   window.appModal = {
-    alert:   function (msg, title)      { return enqueue('alert',   msg, undefined, title); },
-    confirm: function (msg, title)      { return enqueue('confirm', msg, undefined, title); },
-    prompt:  function (msg, def, title) { return enqueue('prompt',  msg, def,       title); }
+    alert:   function (msg, title)              { return enqueue('alert',   msg, undefined, title); },
+    // [MINE-MUT 2026-07-12] confirm gains an optional 3rd arg `labels` ({yes,no}) that overrides ONLY
+    // the button texts (default אישור/ביטול). Backward-compatible: confirm(msg) / confirm(msg,title)
+    // behave exactly as before.
+    confirm: function (msg, title, labels)      { return enqueue('confirm', msg, undefined, title, labels); },
+    prompt:  function (msg, def, title)         { return enqueue('prompt',  msg, def,       title); }
   };
 }());
 </script>
@@ -718,6 +782,12 @@
     getUnconfirmedInvites: function (a) { return { action: 'unconfirmedInvites', token: a[0], mode: a[1], phone: a[2] || '' }; },
     categoryOp:            function (a) { var b = a[0] || {}, o = { action: 'categoryOp' }; for (var k in b) { if (Object.prototype.hasOwnProperty.call(b, k)) o[k] = b[k]; } return o; },
     addManualGuest:        function (a) { var b = a[0] || {}, o = { action: 'addManual' };  for (var k in b) { if (Object.prototype.hasOwnProperty.call(b, k)) o[k] = b[k]; } return o; },
+    // [MINE-MUT 2026-07-12] organiser self-service MANUAL guest mutators. Single-object arg (like
+    // addManualGuest/categoryOp): spread every payload field onto the doPost action. Client shapes:
+    //   deleteManualGuest({ dashboard_token, response_id })
+    //   updateManualGuest({ dashboard_token, response_id, guest_name, phone, men_count, women_count })
+    deleteManualGuest:     function (a) { var b = a[0] || {}, o = { action: 'deleteManualGuest' }; for (var k in b) { if (Object.prototype.hasOwnProperty.call(b, k)) o[k] = b[k]; } return o; },
+    updateManualGuest:     function (a) { var b = a[0] || {}, o = { action: 'updateManualGuest' }; for (var k in b) { if (Object.prototype.hasOwnProperty.call(b, k)) o[k] = b[k]; } return o; },
     registerOrganiser:     function (a) { return { action: 'registerOrg', name: a[0], side: a[1], phone: a[2] || '' }; }
   };
   window.runScript = function (fn) {
@@ -798,6 +868,9 @@
   function selfSid() { return String((D && D.sid) || ''); }
   // Latest categories payload from mode=categories: { categories:[{cat_id,name,created_at,count}], assignments:[{dedupe_key,cat_id}] }.
   var CAT_DATA = { categories: [], assignments: [] };
+  // [FIXLIST-R3 #2 2026-07-10] one-shot guard: seed CAT_DATA from the categories the server now bundles
+  // into the dashboard payload, so the MINE chips paint in the FIRST render (no getCategoriesData lag).
+  var _catSeededFromPayload = false;
   // dedupe_key -> cat_id join map, rebuilt from CAT_DATA.assignments on every fetch.
   var CAT_ASSIGN = {};
   // Whether the "כולם" grouped view is the active records view (vs. the default side lists).
@@ -828,6 +901,64 @@
   var _defaultApplied = false;
   // [#4] set by a view-switching button so renderData scrolls the records area up to the buttons.
   var _scrollPending = false;
+
+  // ===== [MINESCROLL 2026-07-12] MINE auto-scroll + two-level "back-up" arrow =====
+  // The dashboard runs INSIDE #portalDashIframe; the fixed host #appHeader (64px) sits ABOVE the
+  // iframe and never overlaps the iframe's content, so "just below the header" inside the iframe is
+  // simply the TOP of the iframe's own scroll viewport (scrollIntoView block:'start'). A tiny
+  // scroll-margin-top (see CSS .mine-anchor) adds breathing room.
+  //  LEVEL 1 = "האורחים שלי" heading at the top (set when the user ENTERS the MINE view).
+  //  LEVEL 2 = the first guest card (or the filter block if zero guests) at the top (set by any filter).
+  // The arrow shows ONLY after one of these PROGRAMMATIC scrolls, never on a manual user scroll — a
+  // "programmatic" flag + short settle window let a scroll listener tell the two apart and hide the
+  // arrow on any non-programmatic scroll. Clicking the arrow steps back exactly one level:
+  //   LEVEL 2 → LEVEL 1 (arrow stays, now in level-1 state) → page-top (arrow hides).
+  var _mineAutoScroll   = false;   // true during/just-after a programmatic scroll (settle guard)
+  var _mineAutoTimer    = null;    // settle timer id
+  var _mineBackLevel    = 0;       // 0 none | 1 last auto-scroll was LEVEL 1 | 2 was LEVEL 2
+  var _mineEntryPending = false;   // ta-mine-btn queued a LEVEL-1 scroll for the next MINE render
+  var _mineFilterPending= false;   // a MINE filter queued a LEVEL-2 scroll for the next MINE render
+  var _mineScrollListenerBound = false;
+  // arm the "this scroll is programmatic" guard; auto-clears after a short settle window so the
+  // trailing smooth-scroll frames don't count as a manual scroll (which would hide the arrow).
+  function _mineArmProg() {
+    _mineAutoScroll = true;
+    if (_mineAutoTimer) { clearTimeout(_mineAutoTimer); }
+    _mineAutoTimer = setTimeout(function () { _mineAutoScroll = false; _mineAutoTimer = null; }, 900);
+  }
+  function _mineArrowEl() { return document.getElementById('mine-backup-arrow'); }
+  // show the arrow and stamp it with the level it will step back FROM (1 or 2). Toggle .show on BOTH
+  // the button and its row (row height is class-driven, not :has()-driven → no CSS-support dependency).
+  function _mineShowArrow(level) {
+    var a = _mineArrowEl();
+    if (!a) { return; }
+    a.setAttribute('data-level', String(level));
+    a.classList.add('show');
+    var r = a.parentNode; if (r && r.classList) { r.classList.add('show'); }
+  }
+  function _mineHideArrow() {
+    var a = _mineArrowEl();
+    if (a) { a.classList.remove('show'); var r = a.parentNode; if (r && r.classList) { r.classList.remove('show'); } }
+    _mineBackLevel = 0;
+  }
+  // bind ONCE: any scroll of the iframe window that is NOT flagged programmatic hides the arrow.
+  function _mineBindScrollListener() {
+    if (_mineScrollListenerBound) { return; }
+    _mineScrollListenerBound = true;
+    window.addEventListener('scroll', function () {
+      if (_mineAutoScroll) { return; }   // our own smooth-scroll — ignore
+      var a = _mineArrowEl();
+      if (a && a.classList.contains('show')) { _mineHideArrow(); }
+    }, { passive: true });
+  }
+  // smooth-scroll so `el` sits at the top of the iframe viewport, mark the given level, show the arrow.
+  function _mineScrollToLevel(el, level) {
+    if (!el || !el.scrollIntoView) { return; }
+    _mineBackLevel = level;
+    _mineArmProg();
+    _mineShowArrow(level);
+    try { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) {}
+  }
 
   // ===== ROUNDFIX2 (שלב-ב׳) — unconfirmed-as-cards state =====
   // [#3] active filter for the unconfirmed cards: 'all' | 'notopened' (טופס טרם נפתח) | 'opened' (נפתח אך טרם אושר).
@@ -1066,13 +1197,16 @@
 
   // [UIPOLISH3 2026-07-04 - part ד] guest-list filter (personal view). Segmented control; the
   //   data-flt keys are the single extension point - add a key here + a branch in filterRows().
-  function filterBarHtml() {
+  // [MINEFILTER 2026-07-12] `hideAll` (MINE view only) drops the "הכל" attending chip, because the
+  // MINE view now has a SINGLE master "הכל" button above all three groups. The other consumers (the
+  // plain confirmed-guest list) call filterBarHtml() with no arg → keep their own "הכל" chip.
+  function filterBarHtml(hideAll) {
     function b(v, lbl) {
       return '<button type=\'button\' class=\'flt-btn' + (FILTER === v ? ' active' : '')
         + '\' data-flt=\'' + v + '\'>' + lbl + '</button>';
     }
     return '<div class=\'flt-bar\' role=\'tablist\'>'
-      + b('all', 'הכל')
+      + (hideAll ? '' : b('all', 'הכל'))
       + b('coming', 'מגיעים')
       + b('notcoming', 'לא מגיעים')
       + '</div>';
@@ -1340,6 +1474,14 @@
     MINE_VIEW = false; UNCONF_VIEW = false; CAT_VIEW = false; SIDE_ORG_VIEW = false; CAT_SEL = {};
   }
 
+  // [FIXLIST-R3b B 2026-07-10] "תצוגת שורות ועמודות" (ta-list) toggles body.force-table — a real
+  // rows/columns table (below 768px). But the board now DEFAULTS to MINE_VIEW (cards), and mineGuestsHtml
+  // emits .mine-card divs, NOT a .data-table, so force-table CSS had nothing to act on and the user still
+  // saw vertical cards. When force-table is ON we therefore skip the MINE card branch and fall through to
+  // the plain guest TABLE (else-branch guestTable), which force-table CSS turns into the rows/columns list;
+  // toggling OFF restores the card view. Read straight off the body class so no extra state is needed.
+  function _isForceTable() { return document.body.classList.contains('force-table'); }
+
   // [ROUNDFIX-20260708 #1ב] "האורחים שלי" — ONLY the viewer's own guests (own-sid scope), nothing else
   // (no per-organiser breakdown, no unconfirmed data). On a personal board D.rows is already own-only;
   // on a primary's SIDE board D.rows spans the whole side, so filter to selfSid() here.
@@ -1349,6 +1491,66 @@
   // one-shot-defaulting to the category holding the MOST of my guests.
   var MINE_CAT_FILTER = '';          // '' = all · '__uncat__' = ללא סיווג · else a cat_id
   var _mineCatDefaultApplied = false;
+  // [MINE-MUT 2026-07-12] third MINE filter bar: SOURCE (how the guest entered the list).
+  // '' = all · 'manual' = נוסף ידנית (channel==='manual') · 'auto' = נוסף אוטומטית (channel!=='manual').
+  // AND-combined with the category + attending filters. No one-shot default (always starts 'הכל').
+  var MINE_SRC_FILTER = '';
+  // [MINEFILTER 2026-07-12] pending "focus after a MANUAL organiser action" request. Set ONLY by the
+  // explicit manual-op handlers (add / update / delete / category assign-unassign), NEVER by the
+  // automatic wedding-refresh (check_updates) poll. Shape: '' (none) | { rid:'…' } | { dk:'…' }.
+  // The MINE render consumes it once: it resets the filter to "הכל" and smooth-scrolls + highlights
+  // the matching card. rid = response_id (add/update); dk = dedupe_key (category assign/unassign).
+  var _mineFocusReq = null;
+  // [MINEFILTER 2026-07-12] a manual op is a two-step async (server call → refresh → re-render). We
+  // mark the reset-to-הכל the moment the manual op fires; the focus target rides in _mineFocusReq.
+  function _mineManualReset(focus) {
+    MINE_CAT_FILTER = ''; MINE_SRC_FILTER = ''; FILTER = 'all';   // back to the master "הכל" state
+    _mineFocusReq = focus || null;
+  }
+  // [MINEFILTER 2026-07-12] consume a pending manual-action focus once, after the MINE cards render.
+  // Locates the changed guest's card (by response_id or dedupe_key), smooth-scrolls to it and adds a
+  // brief highlight so an older organiser SEES their action landed on that specific guest. Safe no-op
+  // if no request is pending, the MINE view isn't showing, or the card can't be found (e.g. a delete).
+  // [MINESCROLL 2026-07-12] returns true iff it actually focused+scrolled a changed guest's card, so
+  // the caller can SUPPRESS the filter/entry auto-scroll — a manual guest change must win the scroll.
+  function _consumeMineFocus(out) {
+    var req = _mineFocusReq;
+    _mineFocusReq = null;                      // consume once, regardless of outcome
+    if (!req || !out) { return false; }
+    try {
+      var sel = null;
+      if (req.rid) { sel = out.querySelector('.mine-card[data-mine-card-rid="' + String(req.rid).replace(/"/g, '') + '"]'); }
+      if (!sel && req.dk) { sel = out.querySelector('.mine-card[data-mine-card-dk="' + String(req.dk).replace(/"/g, '') + '"]'); }
+      if (!sel) { return false; }              // card gone (e.g. deleted guest) → reset already happened
+      if (sel.scrollIntoView) { sel.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+      sel.classList.add('mine-focus');
+      setTimeout(function () { try { sel.classList.remove('mine-focus'); } catch (e) {} }, 3400);
+      return true;
+    } catch (e) {}
+    return false;
+  }
+  // [MINESCROLL 2026-07-12] consume a pending MINE auto-scroll (LEVEL 1 on entry, LEVEL 2 on filter),
+  // once per render, AFTER _consumeMineFocus. `focused` = a manual guest change already grabbed the
+  // scroll this render → we defer to it and just clear our own pending flags (no double-scroll).
+  function _consumeMineAutoScroll(out, focused) {
+    var wantEntry = _mineEntryPending, wantFilter = _mineFilterPending;
+    _mineEntryPending = false; _mineFilterPending = false;
+    if (!out || !MINE_VIEW) { return; }
+    _mineBindScrollListener();
+    if (focused) { return; }                   // manual-op focus wins the scroll (see COEXISTENCE)
+    if (wantEntry) {
+      var hd = out.querySelector('#mine-heading');
+      if (hd) { _mineScrollToLevel(hd, 1); }   // LEVEL 1: heading to top
+    } else if (wantFilter) {
+      // LEVEL 2: bring the "back-up" arrow ROW to the top of the viewport (NOT the first card) — the
+      // arrow sits just above the first card, so targeting the row keeps the arrow visible with the
+      // first card directly below it. Fallbacks: cards block, then its first card.
+      var row   = out.querySelector('.mine-backup-row');
+      var cards = out.querySelector('#mine-cards');
+      var target = row || (cards ? (cards.querySelector('.mine-card') || cards) : null);
+      if (target) { _mineScrollToLevel(target, 2); }
+    }
+  }
 
   function _mineList() {
     var self = selfSid();
@@ -1380,23 +1582,60 @@
     // render fixes it; if the organiser has no categories at all, MINE_CAT_FILTER stays '' (show all).
     if (!_mineCatDefaultApplied && catUiEnabled() && CAT_DATA && CAT_DATA.categories && CAT_DATA.categories.length) {
       _mineCatDefaultApplied = true;
-      var cc0 = _mineCatCounts(mine), best = '', bestN = -1;
-      for (var k = 0; k < cats.length; k++) {
-        var n = cc0.by[String(cats[k].cat_id)] || 0;
-        if (n > bestN) { bestN = n; best = String(cats[k].cat_id); }
-      }
-      if (cc0.uncat > bestN) { best = '__uncat__'; bestN = cc0.uncat; }
-      MINE_CAT_FILTER = (bestN > 0) ? best : '';   // no categorised guests at all → show all
+      // [FIXLIST-R3 #3 2026-07-10] while the onboarding simulation is about to run (first 3 opens), the
+      // default is "הכל" so the teaching scroll shows the first 7 of ALL my guests, exactly as asked.
+      // Once onboarding is exhausted, the normal "most-of-my-guests" default (#5) resumes.
+      // [MINEDEFAULT 2026-07-12] one-shot default is ALWAYS "הכל" (show all). We no longer
+      // auto-preselect the category with the most of my guests; the first render shows every
+      // guest, and the user picks a category chip explicitly if they want to filter.
+      MINE_CAT_FILTER = '';
     }
-    // apply the category filter, then the existing attending filter.
+    // apply the category filter, then the SOURCE filter, then the existing attending filter.
+    // All three are AND-combined (a guest shows only if it passes every active bar).
     var shown = mine;
     if (MINE_CAT_FILTER === '__uncat__') { shown = mine.filter(function (g) { return !CAT_ASSIGN[String(g.dedupe_key || '')]; }); }
     else if (MINE_CAT_FILTER)           { shown = mine.filter(function (g) { return String(CAT_ASSIGN[String(g.dedupe_key || '')] || '') === MINE_CAT_FILTER; }); }
+    // [MINE-MUT 2026-07-12] SOURCE filter (channel-based). manual → channel==='manual'; auto → the rest.
+    if (MINE_SRC_FILTER === 'manual')    { shown = shown.filter(function (g) { return String(g.channel || '') === 'manual'; }); }
+    else if (MINE_SRC_FILTER === 'auto') { shown = shown.filter(function (g) { return String(g.channel || '') !== 'manual'; }); }
     shown = filterRows(shown);
-    return '<h2>האורחים שלי</h2>'
+    // [MINEFILTER 2026-07-12] "no filter applied" = the master "הכל" state (every group at all).
+    var _allActive = (!MINE_CAT_FILTER && !MINE_SRC_FILTER && FILTER === 'all');
+    var _master = '<div class=\'mine-master-all\'>'
+      + '<button type=\'button\' class=\'mine-master-btn' + (_allActive ? ' active' : '')
+      + '\' data-mine-master=\'1\'>הכל<span class=\'mmb-n\'>' + bdi(mine.length) + '</span></button>'
+      + '</div>';
+    return '<h2 class=\'mine-anchor\' id=\'mine-heading\'>האורחים שלי</h2>'
+      + _master
       + mineCatFilterHtml(mine)
-      + filterBarHtml()
-      + '<div class=\'mine-cards\'>' + mineCardsHtml(shown) + '</div>';
+      + mineSrcFilterHtml(mine)
+      + '<span class=\'mine-filter-cap\'>סטטוס הגעה</span>'
+      + filterBarHtml(true)
+      // [MINESCROLL 2026-07-12] centered "back-up" arrow row, ABOVE the cards. Hidden by default
+      // (.mine-backup-arrow has no .show); JS toggles .show only after a PROGRAMMATIC auto-scroll.
+      + '<div class=\'mine-backup-row\'>'
+      +   '<button type=\'button\' class=\'mine-backup-arrow\' id=\'mine-backup-arrow\' data-mine-backup=\'1\' aria-label=\'חזרה למעלה\' title=\'חזרה למעלה\'>&#8593;</button>'
+      + '</div>'
+      + '<div class=\'mine-cards mine-anchor\' id=\'mine-cards\'>' + mineCardsHtml(shown) + '</div>';
+  }
+  // [MINE-MUT 2026-07-12] SOURCE filter bar (mirrors mineCatFilterHtml). class mine-srcfilter /
+  // .msf-chip / data-minesrcflt. Chips: הכל / נוסף ידנית / נוסף אוטומטית, each with a live count.
+  // Shown whenever the MINE view is shown (not gated on catUiEnabled - source applies to everyone).
+  function mineSrcFilterHtml(mine) {
+    mine = mine || [];
+    var nManual = 0;
+    for (var i = 0; i < mine.length; i++) { if (String(mine[i].channel || '') === 'manual') { nManual++; } }
+    var nAuto = mine.length - nManual;
+    function chip(v, lbl, n) {
+      return '<button type=\'button\' class=\'msf-chip' + (MINE_SRC_FILTER === v ? ' active' : '')
+        + '\' data-minesrcflt=\'' + esc(v) + '\'>' + esc(lbl) + '<span class=\'mcf-n\'>' + bdi(n) + '</span></button>';
+    }
+    // [MINEFILTER 2026-07-12] "הכל" chip removed — the single master button above resets all groups.
+    return '<span class=\'mine-filter-cap\'>מקור</span>'
+      + '<div class=\'mine-srcfilter\' role=\'tablist\'>'
+      + chip('manual', 'נוסף ידנית', nManual)
+      + chip('auto', 'נוסף אוטומטית', nAuto)
+      + '</div>';
   }
   // [#5] category filter bar above the attending filter; a chip per category with a live count.
   function mineCatFilterHtml(mine) {
@@ -1407,8 +1646,9 @@
       return '<button type=\'button\' class=\'mcf-chip' + (MINE_CAT_FILTER === v ? ' active' : '')
         + '\' data-minecatflt=\'' + esc(v) + '\'>' + esc(lbl) + '<span class=\'mcf-n\'>' + bdi(n) + '</span></button>';
     }
-    var h = '<div class=\'mine-catfilter\' role=\'tablist\'>';
-    h += chip('', 'הכל', mine.length);
+    // [MINEFILTER 2026-07-12] "הכל" chip removed — the single master button above resets all groups.
+    var h = '<span class=\'mine-filter-cap\'>קטגוריה</span>'
+      + '<div class=\'mine-catfilter\' role=\'tablist\'>';
     for (var i = 0; i < cats.length; i++) { h += chip(String(cats[i].cat_id), cats[i].name, cc.by[String(cats[i].cat_id)] || 0); }
     h += chip('__uncat__', 'ללא סיווג', cc.uncat);
     return h + '</div>';
@@ -1434,6 +1674,17 @@
       // (_catGuestRowsHtml: bdi(men_count)/bdi(women_count), attending-independent).
       var men = Number(g.men_count) || 0;
       var women = Number(g.women_count) || 0;
+      // [MINE-MUT 2026-07-12] per-card manual-guest actions (מחק / עדכן) - rendered ONLY for a
+      // manually-added guest (channel==='manual'). NEVER on an auto/RSVP card. data-rid = response_id
+      // (the server matches + scope-guards on it); data-mine-act routes to the delete/update handlers.
+      var manualActions = '';
+      if (String(g.channel || '') === 'manual') {
+        var rid = String(g.response_id || '');
+        manualActions = '<div class=\'mine-manual-actions\'>'
+          + '<button type=\'button\' class=\'mine-act-btn mine-act-update\' data-mine-act=\'update\' data-rid=\'' + esc(rid) + '\'>&#9999;&#65039; עדכן</button>'
+          + '<button type=\'button\' class=\'mine-act-btn mine-act-delete\' data-mine-act=\'delete\' data-rid=\'' + esc(rid) + '\'>&#128465;&#65039; מחק</button>'
+          + '</div>';
+      }
       var catRow = '';
       if (enable) {
         var opts = '<option value=\'\'>— ללא סיווג —</option>';
@@ -1457,7 +1708,9 @@
       // is deliberately omitted - the MINE view is own-guests-only, so it is always the viewer
       // themselves. The old compressed 'כמות' row is superseded by the granular גברים/נשים/סה״כ
       // rows (same numbers, fuller). Design (colors/shape/combobox/iconbar/chips) untouched.
-      h += '<div class=\'uc-card mine-card\'>'
+      // [MINEFILTER 2026-07-12] card carries its dedupe_key + response_id so the manual-action focus
+      // helper can locate + scroll-to + highlight the exact guest that just changed.
+      h += '<div class=\'uc-card mine-card\' data-mine-card-dk=\'' + esc(dk) + '\' data-mine-card-rid=\'' + esc(String(g.response_id || '')) + '\'>'
         + _mrow('שם', esc(g.guest_name), 'uc-name-v')
         + _mrow('סטטוס', att ? 'מגיע/ה &#9989;' : 'לא מגיע/ה')
         + _mrow('גברים', bdi(men))
@@ -1468,6 +1721,7 @@
         + _mrow('מתי אישר', g.timestamp ? bdi(fmtDateTimeIL(g.timestamp)) : '<span class=\'muted\'>-</span>')
         + ((g.blessing && String(g.blessing).trim()) ? _mrow('ברכה', esc(g.blessing), 'mine-pre') : '')
         + catRow
+        + manualActions
         + '</div>';
     }
     return h;
@@ -1559,6 +1813,14 @@
   // ── Main render function - takes the data OBJECT (not a JSON string)
   function renderData(obj) {
     D = (obj && typeof obj === 'object') ? obj : {};
+    // [FIXLIST-R3 #2 2026-07-10] categories now ride WITH the dashboard payload; seed CAT_DATA once so
+    // the MINE category chips + per-card comboboxes are complete on the very first paint. The one-shot
+    // guard prevents a later re-render (with the same stale D) from wiping optimistic category edits.
+    if (obj && obj.categories && !_catSeededFromPayload) {
+      _catSeededFromPayload = true;
+      CAT_DATA = { categories: obj.categories || [], assignments: obj.assignments || [] };
+      _rebuildAssignMap();
+    }
     showSection('dashboard-content');
     var out  = document.getElementById('dashboard-content');
     var html = '';
@@ -1597,7 +1859,7 @@
       // tabs just like the side board. D.breakdown is absent here so sideOrgTabsHtml falls back to
       // SIDE_BREAKDOWN (lazy-fetched by fetchSideBreakdown). Mutually exclusive with CAT_VIEW (FIX-A).
       // Combined super board intentionally excluded (MODE!=='combined' is the shared gate).
-      if (MINE_VIEW) {
+      if (MINE_VIEW && !_isForceTable()) {              // [FIXLIST-R3b B] force-table → plain rows/columns table
         html += mineGuestsHtml();                       // [ROUNDFIX #1ב] only my own guests
       } else if (UNCONF_VIEW) {
         html += unconfInlineHtml();                     // [ROUNDFIX #6א] only the unconfirmed list, in-content
@@ -1630,7 +1892,7 @@
       // read-only). Mutually exclusive with CAT_VIEW + the default breakdown (FIX-A; enforced both here
       // and in the toggle wiring). Checked FIRST so it wins its own view.
       // Gate uses MODE!=='combined' (matches the button-emission gate) so combined super is always excluded.
-      if (MINE_VIEW) {
+      if (MINE_VIEW && !_isForceTable()) {              // [FIXLIST-R3b B] force-table → plain rows/columns table
         html += mineGuestsHtml();                       // [ROUNDFIX #1ב] only my own guests
       } else if (UNCONF_VIEW) {
         html += unconfInlineHtml();                     // [ROUNDFIX #6א] only the unconfirmed list, in-content
@@ -1776,7 +2038,11 @@
     var taMine = document.getElementById('ta-mine-btn');
     if (taMine) {
       taMine.addEventListener('click', function () {
-        _clearViews(); MINE_VIEW = true; _scrollPending = true;
+        // [MINESCROLL 2026-07-12] entering MINE → after render, LEVEL-1 auto-scroll (heading at top).
+        // We do NOT set _scrollPending here (that anchors on the back-share button); the LEVEL-1 scroll
+        // to the "האורחים שלי" heading supersedes it for this view.
+        _clearViews(); MINE_VIEW = true;
+        _mineEntryPending = true; _mineFilterPending = false;
         renderData(D);
       });
     }
@@ -1804,6 +2070,11 @@
         var on = document.body.classList.toggle('force-table');
         taL.textContent = on ? '📱 חזרה לתצוגת כרטיסים' : '🖥️ תצוגת שורות ועמודות';
         if (on) { _gotoFullscreen(); } else { _exitFullscreen(); }
+        // [FIXLIST-R3b B 2026-07-10] re-render so the MINE card view swaps to the plain guest TABLE while
+        // force-table is ON (and back to cards when OFF). Only the records branch changes — the force-table
+        // CSS + the fullscreen bridge above are untouched. _isForceTable() (read in renderData) now returns
+        // the just-toggled state, so the else-branch guestTable renders and force-table turns it into rows.
+        renderData(D);
       });
     }
 
@@ -1869,6 +2140,132 @@
         if (_anchor && _anchor.scrollIntoView) { _anchor.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
       } catch (e) {}
     }
+
+    // [MINEFILTER 2026-07-12] after a MANUAL organiser action (add/update/delete/category assign) the
+    // handler reset the filter to "הכל" AND queued _mineFocusReq; consume it here so the freshly-
+    // rendered MINE cards can be scrolled-to + highlighted. This mirrors the onboarding scroll helper
+    // (smooth scrollIntoView). NEVER fires for the automatic wedding-refresh poll — that path never
+    // sets _mineFocusReq (see the window 'message' handler), so this is a no-op for auto updates.
+    var _mineFocused = _consumeMineFocus(out);
+    // [MINESCROLL 2026-07-12] then the MINE auto-scroll (LEVEL 1 on entry / LEVEL 2 on filter),
+    // deferring to a manual-op focus when one just fired this render.
+    _consumeMineAutoScroll(out, _mineFocused);
+
+    // [FIXLIST-R3 #3 2026-07-10] first-time onboarding teaching animation.
+    // [FIXLIST-R3b A2/A3 2026-07-10] fires on the FIRST entry per USER (login or reopen), 3× per user
+    // (per-sid counter), for BOTH boards whose data sits UNDER the buttons:
+    //   • primary/super default → MINE_VIEW (cards), and
+    //   • REGULAR organiser default → the plain guest list (else-branch guestTable).
+    // Skip the special user-navigated views (unconfirmed / categories / side-organisers) and the combined
+    // super board (no personal list). _onbStarted guards it to exactly once per page-load; force-table
+    // (the rows/columns list) is fine — the row items are still scrollable. _maybeRunOnboarding itself
+    // no-ops when there are zero guest items, so this broadened gate never fires on an empty board.
+    if (MODE !== 'combined' && !UNCONF_VIEW && !CAT_VIEW && !SIDE_ORG_VIEW) { _maybeRunOnboarding(); }
+  }
+
+  // [FIXLIST-R3 #3 2026-07-10] Onboarding simulation ─────────────────────────────────────────────────
+  // Older organisers didn't realise the confirmed-guest DATA sits UNDER the buttons (the board opens on
+  // the action row). This one-time 5-second teaching move shows exactly that: for 2s the buttons stay
+  // put and "האורחים שלי" blinks (→ "press me"), then the view auto-scrolls down to reveal the first 7
+  // "הכל" cards and auto-scrolls back up. A transparent overlay makes the whole board un-clickable for
+  // the full 5s so nobody interrupts it mid-way (JS has no real threads; this is a non-blocking timed
+  // sequence + a click-blocking overlay, which is the exact behaviour requested). Runs 3× per device
+  // (localStorage counter) - after that they've learned the mechanism.
+  var _onbStarted = false;
+  var ONB_KEY = 'wrsvpDashOnbCount';           // [FIXLIST-R3b] legacy per-DEVICE fallback key only
+  var ONB_MAX = 3;
+  // [FIXLIST-R3b A1 2026-07-10] PER-USER counter (not per-device): each organiser gets their OWN 3 runs
+  // on the same device. selfSid() === String(D.sid||'') is the CURRENTLY-LOGGED-IN organiser's own sid
+  // (the onboarding only ever runs on a MINE/personal board where MODE!=='combined', so D.sid is never an
+  // acted-as owner_sid — act-as is combined-super-only). Fall back to the old single key if no sid resolves
+  // (never crash). D is already populated (renderData set it) by the time these run.
+  function _onbKey() {
+    var s = '';
+    try { s = String((D && D.sid) || ''); } catch (e) {}
+    return s ? ('wrsvpDashOnb_' + s) : ONB_KEY;
+  }
+  // true while an onboarding run is still pending this page-load (counter not exhausted, not yet started).
+  // Used by the MINE default-filter so those runs open on "הכל".
+  function _onbPending() {
+    if (_onbStarted) { return false; }
+    var seen = 0;
+    try { seen = parseInt(localStorage.getItem(_onbKey()) || '0', 10) || 0; } catch (e) {}   // [FIXLIST-R3b A1] per-sid
+    return seen < ONB_MAX;
+  }
+  function _maybeRunOnboarding() {
+    if (_onbStarted) { return; }               // once per page-load, whichever render wins
+    // [FIXLIST-R3c 2026-07-11] DO NOT consume the one-shot guard here. For a regular organiser whose
+    // guest board first paints EMPTY (an intermediate/pre-data render) and only fills on a later render,
+    // setting _onbStarted up-front made that empty render "eat" the single run: the empty pass hit the
+    // no-items skip below and returned, and the later data-populated render then early-returned above
+    // (_onbStarted already true) → the sim NEVER ran for a regular organiser. Fix: the guard is consumed
+    // ONLY when a run actually STARTS (items present + counter not exhausted), just before _runOnboarding.
+    var _oc = document.getElementById('dashboard-content');
+    // [FIXLIST-R3b A2 2026-07-10] the scrollable guest items depend on the board:
+    //   • primary/super default (MINE_VIEW)  → .mine-card divs (unchanged behaviour)
+    //   • REGULAR organiser default list     → the guest-table data rows (skip the <th> header row)
+    // So a regular organiser (whose default board is the plain guestTable, never MINE_VIEW) also gets the
+    // teaching scroll. If there are zero guest items on either board, skip (never counts).
+    var items = _oc ? _oc.querySelectorAll('.mine-card') : null;
+    if (!items || !items.length) {
+      var rows = _oc ? _oc.querySelectorAll('.data-table tr') : null;
+      if (rows && rows.length) {
+        var arr = [];
+        for (var r = 0; r < rows.length; r++) { if (rows[r].querySelector('td')) { arr.push(rows[r]); } }  // data rows only
+        items = arr;
+      }
+    }
+    if (!items || !items.length) { return; }   // no data to teach-scroll to → skip (never counts, guard NOT consumed)
+    var seen = 0;
+    try { seen = parseInt(localStorage.getItem(_onbKey()) || '0', 10) || 0; } catch (e) {}   // [FIXLIST-R3b A1] per-sid
+    if (seen >= ONB_MAX) { return; }
+    // [FIXLIST-R3c 2026-07-11] a run is genuinely starting → NOW consume the once-per-page-load guard.
+    _onbStarted = true;
+    try { localStorage.setItem(_onbKey(), String(seen + 1)); } catch (e) {}   // count this run up-front (per-sid)
+    _runOnboarding(items);
+  }
+  // [FIXLIST-R3b A2] `cards` is any array-like of guest items (mine-cards OR guest-table rows) whose
+  // elements support getBoundingClientRect — the scroll math is identical for both.
+  function _runOnboarding(cards) {
+    var docEl = document.scrollingElement || document.documentElement;
+    // click-blocker for exactly 5s (transparent → buttons still visible; blocks taps + touch-scroll)
+    var ov = document.createElement('div'); ov.id = 'onb-overlay';
+    ov.addEventListener('touchmove', function (e) { try { e.preventDefault(); } catch (x) {} }, { passive: false });
+    document.body.appendChild(ov);
+    // [FIXLIST-R3b A2] blink the most-relevant existing button ("האורחים שלי", present for regular +
+    // primary alike); if it is absent (edge board), skip the blink gracefully (guard below).
+    var mineBtn = document.getElementById('ta-mine-btn');
+    if (mineBtn) { mineBtn.classList.add('onb-blink'); }
+    // deterministic fixed-duration scroll (easeInOutQuad) so the whole timeline is exact
+    function _animScroll(toY, dur, done) {
+      var fromY = docEl.scrollTop || 0, t0 = null;
+      function step(ts) {
+        if (t0 === null) { t0 = ts; }
+        var p = Math.min(1, (ts - t0) / dur);
+        var e = (p < 0.5) ? (2 * p * p) : (1 - Math.pow(-2 * p + 2, 2) / 2);
+        try { docEl.scrollTop = fromY + (toY - fromY) * e; } catch (x) {}
+        if (p < 1) { requestAnimationFrame(step); } else if (done) { done(); }
+      }
+      requestAnimationFrame(step);
+    }
+    var idx = Math.min(6, cards.length - 1);   // the 7th card (0-based 6), or the last if fewer than 7
+    var target = cards[idx];
+    // t=2000ms: stop the blink, scroll DOWN (~1300ms) so the 7th card's bottom is on screen
+    setTimeout(function () {
+      if (mineBtn) { mineBtn.classList.remove('onb-blink'); }
+      var toY = 0;
+      try { var r = target.getBoundingClientRect(); toY = (docEl.scrollTop || 0) + r.bottom - (window.innerHeight || 600) + 24; } catch (e) {}
+      if (toY < 0) { toY = 0; }
+      _animScroll(toY, 1300, function () {
+        setTimeout(function () { _animScroll(0, 1300); }, 350);   // brief hold, then back UP (~1300ms)
+      });
+    }, 2000);
+    // master timer: release the board at EXACTLY 5000ms, no matter where the scroll is
+    setTimeout(function () {
+      if (mineBtn) { mineBtn.classList.remove('onb-blink'); }
+      if (ov && ov.parentNode) { ov.parentNode.removeChild(ov); }
+      try { docEl.scrollTop = 0; } catch (e) {}
+    }, 5000);
   }
 
   // ===== CATEGORIES-FEATBATCH wiring (R4A/R4B/R4C) =====
@@ -1944,7 +2341,22 @@
           // flight). Only assign/unassign genuinely change the join map → keep the authoritative refetch.
           CAT_DATA.categories = res.categories || CAT_DATA.categories;
           if (body.op === 'create' || body.op === 'rename') {
-            // create/rename NEVER change assignments → CAT_DATA/join map already authoritative.
+            // [FIXLIST-R3 #1 2026-07-10] create FROM a guest card carries dedupe_keys → the server
+            // auto-assigned them to the new cat_id (res.cat_id) atomically. Fold that assignment into
+            // CAT_DATA.assignments BEFORE _rebuildAssignMap so the guest's combobox shows the new
+            // category immediately, with no extra fetch and no second click. Plain manager-create
+            // carries no dedupe_keys → this block is skipped and it behaves exactly as before.
+            if (body.op === 'create' && body.dedupe_keys && body.dedupe_keys.length && res.cat_id) {
+              CAT_DATA.assignments = CAT_DATA.assignments || [];
+              for (var _ai = 0; _ai < body.dedupe_keys.length; _ai++) {
+                var _adk = String(body.dedupe_keys[_ai] || '');
+                if (!_adk) { continue; }
+                CAT_DATA.assignments = CAT_DATA.assignments.filter(function (a) { return String(a.dedupe_key) !== _adk; });
+                CAT_DATA.assignments.push({ dedupe_key: _adk, cat_id: res.cat_id });
+              }
+            }
+            // create/rename NEVER change assignments (except the create+assign case handled above)
+            // → CAT_DATA/join map already authoritative.
             _rebuildAssignMap(); renderData(D);
           } else if (body.op === 'delete') {
             // drop the deleted cat_id from assignments so no orphan lingers (server cascaded the
@@ -2202,28 +2614,83 @@
     }
   }
 
-  // ── Manual-add: open the modal (clears fields + message each time)
+  // [MINE-MUT 2026-07-12] the manual modal is now MODE-AWARE. _manualMode selects EVERY user-facing
+  // string (title/subtitle/submit-btn/in-flight/success/"adding-for"), so nothing says הוסף/הוספה/חדש
+  // in update mode. _manualEditRid carries the response_id of the guest being edited (update mode only).
+  // The normal opener (ta-manual-btn → openManualAdd) always resets back to 'add'.
+  var _manualMode = 'add';       // 'add' | 'update'
+  var _manualEditRid = '';       // response_id being edited (update mode)
+
+  // ── Manual-add: open the modal in ADD mode (clears fields + message each time)
   function openManualAdd() {
+    _manualMode = 'add';
+    _manualEditRid = '';
     var ov = document.getElementById('manual-overlay');
     if (!ov) { return; }
     document.getElementById('m-name').value = '';
     document.getElementById('m-men').value = '0';
     document.getElementById('m-women').value = '0';
     document.getElementById('m-phone').value = '';
-    // req #3: bind the manual-add to THIS dashboard's own organiser so it is impossible
-    // to add for the wrong organiser without seeing it. senderName is present in
-    // personal/side mode; blank -> hide the line gracefully (combined/master has no single owner).
-    var af = document.getElementById('manual-adding-for');
-    if (af) {
-      var owner = String((D && D.senderName) || '');
-      if (owner) { af.innerHTML = 'מוסיף עבור: ' + esc(owner); af.style.display = 'block'; }
-      else { af.textContent = ''; af.style.display = 'none'; }
-    }
+    _applyManualModeChrome();
     setManualMsg('', '');
-    var btn = document.getElementById('manual-submit-btn');
-    if (btn) { btn.disabled = false; btn.textContent = 'הוסף לרשימה'; }
     ov.classList.add('open');
     document.getElementById('m-name').focus();
+  }
+
+  // [MINE-MUT 2026-07-12] open the manual modal in UPDATE mode, pre-filled from the guest identified
+  // by `rid` (response_id), looked up in D.rows. No add wording anywhere. attending is NOT edited here
+  // (the server keeps it as-is), consistent with the update contract.
+  function openManualUpdate(rid) {
+    var ov = document.getElementById('manual-overlay');
+    if (!ov) { return; }
+    var g = null, rows = (D && D.rows) || [];
+    for (var i = 0; i < rows.length; i++) {
+      if (String(rows[i].response_id || '') === String(rid)) { g = rows[i]; break; }
+    }
+    if (!g) { appModal.alert('האורח לא נמצא - רענן/י ונסה/י שוב.'); return; }
+    _manualMode = 'update';
+    _manualEditRid = String(rid);
+    document.getElementById('m-name').value  = String(g.guest_name || '');
+    document.getElementById('m-men').value   = String(Number(g.men_count) || 0);
+    document.getElementById('m-women').value = String(Number(g.women_count) || 0);
+    document.getElementById('m-phone').value = String(g.phone || '');
+    _applyManualModeChrome();
+    setManualMsg('', '');
+    ov.classList.add('open');
+    document.getElementById('m-name').focus();
+  }
+
+  // [MINE-MUT 2026-07-12] apply ALL mode-selected chrome strings for the manual modal in one place.
+  // The 10 ADD-wording strings (title, subtitle, "adding-for" line, submit-btn label) are flipped here.
+  function _applyManualModeChrome() {
+    var isUpd = (_manualMode === 'update');
+    var owner = String((D && D.senderName) || '');
+    // "adding-for" line: add mode → "מוסיף עבור: <owner>"; update mode → an update-context line (no add wording).
+    var af = document.getElementById('manual-adding-for');
+    if (af) {
+      if (isUpd) {
+        af.innerHTML = 'עדכון אורח' + (owner ? (' של: ' + esc(owner)) : '');
+        af.style.display = 'block';
+      } else if (owner) {
+        af.innerHTML = 'מוסיף עבור: ' + esc(owner);
+        af.style.display = 'block';
+      } else {
+        af.textContent = ''; af.style.display = 'none';
+      }
+    }
+    // Modal h2 title.
+    var ttl = document.getElementById('manual-title');
+    if (ttl) { ttl.textContent = isUpd ? 'עדכון אורח' : 'הוספת מאשר ידנית'; }
+    // Subtitle (update mode carries NO add wording).
+    var sub = document.getElementById('manual-subtitle');
+    if (sub) {
+      sub.textContent = isUpd
+        ? 'עריכת פרטי האורח שהוזן ידנית. השינוי יעודכן בספירה מיד.'
+        : 'למי שאישר הגעה מחוץ לקישור (למשל הזמנה מודפסת). האורח יתווסף לספירה מיד.';
+    }
+    // Submit button label.
+    var btn = document.getElementById('manual-submit-btn');
+    if (btn) { btn.disabled = false; btn.textContent = isUpd ? 'שמור שינויים' : 'הוסף לרשימה'; }
   }
 
   // ── Manual-add: close the modal
@@ -2315,6 +2782,41 @@
       return;
     }
 
+    var btn = document.getElementById('manual-submit-btn');
+
+    // [MINE-MUT 2026-07-12] UPDATE mode: call updateManualGuest (in-place edit of an owned manual
+    // guest) with mode-selected wording. attending is NOT sent (the server keeps it as-is).
+    if (_manualMode === 'update') {
+      var updPayload = {
+        dashboard_token: TOKEN,
+        response_id:     _manualEditRid,
+        guest_name:      name,
+        phone:           phone,
+        men_count:       men,
+        women_count:     women
+      };
+      if (btn) { btn.disabled = true; btn.textContent = 'מעדכן…'; }
+      setManualMsg('', '');
+      runScript('updateManualGuest', updPayload)
+        .then(function (res) {
+          if (res && res.success) {
+            setManualMsg('עודכן בהצלחה!', 'ok');
+            // [MINEFILTER 2026-07-12] MANUAL update → reset to "הכל" + focus the updated guest's card
+            // (response_id is stable across an update; the card carries data-mine-card-rid).
+            _mineManualReset((_manualEditRid ? { rid: String(_manualEditRid) } : null));
+            refreshBoard();
+            setTimeout(closeManualAdd, 900);
+          } else {
+            if (btn) { btn.disabled = false; btn.textContent = 'שמור שינויים'; }
+            setManualMsg((res && res.error) ? res.error : 'שגיאה, נסה שוב', 'err');
+          }
+        }, function () {
+          if (btn) { btn.disabled = false; btn.textContent = 'שמור שינויים'; }
+          setManualMsg('שגיאה בשליחה, נסה שוב', 'err');
+        });
+      return;
+    }
+
     var payload = {
       dashboard_token: TOKEN,
       guest_name:      name,
@@ -2324,7 +2826,6 @@
       attending:       true
     };
 
-    var btn = document.getElementById('manual-submit-btn');
     if (btn) { btn.disabled = true; btn.textContent = 'מוסיף…'; }
     setManualMsg('', '');
 
@@ -2332,6 +2833,9 @@
       .then(function (res) {
         if (res && res.success) {
           setManualMsg('נוסף בהצלחה!', 'ok');
+          // [MINEFILTER 2026-07-12] MANUAL add → reset to "הכל" + focus the NEW guest's card
+          // (server returns res.responseId; the card carries data-mine-card-rid).
+          _mineManualReset((res.responseId ? { rid: String(res.responseId) } : null));
           refreshBoard();
           setTimeout(closeManualAdd, 900);
         } else {
@@ -2472,8 +2976,20 @@
         var fb = ev.target && ev.target.closest ? ev.target.closest('.flt-btn') : null;
         if (!fb) { return; }
         var v = fb.getAttribute('data-flt');
-        if (!v || v === FILTER) { return; }
-        FILTER = v;
+        if (!v) { return; }
+        // [MINETOGGLE 2026-07-12] In the MINE view the "הכל" attending chip is hidden (filterBarHtml(true)),
+        // so re-clicking the active coming/notcoming chip must TOGGLE it OFF → FILTER back to 'all' (the
+        // attending "all" state). All-clear then re-lights the master "הכל" (see _allActive). In the
+        // personal list the 'all' chip is present, so a re-click there stays a no-op (unchanged UX).
+        if (v === FILTER) {
+          if (MINE_VIEW && v !== 'all') { FILTER = 'all'; }
+          else { return; }
+        } else {
+          FILTER = v;
+        }
+        // [MINESCROLL 2026-07-12] the attending filter is shared by the personal list + the MINE view;
+        // queue a LEVEL-2 auto-scroll ONLY when it fired inside the MINE view.
+        if (MINE_VIEW) { _mineFilterPending = true; _mineEntryPending = false; }
         renderData(D);
       });
 
@@ -2512,15 +3028,96 @@
           .then(function () { fetchUnconfirmed(); }, function () { fetchUnconfirmed(); });
       });
 
+      // [MINEFILTER 2026-07-12] the SINGLE master "הכל" button (data-mine-master). Resets ALL THREE
+      // filter groups at once (category='' , source='' , attending='all') and re-renders showing every
+      // guest. No focus request — this is a filter reset, not a guest mutation.
+      dc.addEventListener('click', function (ev) {
+        var b = ev.target && ev.target.closest ? ev.target.closest('[data-mine-master]') : null;
+        if (!b) { return; }
+        // [MASTERALL 2026-07-12] no early-return when already all-state: clearing to all is idempotent
+        // (no visible filter change) but every click must still fire the LEVEL-2 auto-scroll below.
+        MINE_CAT_FILTER = ''; MINE_SRC_FILTER = ''; FILTER = 'all';
+        _mineFilterPending = true; _mineEntryPending = false;   // [MINESCROLL] LEVEL-2 auto-scroll
+        renderData(D);
+      });
+
+      // [MINESCROLL 2026-07-12] the "back-up" arrow — steps back exactly ONE level per click. It does
+      // NOT re-render (so the same #mine-backup-arrow persists across the LEVEL-2→LEVEL-1 step); each
+      // click is a PROGRAMMATIC scroll (armed guard) so the scroll listener never mis-hides it mid-step.
+      //   from LEVEL 2 → scroll to the heading (LEVEL 1); arrow STAYS, now in its level-1 state.
+      //   from LEVEL 1 → scroll to the exact PAGE TOP (entry state); arrow HIDES.
+      dc.addEventListener('click', function (ev) {
+        var b = ev.target && ev.target.closest ? ev.target.closest('[data-mine-backup]') : null;
+        if (!b) { return; }
+        _mineArmProg();                                  // this scroll is ours — don't let it self-hide
+        if (_mineBackLevel === 2) {
+          var hd = document.getElementById('mine-heading');
+          _mineBackLevel = 1;
+          _mineShowArrow(1);                             // keep visible, re-stamp to level 1
+          if (hd && hd.scrollIntoView) { try { hd.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) {} }
+        } else {
+          // LEVEL 1 (or any other) → back to the very top (entry state) and hide the arrow.
+          _mineHideArrow();
+          try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (e) { window.scrollTo(0, 0); }
+        }
+      });
+
       // [ROUNDFIX2g #5] MINE category-filter chips (data-minecatflt). Distinct attribute → never collides
       // with the attending data-flt or the unconfirmed data-ucflt handlers. Re-renders from the cache.
       dc.addEventListener('click', function (ev) {
         var b = ev.target && ev.target.closest ? ev.target.closest('.mcf-chip') : null;
         if (!b) { return; }
         var v = b.getAttribute('data-minecatflt') || '';
-        if (v === MINE_CAT_FILTER) { return; }
-        MINE_CAT_FILTER = v;
+        // [MINETOGGLE 2026-07-12] TOGGLE: re-clicking the already-active chip DESELECTS it → this
+        // dimension returns to "all" (''). Clicking a different chip single-selects it (as before).
+        // When this clears the last active filter, the render lights the master "הכל" (see _allActive).
+        MINE_CAT_FILTER = (v === MINE_CAT_FILTER) ? '' : v;
+        _mineFilterPending = true; _mineEntryPending = false;   // [MINESCROLL] LEVEL-2 auto-scroll
         renderData(D);
+      });
+
+      // [MINE-MUT 2026-07-12] MINE SOURCE-filter chips (data-minesrcflt). Distinct attribute → never
+      // collides with the category (data-minecatflt) / attending (data-flt) handlers. Re-renders from cache.
+      dc.addEventListener('click', function (ev) {
+        var b = ev.target && ev.target.closest ? ev.target.closest('.msf-chip') : null;
+        if (!b) { return; }
+        var v = b.getAttribute('data-minesrcflt') || '';
+        // [MINETOGGLE 2026-07-12] TOGGLE: re-clicking the active chip DESELECTS it → source back to
+        // "all" (''); a different chip single-selects. All-clear re-lights the master "הכל".
+        MINE_SRC_FILTER = (v === MINE_SRC_FILTER) ? '' : v;
+        _mineFilterPending = true; _mineEntryPending = false;   // [MINESCROLL] LEVEL-2 auto-scroll
+        renderData(D);
+      });
+
+      // [MINE-MUT 2026-07-12] MINE per-card DELETE (manual guests only). data-rid = response_id.
+      // כן/לא confirm via the appModal label-override, then deleteManualGuest + refresh MINE on success.
+      dc.addEventListener('click', function (ev) {
+        var b = ev.target && ev.target.closest ? ev.target.closest('[data-mine-act="delete"]') : null;
+        if (!b) { return; }
+        var rid = b.getAttribute('data-rid') || '';
+        if (!rid) { return; }
+        appModal.confirm('האם הינך בטוח שהינך רוצה למחוק את האורח?', '', { yes: 'כן', no: 'לא' }).then(function (ok) {
+          if (!ok) { return; }
+          runScript('deleteManualGuest', { dashboard_token: TOKEN, response_id: rid })
+            .then(function (res) {
+              if (res && res.success) {
+                // [MINEFILTER 2026-07-12] MANUAL delete → reset to "הכל". No focus (the guest is gone).
+                _mineManualReset(null);
+                refreshBoard();
+              }
+              else { appModal.alert((res && res.error) ? res.error : 'שגיאת מחיקה, נסה שוב'); }
+            }, function () { appModal.alert('שגיאת תקשורת - נסו שוב'); });
+        });
+      });
+
+      // [MINE-MUT 2026-07-12] MINE per-card UPDATE (manual guests only). Opens the manual modal in
+      // UPDATE mode, pre-filled from the guest looked up by response_id in D.rows.
+      dc.addEventListener('click', function (ev) {
+        var b = ev.target && ev.target.closest ? ev.target.closest('[data-mine-act="update"]') : null;
+        if (!b) { return; }
+        var rid = b.getAttribute('data-rid') || '';
+        if (!rid) { return; }
+        openManualUpdate(rid);
       });
 
       // [ROUNDFIX2g #4] MINE per-guest category assign/unassign. data-dk = the CONFIRMED guest's dedupe_key
@@ -2532,6 +3129,9 @@
         if (!dk) { return; }
         var cid = sel.value || '';
         if (cid) { CAT_ASSIGN[String(dk)] = cid; } else { delete CAT_ASSIGN[String(dk)]; }
+        // [MINEFILTER 2026-07-12] MANUAL organiser category assign/unassign → reset to "הכל" + focus
+        // that guest's card (dedupe_key is the card's data-mine-card-dk). fetchCategories(true) re-renders.
+        _mineManualReset({ dk: String(dk) });
         var body = cid
           ? { action: 'categoryOp', op: 'assign', token: TOKEN, phone: AUTH_PHONE, cat_id: cid, dedupe_keys: [dk] }
           : { action: 'categoryOp', op: 'unassign', token: TOKEN, phone: AUTH_PHONE, dedupe_keys: [dk] };
@@ -2554,9 +3154,13 @@
         // the op runs ONLY on אישור). Each branch's continuation moved into .then; the branches
         // are mutually exclusive and nothing follows the if/else-if chain in this handler.
         if (act === 'add') {
+          // [FIXLIST-R3 #1 2026-07-10] capture THIS card's guest key so the new category is auto-assigned
+          // to that guest (server does it atomically; combobox updates on the re-render). Manager-level
+          // add (the category-panel button) is a different handler and stays assignment-less.
+          var _addDk = selEl ? String(selEl.getAttribute('data-dk') || '') : '';
           appModal.prompt('שם הקטגוריה החדשה:', '').then(function (res) {
             var nm = trim(res);
-            if (nm) { postCategoryOp({ op: 'create', name: nm }); }
+            if (nm) { postCategoryOp({ op: 'create', name: nm, dedupe_keys: _addDk ? [_addDk] : [] }); }
           });
         } else if (act === 'rename') {
           if (!curCid) { appModal.alert('בחר/י קודם קטגוריה מהרשימה, ואז שנה/י את שמה.'); return; }
@@ -2633,7 +3237,7 @@
 <div id='manual-overlay' class='manual-overlay'>
   <div class='manual-modal' role='dialog' aria-modal='true' aria-labelledby='manual-title'>
     <h2 id='manual-title'>הוספת מאשר ידנית</h2>
-    <p style='color:#666;font-size:.9em;margin:0 0 14px'>למי שאישר הגעה מחוץ לקישור (למשל הזמנה מודפסת). האורח יתווסף לספירה מיד.</p>
+    <p id='manual-subtitle' style='color:#666;font-size:.9em;margin:0 0 14px'>למי שאישר הגעה מחוץ לקישור (למשל הזמנה מודפסת). האורח יתווסף לספירה מיד.</p>
     <p id='manual-adding-for' style='display:none;font-weight:bold;color:#1a6e3c;background:#eaf6ee;border-radius:8px;padding:9px 12px;margin:0 0 14px;font-size:.98em'></p>
 
     <div class='manual-field'>
