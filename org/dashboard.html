@@ -1760,9 +1760,8 @@
   function _remText(p) {
     var link = _inviteLink(p);
     var nm = (p && p.invitee_name) ? p.invitee_name : '';
-    if (p && p.status === 'opened') {
-      return 'היי ' + nm + '! ראינו שנכנסתם להזמנה לחתונה של אבי ומיכל 💍 אבל אישור ההגעה עדיין לא הושלם 🙏 זה לוקח רק רגע: ' + link;
-    }
+    // [REMINDER 2026-07-27 text-unify] ONE identical message for EVERYONE (opened + not-opened) - the
+    // universal "not-opened" wording, per owner instruction. No status branch.
     return 'היי ' + nm + '! מזמינים אתכם בשמחה לחתונה של אבי ומיכל 💍 עדיין לא קיבלנו מכם אישור הגעה — נשמח שתאשרו כאן: ' + link;
   }
   function _remIntl(phone) {
@@ -3192,6 +3191,26 @@
         Promise.all(jobs.map(function (j) { return j.then(function (r) { return r; }, function () { return null; }); })).then(function () {
           b.disabled = false; b.textContent = _old; renderUnconfCards();
         });
+      });
+
+      // [REMINDER 2026-07-27 auto-save] persist a typed phone/email AUTOMATICALLY on field-exit (change),
+      // no need to press "שמור". Validates the phone; skips a no-op; updates the cache (no re-render, so the
+      // organiser can keep typing across fields uninterrupted). The explicit "שמור" button still works too.
+      dc.addEventListener('change', function (ev) {
+        var inp = ev.target && ev.target.closest ? ev.target.closest('.rem-phone, .rem-email') : null;
+        if (!inp) { return; }
+        var wrap = inp.closest('.uc-remind'); if (!wrap) { return; }
+        var tok = wrap.getAttribute('data-rem-tok'); if (!tok) { return; }
+        var p = _remPersonByTok(tok); if (!p) { return; }
+        var phEl = wrap.querySelector('.rem-phone');
+        var emEl = wrap.querySelector('.rem-email');
+        var ph = phEl ? phEl.value.trim() : '';
+        var em = emEl ? emEl.value.trim() : '';
+        if (ph && !normalizeIsraeliPhoneClient(ph)) { if (phEl) { phEl.style.borderColor = '#c0392b'; } return; }
+        if (phEl) { phEl.style.borderColor = ''; }
+        if (ph === (p.invitee_phone || '') && em === (p.invitee_email || '')) { return; }   // nothing changed
+        p.invitee_phone = ph; p.invitee_email = em;
+        runScript('saveInviteContact', TOKEN, MODE, AUTH_PHONE, tok, ph, em).then(function () {}, function () {});
       });
 
       // [ROUNDFIX2 #2] assign a category to a NOT-YET-CONFIRMED guest from their card (own invites only).

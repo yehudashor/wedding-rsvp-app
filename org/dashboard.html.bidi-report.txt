@@ -57,49 +57,49 @@ Auto-fixes (quotes/gershayim/control-chars/punct-outside-backticks) were applied
   L1734  R-16 line-ending: RTL line ends with a bracket/punct group wrapping a Latin token — split into a separate sentence (NOT auto-applied).
   L1735  R-16 line-ending: RTL line ends with a bracket/punct group wrapping a Latin token — split into a separate sentence (NOT auto-applied).
   L1737  R-16 line-ending: RTL line ends with a bracket/punct group wrapping a Latin token — split into a separate sentence (NOT auto-applied).
-  L1803  bare-Latin-in-Hebrew: 'h2'  (suggest backticks — NOT auto-applied)
-  L1805  R-16 line-ending: RTL line ends with a bracket/punct group wrapping a Latin token — split into a separate sentence (NOT auto-applied).
-  L1808  R-16 line-ending: RTL line ends with a bracket/punct group wrapping a Latin token — split into a separate sentence (NOT auto-applied).
-  L1867  bare-Latin-in-Hebrew: 'label'  (suggest backticks — NOT auto-applied)
+  L1802  bare-Latin-in-Hebrew: 'h2'  (suggest backticks — NOT auto-applied)
+  L1804  R-16 line-ending: RTL line ends with a bracket/punct group wrapping a Latin token — split into a separate sentence (NOT auto-applied).
+  L1807  R-16 line-ending: RTL line ends with a bracket/punct group wrapping a Latin token — split into a separate sentence (NOT auto-applied).
+  L1866  bare-Latin-in-Hebrew: 'label'  (suggest backticks — NOT auto-applied)
+  L1882  R-16 line-ending: RTL line ends with a bracket/punct group wrapping a Latin token — split into a separate sentence (NOT auto-applied).
   L1883  R-16 line-ending: RTL line ends with a bracket/punct group wrapping a Latin token — split into a separate sentence (NOT auto-applied).
-  L1884  R-16 line-ending: RTL line ends with a bracket/punct group wrapping a Latin token — split into a separate sentence (NOT auto-applied).
-  L1937  bare-Latin-in-Hebrew: 'X'  (suggest backticks — NOT auto-applied)
-  L1939  bare-Latin-in-Hebrew: 'part'  (suggest backticks — NOT auto-applied)
-  L1948  bare-Latin-in-Hebrew: 'part'  (suggest backticks — NOT auto-applied)
-  L1969  bare-Latin-in-Hebrew: 'h2'  (suggest backticks — NOT auto-applied)
-  L1970  bare-Latin-in-Hebrew: 'part'  (suggest backticks — NOT auto-applied)
-  L1970  R-16 line-ending: RTL line ends with a bracket/punct group wrapping a Latin token — split into a separate sentence (NOT auto-applied).
-  L1981  bare-Latin-in-Hebrew: 'part'  (suggest backticks — NOT auto-applied)
-  L2003  bare-Latin-in-Hebrew: 'h2'  (suggest backticks — NOT auto-applied)
-  L2015  bare-Latin-in-Hebrew: 'h2'  (suggest backticks — NOT auto-applied)
-  L2026  bare-Latin-in-Hebrew: 'part'  (suggest backticks — NOT auto-applied)
-  L2041  R-16 line-ending: RTL line ends with a bracket/punct group wrapping a Latin token — split into a separate sentence (NOT auto-applied).
-  L2048  bare-Latin-in-Hebrew: 'h2'  (suggest backticks — NOT auto-applied)
-  L2051  bare-Latin-in-Hebrew: 'h2'  (suggest backticks — NOT auto-applied)
-  L2058  bare-Latin-in-Hebrew: 'h2'  (suggest backticks — NOT auto-applied)
-  L2061  bare-Latin-in-Hebrew: 'h2'  (suggest backticks — NOT auto-applied)
-  L2070  bare-Latin-in-Hebrew: 'h3'  (suggest backticks — NOT auto-applied)
-  L2076  bare-Latin-in-Hebrew: 'h3'  (suggest backticks — NOT auto-applied)
-  L2086  bare-Latin-in-Hebrew: 'p'  (suggest backticks — NOT auto-applied)
-  L2088  bare-Latin-in-Hebrew: 'p'  (suggest backticks — NOT auto-applied)
-  L2095  R-16 line-ending: RTL line ends with a bracket/punct group wrapping a Latin token — split into a separate sentence (NOT auto-applied).
-  L2106  bare-Latin-in-Hebrew: 'p'  (suggest backticks — NOT auto-applied)
-  L2132  R-16 line-ending: RTL line ends with a bracket/punct group wrapping a Latin token — split into a separate sentence (NOT auto-applied).
-  L2561  R-16 line-ending: RTL line ends with a bracket/punct group wrapping a Latin token — split into a separate sentence (NOT auto-applied).
-  L2578  bare-Latin-in-Hebrew: 'on'  (suggest backticks — NOT auto-applied)
-  L2579  R-16 line-ending: RTL line ends with a bracket/punct group wrapping a Latin token — split into a separate sentence (NOT auto-applied).
-  L2668  R-16 line-ending: RTL line ends with a bracket/punct group wrapping a Latin token — split into a separate sentence (NOT auto-applied).
-  L2713  bare-Latin-in-Hebrew: 'says'  (suggest backticks — NOT auto-applied)
-  L2763  R-16 line-ending: RTL line ends with a bracket/punct group wrapping a Latin token — split into a separate sentence (NOT auto-applied).
-  L2767  R-16 line-ending: RTL line ends with a bracket/punct group wrapping a Latin token — split into a separate sentence (NOT auto-applied).
-  L2770  R-16 line-ending: RTL line ends with a bracket/punct group wrapping a Latin token — split into a separate sentence (NOT auto-applied).
-  L3066  bare-Latin-in-Hebrew: 'part'  (suggest backticks — NOT auto-applied)
-  L3075  R-16 line-ending: RTL line ends with a bracket/punct group wrapping a Latin token — split into a separate sentence (NOT auto-applied).
-  L3260  R-16 line-ending: RTL line ends with a bracket/punct group wrapping a Latin token — split into a separate sentence (NOT auto-applied).
-  L3280  bare-Latin-in-Hebrew: 'confirm'  (suggest backticks — NOT auto-applied)
-  L3286  R-16 line-ending: RTL line ends with a bracket/punct group wrapping a Latin token — split into a separate sentence (NOT auto-applied).
-  L3291  R-16 line-ending: RTL line ends with a bracket/punct group wrapping a Latin token — split into a separate sentence (NOT auto-applied).
-  L3341  bare-Latin-in-Hebrew: 'on'  (suggest backticks — NOT auto-applied)
-  L3348  R-16 line-ending: RTL line ends with a bracket/punct group wrapping a Latin token — split into a separate sentence (NOT auto-applied).
-  L3355  R-16 line-ending: RTL line ends with a bracket/punct group wrapping a Latin token — split into a separate sentence (NOT auto-applied).
-  L3361  R-16 line-ending: RTL line ends with a bracket/punct group wrapping a Latin token — split into a separate sentence (NOT auto-applied).
+  L1936  bare-Latin-in-Hebrew: 'X'  (suggest backticks — NOT auto-applied)
+  L1938  bare-Latin-in-Hebrew: 'part'  (suggest backticks — NOT auto-applied)
+  L1947  bare-Latin-in-Hebrew: 'part'  (suggest backticks — NOT auto-applied)
+  L1968  bare-Latin-in-Hebrew: 'h2'  (suggest backticks — NOT auto-applied)
+  L1969  bare-Latin-in-Hebrew: 'part'  (suggest backticks — NOT auto-applied)
+  L1969  R-16 line-ending: RTL line ends with a bracket/punct group wrapping a Latin token — split into a separate sentence (NOT auto-applied).
+  L1980  bare-Latin-in-Hebrew: 'part'  (suggest backticks — NOT auto-applied)
+  L2002  bare-Latin-in-Hebrew: 'h2'  (suggest backticks — NOT auto-applied)
+  L2014  bare-Latin-in-Hebrew: 'h2'  (suggest backticks — NOT auto-applied)
+  L2025  bare-Latin-in-Hebrew: 'part'  (suggest backticks — NOT auto-applied)
+  L2040  R-16 line-ending: RTL line ends with a bracket/punct group wrapping a Latin token — split into a separate sentence (NOT auto-applied).
+  L2047  bare-Latin-in-Hebrew: 'h2'  (suggest backticks — NOT auto-applied)
+  L2050  bare-Latin-in-Hebrew: 'h2'  (suggest backticks — NOT auto-applied)
+  L2057  bare-Latin-in-Hebrew: 'h2'  (suggest backticks — NOT auto-applied)
+  L2060  bare-Latin-in-Hebrew: 'h2'  (suggest backticks — NOT auto-applied)
+  L2069  bare-Latin-in-Hebrew: 'h3'  (suggest backticks — NOT auto-applied)
+  L2075  bare-Latin-in-Hebrew: 'h3'  (suggest backticks — NOT auto-applied)
+  L2085  bare-Latin-in-Hebrew: 'p'  (suggest backticks — NOT auto-applied)
+  L2087  bare-Latin-in-Hebrew: 'p'  (suggest backticks — NOT auto-applied)
+  L2094  R-16 line-ending: RTL line ends with a bracket/punct group wrapping a Latin token — split into a separate sentence (NOT auto-applied).
+  L2105  bare-Latin-in-Hebrew: 'p'  (suggest backticks — NOT auto-applied)
+  L2131  R-16 line-ending: RTL line ends with a bracket/punct group wrapping a Latin token — split into a separate sentence (NOT auto-applied).
+  L2560  R-16 line-ending: RTL line ends with a bracket/punct group wrapping a Latin token — split into a separate sentence (NOT auto-applied).
+  L2577  bare-Latin-in-Hebrew: 'on'  (suggest backticks — NOT auto-applied)
+  L2578  R-16 line-ending: RTL line ends with a bracket/punct group wrapping a Latin token — split into a separate sentence (NOT auto-applied).
+  L2667  R-16 line-ending: RTL line ends with a bracket/punct group wrapping a Latin token — split into a separate sentence (NOT auto-applied).
+  L2712  bare-Latin-in-Hebrew: 'says'  (suggest backticks — NOT auto-applied)
+  L2762  R-16 line-ending: RTL line ends with a bracket/punct group wrapping a Latin token — split into a separate sentence (NOT auto-applied).
+  L2766  R-16 line-ending: RTL line ends with a bracket/punct group wrapping a Latin token — split into a separate sentence (NOT auto-applied).
+  L2769  R-16 line-ending: RTL line ends with a bracket/punct group wrapping a Latin token — split into a separate sentence (NOT auto-applied).
+  L3065  bare-Latin-in-Hebrew: 'part'  (suggest backticks — NOT auto-applied)
+  L3074  R-16 line-ending: RTL line ends with a bracket/punct group wrapping a Latin token — split into a separate sentence (NOT auto-applied).
+  L3279  R-16 line-ending: RTL line ends with a bracket/punct group wrapping a Latin token — split into a separate sentence (NOT auto-applied).
+  L3299  bare-Latin-in-Hebrew: 'confirm'  (suggest backticks — NOT auto-applied)
+  L3305  R-16 line-ending: RTL line ends with a bracket/punct group wrapping a Latin token — split into a separate sentence (NOT auto-applied).
+  L3310  R-16 line-ending: RTL line ends with a bracket/punct group wrapping a Latin token — split into a separate sentence (NOT auto-applied).
+  L3360  bare-Latin-in-Hebrew: 'on'  (suggest backticks — NOT auto-applied)
+  L3367  R-16 line-ending: RTL line ends with a bracket/punct group wrapping a Latin token — split into a separate sentence (NOT auto-applied).
+  L3374  R-16 line-ending: RTL line ends with a bracket/punct group wrapping a Latin token — split into a separate sentence (NOT auto-applied).
+  L3380  R-16 line-ending: RTL line ends with a bracket/punct group wrapping a Latin token — split into a separate sentence (NOT auto-applied).
