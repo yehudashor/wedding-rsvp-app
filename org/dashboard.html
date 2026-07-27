@@ -170,6 +170,19 @@
     #unconf-inline .uc-card .uc-catrow { margin:12px 0 0; padding-top:10px; border-top:1px dashed #e5dcc7; display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
     #unconf-inline .uc-card .uc-catrow label { font-weight:700; color:#8d7d66; font-size:.9rem; flex:0 0 auto; }
     #unconf-inline .uc-card .uc-cat-sel { border:1.5px solid #cbbf9f; border-radius:9px; padding:8px 10px; font-size:.95rem; font-family:inherit; flex:1; min-width:150px; min-height:42px; background:#fff; }
+    /* [REMINDER 2026-07-27] reminder-pack controls */
+    #unconf-inline .uc-remind { margin-top:10px; padding-top:10px; border-top:1px dashed #d8cba8; display:flex; flex-direction:column; gap:8px; }
+    #unconf-inline .uc-remind.uc-skip { opacity:.5; }
+    #unconf-inline .uc-rembtns { display:flex; gap:8px; flex-wrap:wrap; }
+    #unconf-inline .rem-send { flex:1; min-width:140px; min-height:44px; border:none; border-radius:10px; font-family:inherit; font-size:.98rem; font-weight:600; cursor:pointer; }
+    #unconf-inline .rem-wa { background:#25d366; color:#fff; }
+    #unconf-inline .rem-em { background:#e9dcc0; color:#5f4a1e; }
+    #unconf-inline .uc-remsave { display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
+    #unconf-inline .rem-inp { border:1.5px solid #cbbf9f; border-radius:9px; padding:8px 10px; font-size:.95rem; font-family:inherit; min-height:42px; background:#fff; flex:1; min-width:120px; }
+    #unconf-inline .rem-savebtn { min-height:42px; padding:0 16px; border:none; border-radius:9px; background:#5f4a1e; color:#fff; font-family:inherit; cursor:pointer; }
+    #unconf-inline .uc-skiplbl { font-size:.92rem; color:#7a6a45; display:flex; align-items:center; gap:6px; }
+    #unconf-inline .rem-bulkbar { margin:8px 0 2px; }
+    #unconf-inline .rem-bulkbtn { min-height:44px; padding:0 18px; border:1.5px solid #cbbf9f; border-radius:10px; background:#fbf7ee; color:#5f4a1e; font-family:inherit; font-weight:600; cursor:pointer; }
 
     /* [ROUNDFIX2g 2026-07-09 #4/#5] MINE_VIEW cards + category filter + per-card category icons */
     .mine-cards { display:flex; flex-direction:column; gap:12px; margin-top:10px; }
@@ -788,7 +801,9 @@
     //   updateManualGuest({ dashboard_token, response_id, guest_name, phone, men_count, women_count })
     deleteManualGuest:     function (a) { var b = a[0] || {}, o = { action: 'deleteManualGuest' }; for (var k in b) { if (Object.prototype.hasOwnProperty.call(b, k)) o[k] = b[k]; } return o; },
     updateManualGuest:     function (a) { var b = a[0] || {}, o = { action: 'updateManualGuest' }; for (var k in b) { if (Object.prototype.hasOwnProperty.call(b, k)) o[k] = b[k]; } return o; },
-    registerOrganiser:     function (a) { return { action: 'registerOrg', name: a[0], side: a[1], phone: a[2] || '' }; }
+    registerOrganiser:     function (a) { return { action: 'registerOrg', name: a[0], side: a[1], phone: a[2] || '' }; },
+    // [REMINDER 2026-07-27] persist an organiser-entered phone/email for an unconfirmed invitee.
+    saveInviteContact:     function (a) { return { action: 'saveInviteContact', token: a[0], mode: a[1], phone: a[2] || '', invite_token: a[3] || '', invitee_phone: a[4] || '', invitee_email: a[5] || '' }; }
   };
   window.runScript = function (fn) {
     var args = Array.prototype.slice.call(arguments, 1);
@@ -963,6 +978,8 @@
   // ===== ROUNDFIX2 (שלב-ב׳) — unconfirmed-as-cards state =====
   // [#3] active filter for the unconfirmed cards: 'all' | 'notopened' (טופס טרם נפתח) | 'opened' (נפתח אך טרם אושר).
   var UNCONF_FILTER = 'all';
+  var UNCONF_CHANNEL = 'all';        // [REMINDER 2026-07-27] channel-split filter: all | wa | email
+  var REM_SKIP = {};                 // [REMINDER 2026-07-27] per-invite skip toggle (invite_token -> true)
   // cached people[] from the last getUnconfirmedInvites (so filter/assign re-render without a refetch).
   var UNCONF_PEOPLE = null;
 
@@ -1727,6 +1744,48 @@
     return h;
   }
 
+  // [REMINDER 2026-07-27] ---- reminder-pack helpers: build the personal invite link + a prefilled text,
+  //   and the wa.me / mailto URLs. When a saved number/email exists the URL is 1-tap (direct to that
+  //   contact); otherwise it opens WhatsApp/mail with the message ready and the organiser picks the contact.
+  function _inviteBaseUrl() {
+    // host-aware, mirrors index.html INVITE_BASE (PROD -> isolated invite domain; else same-origin).
+    var PROD = ['magiim.pages.dev', 'yehudashor.github.io'];
+    return (PROD.indexOf(location.hostname) !== -1) ? 'https://hazmana-avi-michal.pages.dev' : location.origin;
+  }
+  function _inviteLink(p) {
+    if (!p || !p.invite_token) { return ''; }
+    return _inviteBaseUrl() + '/g/i?sid=' + encodeURIComponent(p.sid || '')
+      + '&ch=' + encodeURIComponent(p.channel || '') + '&g=' + encodeURIComponent(p.invite_token);
+  }
+  function _remText(p) {
+    var link = _inviteLink(p);
+    var nm = (p && p.invitee_name) ? p.invitee_name : '';
+    if (p && p.status === 'opened') {
+      return 'היי ' + nm + '! ראינו שנכנסתם להזמנה לחתונה של אבי ומיכל 💍 אבל אישור ההגעה עדיין לא הושלם 🙏 זה לוקח רק רגע: ' + link;
+    }
+    return 'היי ' + nm + '! מזמינים אתכם בשמחה לחתונה של אבי ומיכל 💍 עדיין לא קיבלנו מכם אישור הגעה — נשמח שתאשרו כאן: ' + link;
+  }
+  function _remIntl(phone) {
+    var d = normalizeIsraeliPhoneClient(phone);   // '' if invalid
+    return d ? ('972' + d.replace(/^0/, '')) : '';
+  }
+  function _remWaUrl(p) {
+    var t = encodeURIComponent(_remText(p));
+    var intl = _remIntl(p.invitee_phone);
+    return intl ? ('https://wa.me/' + intl + '?text=' + t) : ('https://wa.me/?text=' + t);
+  }
+  function _remEmUrl(p) {
+    var subj = encodeURIComponent('אישור הגעה לחתונת אבי חוקת ומיכל שור');
+    var body = encodeURIComponent(_remText(p));
+    var addr = (p.invitee_email || '').trim();
+    return 'mailto:' + addr + '?subject=' + subj + '&body=' + body;
+  }
+  function _remPersonByTok(tok) {
+    var a = UNCONF_PEOPLE || [];
+    for (var i = 0; i < a.length; i++) { if (a[i].invite_token === tok) { return a[i]; } }
+    return null;
+  }
+
   // [ROUNDFIX-20260708 #6א] "מי לא אישר עדיין" — in-content skeleton (below the buttons). fetchUnconfirmed
   // fills #unconf-opened / #unconf-notopened (renderUnconfirmed targets those same ids). Shows ONLY the
   // unconfirmed list — the guest records are NOT rendered in this view.
@@ -1735,11 +1794,20 @@
       return '<button type=\'button\' class=\'flt-btn' + (UNCONF_FILTER === v ? ' active' : '')
         + '\' data-ucflt=\'' + v + '\'>' + lbl + '</button>';
     }
+    // [REMINDER 2026-07-27] channel-split filter (WhatsApp / mail) so the organiser works one send-type at a time.
+    function cfb(v, lbl) {
+      return '<button type=\'button\' class=\'flt-btn' + (UNCONF_CHANNEL === v ? ' active' : '')
+        + '\' data-ucchan=\'' + v + '\'>' + lbl + '</button>';
+    }
     return '<div id=\'unconf-inline\'>'
       + '<h2>מי עדיין לא אישר</h2>'
       + '<div class=\'flt-bar\' role=\'tablist\'>'
       +   fb('all', 'הכל') + fb('notopened', 'טופס טרם נפתח') + fb('opened', 'נפתח אך טרם אושר')
       + '</div>'
+      + '<div class=\'flt-bar\' role=\'tablist\'>'
+      +   cfb('all', 'כל הערוצים') + cfb('wa', 'נשלח בוואטסאפ') + cfb('email', 'נשלח במייל')
+      + '</div>'
+      + '<div class=\'rem-bulkbar\'><button type=\'button\' class=\'rem-bulkbtn\' data-rem-bulk=\'1\'>💾 שמור את כל המספרים/מיילים שהוזנו</button></div>'
       + '<div id=\'unconf-cards\'>' + (UNCONF_PEOPLE ? _unconfCardsHtml() : '<div class=\'uc-empty\'>&#8987; טוען…</div>') + '</div>'
       + '</div>';
   }
@@ -1747,9 +1815,12 @@
   // [ROUNDFIX2 #3] build the category-grouped cards from the cached UNCONF_PEOPLE, honoring UNCONF_FILTER.
   function _unconfCardsHtml() {
     var people = (UNCONF_PEOPLE || []).filter(function (p) {
-      if (UNCONF_FILTER === 'notopened') { return p.status === 'notopened'; }
-      if (UNCONF_FILTER === 'opened')    { return p.status === 'opened'; }
-      return true;   // 'all'
+      if (UNCONF_FILTER === 'notopened' && p.status !== 'notopened') { return false; }
+      if (UNCONF_FILTER === 'opened'    && p.status !== 'opened')    { return false; }
+      // [REMINDER 2026-07-27] channel split
+      if (UNCONF_CHANNEL === 'wa'    && !/wa|whats/i.test(p.channel || '')) { return false; }
+      if (UNCONF_CHANNEL === 'email' && !/mail|email/i.test(p.channel || '')) { return false; }
+      return true;
     });
     if (!people.length) { return '<div class=\'uc-empty\'>אין אורחים בתצוגה זו. &#128077;</div>'; }
     // Group by the VIEWER's OWN categories (CAT_DATA); anything unmatched → "ללא סיווג".
@@ -1795,6 +1866,29 @@
       }
       catRow = '<div class=\'uc-catrow\'><label>סיווג לקטגוריה:</label><select class=\'uc-cat-sel\' data-pk=\'' + esc(p.person_key) + '\'>' + opts + '</select></div>';
     }
+    // [REMINDER 2026-07-27] send-a-reminder block: WhatsApp + mail buttons (1-tap when a saved contact
+    // exists), an optional phone/email entry that persists via saveInviteContact, and a per-guest skip.
+    var _tok = esc(p.invite_token || '');
+    var _skip = !!REM_SKIP[p.invite_token];
+    var _hasPhone = !!(p.invitee_phone && normalizeIsraeliPhoneClient(p.invitee_phone));
+    var _hasEmail = !!(p.invitee_email && p.invitee_email.indexOf('@') > 0);
+    var remRow;
+    if (p.invite_token) {
+      remRow = '<div class=\'uc-remind' + (_skip ? ' uc-skip' : '') + '\' data-rem-tok=\'' + _tok + '\'>'
+        + '<div class=\'uc-rembtns\'>'
+        +   '<button type=\'button\' class=\'rem-send rem-wa\' data-rem-wa=\'' + _tok + '\'>' + (_hasPhone ? 'וואטסאפ · נגיעה אחת' : 'שלח בוואטסאפ') + '</button>'
+        +   '<button type=\'button\' class=\'rem-send rem-em\' data-rem-em=\'' + _tok + '\'>' + (_hasEmail ? 'מייל · נגיעה אחת' : 'שלח במייל') + '</button>'
+        + '</div>'
+        + '<div class=\'uc-remsave\'>'
+        +   '<input type=\'tel\' class=\'rem-inp rem-phone\' placeholder=\'טלפון (לא חובה)\' value=\'' + esc(p.invitee_phone || '') + '\'>'
+        +   '<input type=\'email\' class=\'rem-inp rem-email\' placeholder=\'מייל (לא חובה)\' value=\'' + esc(p.invitee_email || '') + '\'>'
+        +   '<button type=\'button\' class=\'rem-savebtn\' data-rem-save=\'' + _tok + '\'>שמור</button>'
+        + '</div>'
+        + '<label class=\'uc-skiplbl\'><input type=\'checkbox\' class=\'rem-skip\' data-rem-skip=\'' + _tok + '\'' + (_skip ? ' checked' : '') + '> דלג על אורח זה (לא נשלח / לא נשמר באצווה)</label>'
+        + '</div>';
+    } else {
+      remRow = '<div class=\'uc-remind\'><span class=\'uc-v uc-muted\'>אין טוקן אישי — שליחה חוזרת דרך הקישור הכללי בלבד</span></div>';
+    }
     // [ROUNDFIX2c #5ב] stacked rows (label above value) for clean, aligned, readable cards.
     return '<div class=\'uc-card\'>'
       + '<div class=\'uc-row\'><span class=\'uc-k\'>השם שקראתי לו בשליחה</span><span class=\'uc-v uc-name-v\'>' + esc(p.invitee_name) + '</span></div>'
@@ -1802,6 +1896,7 @@
       + '<div class=\'uc-row\'><span class=\'uc-k\'>תאריכי שליחת הקישור</span>' + sharesHtml + '</div>'
       + '<div class=\'uc-row\'><span class=\'uc-k\'>תאריך אחרון שבו הטופס נפתח</span><span class=\'uc-v\'>' + lastOpened + '</span></div>'
       + catRow
+      + remRow
       + '</div>';
   }
   // re-fill the cards container from the cache (filter change / assign) without a refetch.
@@ -3005,6 +3100,98 @@
         var pills = b.parentNode.querySelectorAll('.flt-btn');
         for (var i = 0; i < pills.length; i++) { pills[i].classList.toggle('active', pills[i] === b); }
         renderUnconfCards();
+      });
+
+      // [REMINDER 2026-07-27] channel-split filter (WhatsApp / mail). Own data-ucchan attribute so it never
+      // collides with the status data-ucflt handler. Re-renders the cards from the cache (no refetch).
+      dc.addEventListener('click', function (ev) {
+        var b = ev.target && ev.target.closest ? ev.target.closest('[data-ucchan]') : null;
+        if (!b) { return; }
+        var v = b.getAttribute('data-ucchan');
+        if (!v || v === UNCONF_CHANNEL) { return; }
+        UNCONF_CHANNEL = v;
+        var pills = b.parentNode.querySelectorAll('[data-ucchan]');
+        for (var i = 0; i < pills.length; i++) { pills[i].classList.toggle('active', pills[i] === b); }
+        renderUnconfCards();
+      });
+
+      // [REMINDER 2026-07-27] send a reminder (WhatsApp / mail). Reads any number/email typed on the row,
+      // MERGES it into the cached person (so the link is 1-tap) AND persists it via saveInviteContact
+      // (required in the one-by-one path too), then opens the prefilled wa.me / mailto. Never blocks on save.
+      dc.addEventListener('click', function (ev) {
+        var b = ev.target && ev.target.closest ? ev.target.closest('.rem-wa, .rem-em') : null;
+        if (!b) { return; }
+        var tok = b.getAttribute('data-rem-wa') || b.getAttribute('data-rem-em');
+        var p = _remPersonByTok(tok); if (!p) { return; }
+        var wrap = b.closest('.uc-remind');
+        var phEl = wrap ? wrap.querySelector('.rem-phone') : null;
+        var emEl = wrap ? wrap.querySelector('.rem-email') : null;
+        var ph = phEl ? phEl.value.trim() : '';
+        var em = emEl ? emEl.value.trim() : '';
+        var changed = false;
+        if (ph && normalizeIsraeliPhoneClient(ph) && ph !== p.invitee_phone) { p.invitee_phone = ph; changed = true; }
+        if (em && em.indexOf('@') > 0 && em !== p.invitee_email) { p.invitee_email = em; changed = true; }
+        if (changed) { runScript('saveInviteContact', TOKEN, MODE, AUTH_PHONE, tok, p.invitee_phone || '', p.invitee_email || '').then(function () {}, function () {}); }
+        var url = b.classList.contains('rem-wa') ? _remWaUrl(p) : _remEmUrl(p);
+        window.open(url, '_blank');
+      });
+
+      // [REMINDER 2026-07-27] save a single row's phone/email (persist for 1-tap + future batch).
+      dc.addEventListener('click', function (ev) {
+        var b = ev.target && ev.target.closest ? ev.target.closest('.rem-savebtn') : null;
+        if (!b) { return; }
+        var tok = b.getAttribute('data-rem-save');
+        var p = _remPersonByTok(tok); if (!p) { return; }
+        var wrap = b.closest('.uc-remind');
+        var phEl = wrap ? wrap.querySelector('.rem-phone') : null;
+        var emEl = wrap ? wrap.querySelector('.rem-email') : null;
+        var ph = phEl ? phEl.value.trim() : '';
+        var em = emEl ? emEl.value.trim() : '';
+        if (ph && !normalizeIsraeliPhoneClient(ph)) { if (phEl) { phEl.style.borderColor = '#c0392b'; } return; }
+        if (phEl) { phEl.style.borderColor = ''; }
+        p.invitee_phone = ph; p.invitee_email = em;
+        b.textContent = 'שומר…'; b.disabled = true;
+        runScript('saveInviteContact', TOKEN, MODE, AUTH_PHONE, tok, ph, em).then(function (res) {
+          if (res && res.ok) { renderUnconfCards(); } else { b.textContent = 'שמור'; b.disabled = false; }
+        }, function () { b.textContent = 'שמור'; b.disabled = false; });
+      });
+
+      // [REMINDER 2026-07-27] per-guest skip toggle (excluded from the batch save / from a send).
+      dc.addEventListener('change', function (ev) {
+        var c = ev.target && ev.target.closest ? ev.target.closest('.rem-skip') : null;
+        if (!c) { return; }
+        var tok = c.getAttribute('data-rem-skip');
+        if (c.checked) { REM_SKIP[tok] = true; } else { delete REM_SKIP[tok]; }
+        var wrap = c.closest('.uc-remind'); if (wrap) { wrap.classList.toggle('uc-skip', c.checked); }
+      });
+
+      // [REMINDER 2026-07-27] BULK: save every row's typed number/email at once, then re-render so each
+      // becomes 1-tap. Skips rows toggled "skip" and rows with an invalid phone. Optimistic cache update.
+      dc.addEventListener('click', function (ev) {
+        var b = ev.target && ev.target.closest ? ev.target.closest('[data-rem-bulk]') : null;
+        if (!b) { return; }
+        var rows = document.querySelectorAll('.uc-remind[data-rem-tok]');
+        var jobs = [];
+        for (var i = 0; i < rows.length; i++) {
+          var tok = rows[i].getAttribute('data-rem-tok'); if (!tok || REM_SKIP[tok]) { continue; }
+          var p = _remPersonByTok(tok); if (!p) { continue; }
+          var phEl = rows[i].querySelector('.rem-phone');
+          var emEl = rows[i].querySelector('.rem-email');
+          var ph = phEl ? phEl.value.trim() : '';
+          var em = emEl ? emEl.value.trim() : '';
+          var okPh = !ph || !!normalizeIsraeliPhoneClient(ph);
+          if (phEl) { phEl.style.borderColor = okPh ? '' : '#c0392b'; }
+          var changed = ((ph && okPh && ph !== p.invitee_phone) || (em && em !== p.invitee_email));
+          if (changed) {
+            if (ph && okPh) { p.invitee_phone = ph; }
+            if (em) { p.invitee_email = em; }
+            jobs.push(runScript('saveInviteContact', TOKEN, MODE, AUTH_PHONE, tok, p.invitee_phone || '', p.invitee_email || ''));
+          }
+        }
+        b.disabled = true; var _old = b.textContent; b.textContent = '💾 שומר…';
+        Promise.all(jobs.map(function (j) { return j.then(function (r) { return r; }, function () { return null; }); })).then(function () {
+          b.disabled = false; b.textContent = _old; renderUnconfCards();
+        });
       });
 
       // [ROUNDFIX2 #2] assign a category to a NOT-YET-CONFIRMED guest from their card (own invites only).
